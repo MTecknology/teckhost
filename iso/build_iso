@@ -1,0 +1,286 @@
+#!/bin/bash
+##
+# This will modify an existing ISO and embed a preseed file.
+##
+
+# Primary script logic
+main() {
+	parse_options "$@"
+	safety_checks
+
+	# Create a temp directory
+	TH_TEMP="$(mktemp -d)"
+
+	# Build customized ISO with preseed
+	unpack_source
+	inject_grubconfig
+	inject_preseed
+	build_iso
+
+	# Clean up temp data
+	if is_true "$TH_KEEP"; then
+		log "$WARN" "Not removing temporary directory at $TH_TEMP"
+	else
+		rm -rf "$TH_TEMP"
+	fi
+}
+
+
+# Read options into environment
+parse_options() {
+	# Defaults
+	export TH_CKSUM="$TH_CKSUM"
+	export TH_SRC="${TH_SRC:-./debian-netinst.iso}"
+	export TH_DST="${TH_DST:-./modified.iso}"
+	export TH_SEED="${TH_SEED:-preseed.cfg}"
+	export TH_GRUB="${TH_GRUB:-./auto-grub.cfg}"
+	export TH_KEEP="${TH_KEEP:-False}"
+	export THT_DEVICE="${THT_DEVICE:-/dev/nvme0n1}"
+	export LOG_LEVEL="${LOG_LEVEL:-1}"
+
+	while getopts 'c:i:o:s:g:kd:l:h' OPT; do
+		case "$OPT" in
+			c) TH_CKSUM="$OPTARG";;
+			i) TH_SRC="$OPTARG";;
+			o) TH_DST="$OPTARG";;
+			s) TH_SEED="$OPTARG";;
+			g) TH_GRUB="$OPTARG";;
+			k) TH_KEEP=True;;
+			d) THT_DEVICE="$OPTARG";;
+			l) LOG_LEVEL="$OPTARG";;
+			h) show_help; exit 1;;
+			*) die "Unexpected argument provided: '$OPT'";;
+		esac
+	done
+}
+
+
+# Show help text (an explanation of options)
+show_help() {
+	t="$(printf '\t')"
+	cat <<-EOF
+	Modify a Debian ISO and inject a preseed.cfg file.
+
+	Usage: build_iso [options]
+
+	Options:
+	  -c X${t}Checksum of resource
+	  -i X${t}Pristine ISO to be modified (can be http)
+	  -o X${t}Output ISO
+	  -s X${t}Preseed template to embed into ISO
+	  -g X${t}Grub configuration file
+	  -d X${t}Installation device
+	  -l X${t}Log level (0=Debug, 1=Info, 2=Warn, 3=Error)
+	  -k${t}Keep temporary directory
+	  -h${t}Print this help text and exit
+
+	Defaults (can be set as environment variables):
+	  TH_CKSUM${t}<empty>
+	  TH_SRC${t}./debian-netinst.iso
+	  TH_DST${t}./modified.iso
+	  TH_SEED${t}./preseed.cfg
+	  TH_GRUB${t}./auto-grub.cfg
+	  TH_KEEP${t}True
+	  THT_DEVICE${t}/dev/nvme0n1
+	  LOG_LEVEL${t}1  (information)
+
+	Tell build_iso to pull a remote iso and store in /tmp/\$TH_CKSUM.iso:
+	  export \
+	      TH_SRC=https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso \
+	      TH_CKSUM=eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
+	  ./build_iso -o ~/modified.iso
+	EOF
+}
+
+
+safety_checks() {
+	log "$DEBUG" 'Running sanity checks'
+
+	# Check for required commands
+	for cmd in 'bsdtar' 'syslinux' 'xorriso'; do
+		command_present "$cmd" || die 'Missing dependencies, must have: bsdtar syslinux xorriso'
+	done
+
+	# Verify provided values point at files
+	[ -f "$TH_SEED" ] || die 'Seed file not found'
+	[ -f "$TH_GRUB" ] || die 'Grub configuration not found'
+
+	# Other option checks
+	is_int "$LOG_LEVEL" || die 'Log level must be an integer (0-3)'
+}
+
+unpack_source() {
+	# If source is http, grab/cache resource
+	if [[ "$TH_SRC" = http* ]]; then
+		_get_websource || die 'Failed to grab resource'
+	fi
+
+	# Verify source exists
+	[[ ! -f "$TH_SRC" ]] && die "Source file ($TH_SRC) does not exist"
+
+	# Verify checksum of source
+	if [[ -n "$TH_CKSUM" ]]; then
+		sha512sum "$TH_SRC" | cut -d' ' -f1 | grep -q "$TH_CKSUM" || \
+			die "cksum($TH_SRC) != $TH_CKSUM"
+	fi
+
+	# Actually unpack source
+	bsdtar -C "$TH_TEMP" -xf "$TH_SRC"
+
+	# Make it editable (must be reverted before regen)
+	chmod -R +w "$TH_TEMP"
+}
+
+# Pull/cache a copy from the web and swap variables once verified
+_get_websource() {
+	command_present 'wget' || die 'wget is required to get a web source'
+
+	# Local cache location
+	iso="/tmp/$TH_CKSUM.iso"
+
+	# If cache file exists, validate and return
+	if [[ -f "$iso" ]]; then
+		if sha512sum "$iso" | cut -d' ' -f1 | grep -q "$TH_CKSUM"; then
+			log "$DEBUG" "Valid cache for $TH_SRC"
+			TH_SRC="$iso"
+			return 0
+		fi
+		log "$WARN" "Removing invalid cache at $iso"
+		rm -f "$iso"
+	fi
+	# Grab resource and store in cache location
+	wget -qO "$iso" "$TH_SRC" && TH_SRC="$iso"
+}
+
+
+# Insert an auto-only grub boot config
+inject_grubconfig() {
+	log "$DEBUG" 'Copying grub config'
+	cp "$TH_GRUB" "$TH_TEMP/boot/grub/grub.cfg"
+}
+
+
+# Inject a custom preseed into initrd
+inject_preseed() {
+	# Copy template and update template value(s)
+	log "$DEBUG" 'Generating preseed file'
+	sed -e "s|TEMPLATE_DEVICE|$THT_DEVICE|" "$TH_SEED" > "$TH_TEMP/preseed.cfg"
+		# This was "replaced" because of issues with multi-preseed options.
+		# See preseed.cfg header for more information.
+		#-e "s|TEMPLATE_METHOD|$THT_METHOD|" \
+
+	# Not the cleanest assumption, but we error if files are missisg
+	basedir="$(dirname "$0")/../"
+	# Copy preseed-executed scripts from repository
+	# (copying locally helps avoid issues with stale cache)
+	cp "$basedir/iso/debconf_early" "$TH_TEMP/debconf_early" || return 1
+	cp "$basedir/bootstrap" "$TH_TEMP/bootstrap" || return 1
+
+	# Injection magic
+	log "$DEBUG" 'Injecting preseed into initrd'
+	pushd "$TH_TEMP" >/dev/null || return 1
+	gunzip install.amd/initrd.gz
+	echo 'preseed.cfg' | cpio --quiet -o -H newc -A -F install.amd/initrd
+	gzip install.amd/initrd
+	find -follow -type f -print0 2>/dev/null | xargs --null md5sum >md5sum.txt
+	popd >/dev/null || return 1
+}
+
+
+# Build the modified ISO
+build_iso() {
+	log "$DEBUG" "Bulding ISO at $TH_DST"
+	# Some weird requirement; things break without it
+	chmod -R -w "$TH_TEMP"
+	# command partially copied from iso in .disk/isofs
+	# see: https://wiki.debian.org/RepackBootableISO
+	xorriso -as mkisofs -quiet -r -V 'Debian Teckhost amd64' \
+		-isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin \
+		-b isolinux/isolinux.bin -c isolinux/boot.cat -boot-load-size 4 \
+		-boot-info-table -no-emul-boot -eltorito-alt-boot \
+		-e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -isohybrid-apm-hfsplus \
+		-o "$TH_DST" "$TH_TEMP" 2>/dev/null || log "$ERROR" 'Building ISO failed'
+	# -w is annoying, so we undo it right away
+	chmod -R +w "$TH_TEMP"
+}
+
+
+##
+# Functions copied from https://github.com/MTecknology/script-helpers
+##
+
+# Log Levels
+DEBUG=0; INFO=1; WARN=2; ERROR=3
+readonly DEBUG INFO WARN ERROR
+export DEBUG INFO WARN ERROR
+
+
+# Check if a command (or alias/function) is available.
+command_present() {
+	command -v "$1" >/dev/null && return 0
+	alias | grep -q "\s$1=" 2>/dev/null && return 0
+	return 1
+}
+
+
+# Print a formatted (critical) message and exit with status.
+die() {
+	# If first argument was an integer, use as exit_status
+	case "$1" in
+		(*[!0123456789]*) _exit_status=1;;
+		(*) _exit_status="$1"; shift;;
+	esac
+
+	printf '*** CRITICAL: %s ***\n' "$1"
+	exit "$_exit_status"
+}
+
+
+# Print a formatted message if env[LOG_LEVEL] >= level.
+log() {
+	if [ "${LOG_LEVEL:-1}" -le "$1" ]; then
+		case "$1" in
+			(0) _lvl='DEBUG';;
+			(1) _lvl='INFO';;
+			(2) _lvl='WARN';;
+			(3) _lvl='ERROR';;
+			(*) _lvl='UNKNOWN';;
+		esac
+
+		printf '*** %s: %s ***\n' "$_lvl" "$2"
+	fi
+}
+
+
+# Evaluate if a given string is an integer.
+is_int() {
+	_i="$1"
+	[ "$(printf "%.1s" "$_i")" = '-' ] &&
+		_i="$(printf '%s' "$1" | cut -c2-)"
+	case "$_i" in
+		('') return 1;;
+		(*[!0123456789]*) return 1;;
+		(*) return 0;;
+	esac
+}
+
+
+# Evaluate if a given string is true-like (True, TrUE, true, 0).
+is_true() {
+	# Everything to lower-case (True|TRUE|trUe -> true)
+	_str="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+	[ "$_str" = 'true' ] && return 0
+	[ "$_str" = '' ] && return 1
+	# False if number is non-zero.
+	is_int "$_str" || return 1
+	[ "$_str" -eq '0' ] 2>/dev/null && return 0
+
+	return 1
+}
+
+
+##
+# Script Kickoff
+##
+
+main "$@"

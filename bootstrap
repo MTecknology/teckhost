@@ -1,0 +1,204 @@
+#!/bin/sh
+##
+# A quick/simple script to get masterless salt deployed and configured.
+# See help text (./bootstrap -h) and README.rst for requirements.
+#
+# skeys.gpg, generated with:
+#   cd /etc/salt; tar -cf- gpgkeys | gpg --symmetric --cipher-algo TWOFISH -o skeys.gpg
+#
+# TEST_MODE: This script will behave different if the $TEST_MODE environment
+#            variable is set. This is meant for (insecure) automated testing.
+##
+
+main() {
+	parse_options "$@"
+
+	# Prep
+	safety_checks
+	lock acquire "$0" || die 'Unable to acquire lock'
+	mkdir -p /etc/salt/minion.d
+
+	# Install Masterless Salt
+	install_dependencies || die 'Failed to install dependencies'
+	configure_minion || die 'Failed to install salt-minion'
+	deploy_gpgkeys || die 'Failed to unpack GPG keys'
+	apt-get install -y salt-minion || die 'Failed to install salt-minion'
+
+	# Run Highstate and Configure System
+	salt-call --local state.highstate || die 'Provisioning process (highstate) failed'
+
+	# Cleanup
+	lock destroy "$0"
+}
+
+show_usage() {
+	t="$(printf '\t')"
+	cat <<-EOF
+	Deploy masterless salt on a host managed by MTecknology.
+
+	Usage: $0 [-h] <options>
+
+	Options:
+	  -k [http]${t}Location of encrypted blob containing Salt GPG keys (can be file)
+	  -p [path]${t}File with password used to decrypt gpg blob
+	  -h${t}${t}Print this help text
+
+	Defaults (Environment Variables):
+	  TH_SALTGPG${t}https://raw.githubusercontent.com/MTecknology/teckhost/master/pillar/skeys.gpg
+	  TH_SALTPWF${t}/tmp/gpgpassphrase
+	EOF
+}
+
+# Parse options, prioritizing args > env > defaults
+# Exports: TH_SALTGPG
+parse_options() {
+	# Default values
+	# These can be overridden by setting environment variables
+	if [ -n "$TEST_MODE" ]; then
+		export TH_SALTGPG="${TH_SALTGPG:-https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
+	else
+		export TH_SALTGPG="${TH_SALTGPG:-https://raw.githubusercontent.com/MTecknology/teckhost/master/pillar/skeys.gpg}"
+	fi
+	export TH_SALTPWF="${TH_SALTPWF:-/tmp/gpgpassphrase}"
+
+	# Modify defaults
+	while getopts 'k:p:h' opt; do
+		case "$opt" in
+			(k) TH_SALTGPG="$OPTARG";;
+			(p) TH_SALTPWF="$OPTARG";;
+			(h) show_usage; exit 0;;
+			(*) die "Invalid option: $opt"
+		esac
+	done
+}
+
+# Verify all expected data is currently present or else die with reason
+safety_checks() {
+	command_present apt-get || die 'Must have apt-get available'
+}
+
+# Install dependencies to deploy gpg keys and run salt
+# NOTE: This also wipes /etc/apt/sources.list to ensure clean sources
+install_dependencies() {
+	# Seems excessive when only one path is likely, but who knows how this might get used
+	if [ -n "$OSCODENAME" ]; then
+		: # do nothing if a value was already set
+	elif [ -f /etc/os-release ]; then
+		# most likely path
+		. /etc/os-release
+		OSCODENAME="$VERSION_CODENAME"
+	elif command_present 'lsb_release'; then
+		OSCODENAME="$(lsb_release -cs)"
+	else
+		die 'Could not figure out OSCODENAME'
+	fi
+	# Force a pristine/known-good apt configuration
+	rm -rf /etc/apt/sources.*
+	cat >/etc/apt/sources.list <<-EOF
+		deb http://deb.debian.org/debian $OSCODENAME main contrib non-free
+		deb http://security.debian.org/debian-security $OSCODENAME-security main contrib non-free
+		deb http://deb.debian.org/debian $OSCODENAME-updates main contrib non-free
+		EOF
+	apt-get update
+	apt-get -y install gpg python3-pygit2 wget
+}
+
+# Create default minion configuration
+configure_minion() {
+	testdir=''; [ -n "$TEST_MODE" ] && testdir='test/'
+	cat >/etc/salt/minion.d/saltsolo.conf <<-EOF
+		file_client: local
+		fileserver_backend:
+		  - gitfs
+		gitfs_remotes:
+		  - https://github.com/MTecknology/teckhost.git:
+		    - root: states
+		ext_pillar:
+		  - git:
+		    - https://github.com/MTecknology/teckhost.git:
+		      - root: ${testdir}pillar
+		EOF
+		# NOTE: Salt will overwrite this if the hostname is wrong.
+}
+
+# Download and unpack Salt GPG keys
+# NOTE: This requires a password, shared among admins
+deploy_gpgkeys() {
+	# Get the encrypted keys
+	gpgblob="$(mktemp)"
+	if [ -f "$TH_SALTGPG" ]; then
+		cp "$TH_SALTGPG" "$gpgblob" || return 1
+	else
+		wget "$TH_SALTGPG" -O "$gpgblob" || return 1
+	fi
+
+	# Deploy GPG keys
+	# NOTE: gpg option order is very important
+	if [ -f "$TH_SALTPWF" ]; then
+		gpg --batch --passphrase-file "$TH_SALTPWF" --decrypt "$gpgblob" | \
+			tar -xC /etc/salt/ || (rm "$gpgblob"; return 1)
+	else
+		gpg --batch --decrypt "$gpgblob" | \
+			tar -xC /etc/salt/ || (rm "$gpgblob"; return 1)
+	fi
+	rm "$gpgblob"
+	chown -R root:root /etc/salt/
+}
+
+
+##
+# Copied from https://github.com/MTecknology/script-helpers
+##
+
+# Check if a command (or alias/function) is available.
+# Usage: command_present bin
+command_present() {
+	command -v "$1" >/dev/null && return 0
+	alias | grep -q "\s$1=" 2>/dev/null && return 0
+	return 1
+}
+
+# Print a formatted (critical) message and exit with status.
+# Usage: die [exit_status] message
+die() {
+	lock destroy "$0"
+
+	# If first argument was an integer, use as exit_status
+	case "$1" in
+		(*[!0123456789]*) _exit_status=1;;
+		(*) _exit_status="$1"; shift;;
+	esac
+
+	printf '*** CRITICAL: %s ***\n' "$1"
+	exit "$_exit_status"
+}
+
+# Manage a lock file.
+# Usage: lock operation [key]
+lock() {
+	_h="$(printf '%s' "${2:-$0}" | cksum | awk '{print $1}')"
+	case "$1" in
+		(acquire) _lock_acquire "/tmp/$_h.lock";;
+		(destroy) rm -f "/tmp/$_h.lock";;
+	esac
+}
+
+# Create a lock file and populate it with PID.
+_lock_acquire() {
+	# Check if running
+	[ -e "$1" ] && kill -0 "$(cat "$1")" && return 1
+
+	# make sure the lockfile is removed when we exit and then claim it
+	# shellcheck disable=SC2064 #[we want this expanding now]
+	trap "rm -f '$1'; exit" INT TERM EXIT
+	echo $$ > "$1"
+
+	return 0
+}
+
+
+##
+# Kick off the script
+##
+
+main "$@"

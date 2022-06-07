@@ -1,0 +1,98 @@
+#!/bin/sh
+##
+# This script is used to modify the 'debian-installer' environment and is not
+# intented to be run interactively. It should be executed by ``partman/early_command``
+# in ``preseed.cfg`` which is after networking is set up but before partitioning.
+#
+# Requirements:
+# - Run inside of a debian-installer TTY
+# - Run outside of in-target
+#
+# TEST_MODE: This script will behave different if the $TEST_MODE environment
+#            variable is set. This is meant for (insecure) automated testing.
+##
+. /usr/share/debconf/confmodule
+
+main() {
+	safety_checks
+	# If $TEST_MODE is set, then write known test values and return
+	if [ -n "$TEST_MODE" ]; then
+		printf 'AWeakLink' >/tmp/gpgpassphrase
+		db_set partman-auto/method lvm
+	else
+		debconf_prompts
+		debconf_environment
+	fi
+}
+
+safety_checks() {
+	# This should have been set by options in auto-grub.cfg
+	# $TEMPLATE_METHOD :: lvm or crypto
+	if [ "$TEMPLATE_METHOD" != 'lvm' ] && [ "$TEMPLATE_METHOD" != 'crypto' ]; then
+		die "Unexpected environment variable TEMPLATE_METHOD ($TEMPLATE_METHOD)"
+	fi
+}
+
+# Update `d-i` options from environment variables, set by grub (in auto-grub.cfg)
+debconf_environment() {
+	# In preseed.cfg :: #d-i partman-auto/method string TEMPLATE_METHOD
+	db_set partman-auto/method "$TEMPLATE_METHOD"
+}
+
+# Interact with debconf to get extra information from users
+#
+# - gpgpassphrase:
+#   + Used to decrypt salt gpg keys in `bootstrap` script
+#   + Stores password in /tmp/gpgpassphrase
+debconf_prompts() {
+	# Create a debconf template file
+	cat > /tmp/custom.template <<-EOF
+		Template: gpgpassphrase/ask
+		Type: string
+		Description: Passphrase to decrypt GPG keys
+
+		Template: gpgpassphrase/title
+		Type: text
+		Description: SKeys Passphrase
+		EOF
+	debconf-loadtemplate gpgpassphrase /tmp/custom.template
+
+	# Get user input: gpgpassphrase
+	db_settitle gpgpassphrase/title
+	db_input critical gpgpassphrase/ask
+	db_go
+
+	# Save and clear input: gpgpassphrase
+	# NOTE: This /tmp/ should be part of the installer environment;
+	#       Additional processes will need to interact with this file
+	db_get gpgpassphrase/ask &&
+		printf '%s' "$RET" >/tmp/gpgpassphrase
+	db_reset gpgpassphrase/ask
+}
+
+
+##
+# Copied from https://github.com/MTecknology/script-helpers
+##
+
+# Print a formatted (critical) message and exit with status.
+# Usage: die [exit_status] message
+die() {
+	lock destroy "$0"
+
+	# If first argument was an integer, use as exit_status
+	case "$1" in
+		(*[!0123456789]*) _exit_status=1;;
+		(*) _exit_status="$1"; shift;;
+	esac
+
+	printf '*** CRITICAL: %s ***\n' "$1"
+	exit "$_exit_status"
+}
+
+
+##
+# Kick off the script
+##
+
+main "$@"
