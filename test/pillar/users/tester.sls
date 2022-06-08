@@ -27,4 +27,5 @@ users:
         CY0XOq5SsiM4q9VD/Obtrc7Yzapg83/YpU694kV+1bBmBYWrFQ==
         =ruPa
         -----END PGP MESSAGE-----
-    #keys: []
+    keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDe0u5JOMP2RO8H/gUAizLoPWvRsgZXYXicjapOd8nlb tester@testpc1

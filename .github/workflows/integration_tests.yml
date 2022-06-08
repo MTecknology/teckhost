@@ -1,0 +1,74 @@
+name: Integration Tests
+##
+# 1. Build a "teckhost" iso from upstream release,
+# 2. Install OS on VM using teckhost.iso (testing option),
+# 3. Verify we can log in using the "tester" account
+##
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+
+  buildiso:
+    name:  Build Teckhost ISO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: sudo apt-get install virtualbox libarchive-tools syslinux xorriso isolinux
+
+      - name: Tweak Preseed (for testing only)
+        run: |
+            sed -e '/netcfg\/dhcp_options/d' iso/preseed.cfg >/tmp/testseed.cfg
+            echo 'd-i netcfg/get_hostname string testpc1' >>/tmp/testseed.cfg
+            echo 'd-i netcfg/get_domain string domain.tld' >>/tmp/testseed.cfg
+            echo 'd-i finish-install/reboot_in_progress note' >>/tmp/testseed.cfg
+
+      # 1. Build a "teckhost" iso from upstream release,
+      - name: Build Teckhost ISO
+        run: bash ./iso/build_iso -g iso/auto-grub.cfg -d /dev/sda -o /tmp/teckhost.iso -s /tmp/testseed.cfg
+        env:
+          TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
+          TH_CKSUM: eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
+
+      - name: Push ISO (teckhost.iso)
+        uses: actions/upload-artifact@v3
+        with:
+          name: teckhost.iso
+          path: /tmp/teckhost.iso
+
+  testinstall:
+    name:  Testing Install
+    needs: buildiso
+    # virtualbox can only run on some versions (10.5, 12) of macosx runners
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Pull ISO (teckhost.iso)
+        uses: actions/download-artifact@v3
+        with:
+          name: teckhost.iso
+
+      # 2. Install OS on VM using teckhost.iso (testing option),
+      - name: Create VM and Install (Testing) Teckhost
+        run: bash ./test/vbox_create
+        env:
+          TH_ISOPATH: /Users/runner/work/teckhost/teckhost/teckhost.iso
+          TH_VMNAME: testpc1
+
+      - name: Fix SSH Key Permissions
+        run: |
+            chmod 700 test/.ssh
+            chmod 600 test/.ssh/id_ed25519
+
+      # 3. Verify we can log in using the "tester" account
+      - name: User (tester) Login
+        run: ssh -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'

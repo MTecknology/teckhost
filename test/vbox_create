@@ -1,0 +1,180 @@
+#!/bin/bash
+##
+# Very simple wrapper to make a clean virtualbox VM for testing.
+# Create a clean VM and install OS from an ISO.
+##
+
+
+main() {
+	parse_options "$@"
+
+	# Prep
+	safety_checks
+	lock acquire "$0" || die 'Unable to acquire lock'
+
+	# Flight
+	destroy_vm
+	create_vm || die 'VM creation failed'
+	install_os || die 'OS install failed'
+
+	# Cleanup
+	lock destroy "$0"
+}
+
+show_usage() {
+	t="$(printf '\t')"
+	cat <<-EOF
+	Create a fresh VM for testing with
+
+	Usage: ./vbox_create [-h] <options>
+
+	Options:
+	  -i [path]${t}Location of installer ISO
+	  -n [name]${t}Name of VM
+	  -h${t}${t}Print this help text
+
+	Defaults (Environment Variables):
+	  TH_ISOPATH${t}./teckhost.iso
+	  TH_VMNAME${t}testpc1
+	EOF
+}
+
+# Parse options, prioritizing args > env > defaults
+# Exports: TH_SALTGPG
+parse_options() {
+	# Default values
+	export TH_ISOPATH="${TH_ISOPATH:-./teckhost.iso}"
+	export TH_VMNAME="${TH_VMNAME:-testpc1}"
+
+	# Modify defaults
+	while getopts 'i:n:d:h' opt; do
+		case "$opt" in
+			(i) TH_ISOPATH="$OPTARG";;
+			(n) TH_VMNAME="$OPTARG";;
+			(h) show_usage; exit 0;;
+			(*) die "Invalid option: $opt"
+		esac
+	done
+}
+
+# Verify all expected data is currently present or else die with reason
+safety_checks() {
+	command_present 'VBoxManage' || die 'Could not find VBoxManage'
+	[ -f "$TH_ISOPATH" ] || die "ISO ($TH_ISOPATH) was not found"
+}
+
+destroy_vm() {
+	# Destroy VM if it exists
+	VBoxManage controlvm "$TH_VMNAME" poweroff
+	VBoxManage unregistervm "$TH_VMNAME" --delete
+}
+
+create_vm() {
+	# Create VM
+	VBoxManage createvm --name "$TH_VMNAME" --ostype "Debian_64" --register || return 1
+	VBoxManage modifyvm "$TH_VMNAME" --ioapic on
+	VBoxManage modifyvm "$TH_VMNAME" --cpus 4
+	VBoxManage modifyvm "$TH_VMNAME" --memory 1024 --vram 128
+	VBoxManage modifyvm "$TH_VMNAME" --firmware efi || return 1
+
+	# Networking
+	VBoxManage modifyvm "$TH_VMNAME" --nic1 nat
+	VBoxManage modifyvm "$TH_VMNAME" --natpf1 "vm-ssh,tcp,,4222,,22"
+
+	# Add HD (~250G)
+	path="$(dirname "$(VBoxManage showvminfo "$TH_VMNAME" --machinereadable | grep '^CfgFile=' | cut -d'"' -f2)")"
+	VBoxManage createhd --filename "$path/disk0.vdi" --size 250000 --format VDI || return 1
+	VBoxManage storagectl "$TH_VMNAME" --name "SATA Controller" --add sata --controller IntelAhci
+	VBoxManage storageattach "$TH_VMNAME" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "$path/disk0.vdi"
+
+	# Attach ISO
+	VBoxManage storagectl "$TH_VMNAME" --name "IDE Controller" --add ide --controller PIIX4
+	VBoxManage storageattach "$TH_VMNAME" --storagectl "IDE Controller" --port 1 --device 0 --type dvddrive --medium "$TH_ISOPATH"
+
+	# Boot Order
+	VBoxManage modifyvm "$TH_VMNAME" --boot1 dvd --boot2 disk --boot3 none --boot4 none
+}
+
+install_os() {
+	# Boot VM to grub menu (assume: clean disk, teckhost.iso[auto-grub,testseed])
+	VBoxManage startvm "$TH_VMNAME" --type headless || return 1; sleep 10
+
+	# Press "t" for testing install (see --hotkey=t in iso/auto-grub.cfg)
+	VBoxManage controlvm "$TH_VMNAME" keyboardputstring "t" || return 1
+
+	# Local testing took approximately 15 minutes
+	printf 'Waiting (up to 60 minutes) for install to finish ...'
+	for i in {1..60}; do
+		sleep 60
+		printf ' %s ...' "$i"
+		# The installer iso will remain mounted until the installer triggers an eject.
+		VBoxManage showvminfo "$TH_VMNAME" | grep -q "$TH_ISOPATH" || break
+	done
+	printf ' Done\n'
+
+	# If iso is still mounted, something broke (or timed out)
+	VBoxManage showvminfo "$TH_VMNAME" | grep -q "$TH_ISOPATH" && return 1
+
+	# Verify VM is powered on
+	VBoxManage list runningvms | grep -q "$TH_VMNAME" || return 1
+	# Give VM time to boot up on slow hosts
+	sleep 60
+}
+
+
+##
+# Copied from https://github.com/MTecknology/script-helpers
+##
+
+# Check if a command (or alias/function) is available.
+# Usage: command_present bin
+command_present() {
+	command -v "$1" >/dev/null && return 0
+	alias | grep -q "\s$1=" 2>/dev/null && return 0
+	return 1
+}
+
+# Print a formatted (critical) message and exit with status.
+# Usage: die [exit_status] message
+die() {
+	lock destroy "$0"
+
+	# If first argument was an integer, use as exit_status
+	case "$1" in
+		(*[!0123456789]*) _exit_status=1;;
+		(*) _exit_status="$1"; shift;;
+	esac
+
+	printf '*** CRITICAL: %s ***\n' "$1"
+	exit "$_exit_status"
+}
+
+# Manage a lock file.
+# Usage: lock operation [key]
+lock() {
+	_h="$(printf '%s' "${2:-$0}" | cksum | awk '{print $1}')"
+	case "$1" in
+		(acquire) _lock_acquire "/tmp/$_h.lock";;
+		(destroy) rm -f "/tmp/$_h.lock";;
+	esac
+}
+
+# Create a lock file and populate it with PID.
+_lock_acquire() {
+	# Check if running
+	[ -e "$1" ] && kill -0 "$(cat "$1")" && return 1
+
+	# make sure the lockfile is removed when we exit and then claim it
+	# shellcheck disable=SC2064 #[we want this expanding now]
+	trap "rm -f '$1'; exit" INT TERM EXIT
+	echo $$ > "$1"
+
+	return 0
+}
+
+
+##
+# Kick off the script
+##
+
+main "$@"

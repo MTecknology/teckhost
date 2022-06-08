@@ -1,0 +1,28 @@
+name: Lint Checks
+##
+# 1. Shellcheck
+##
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+
+  shellcheck:
+    name:  ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # 1. Shellcheck
+      # Looks for +x files
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        env:
+          SHELLCHECK_OPTS: -e SC1091
+          # https://github.com/koalaman/shellcheck/wiki/SC1091

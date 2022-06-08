@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-# This will modify an existing ISO and embed a preseed file.
+# This will modify an existing ISO and embed a preseed and grub config.
 ##
 
 # Primary script logic
@@ -25,13 +25,12 @@ main() {
 	fi
 }
 
-
 # Read options into environment
 parse_options() {
 	# Defaults
 	export TH_CKSUM="$TH_CKSUM"
 	export TH_SRC="${TH_SRC:-./debian-netinst.iso}"
-	export TH_DST="${TH_DST:-./modified.iso}"
+	export TH_DST="${TH_DST:-./teckhost.iso}"
 	export TH_SEED="${TH_SEED:-preseed.cfg}"
 	export TH_GRUB="${TH_GRUB:-./auto-grub.cfg}"
 	export TH_KEEP="${TH_KEEP:-False}"
@@ -53,7 +52,6 @@ parse_options() {
 		esac
 	done
 }
-
 
 # Show help text (an explanation of options)
 show_help() {
@@ -77,21 +75,20 @@ show_help() {
 	Defaults (can be set as environment variables):
 	  TH_CKSUM${t}<empty>
 	  TH_SRC${t}./debian-netinst.iso
-	  TH_DST${t}./modified.iso
+	  TH_DST${t}./teckhost.iso
 	  TH_SEED${t}./preseed.cfg
 	  TH_GRUB${t}./auto-grub.cfg
 	  TH_KEEP${t}True
 	  THT_DEVICE${t}/dev/nvme0n1
-	  LOG_LEVEL${t}1  (information)
+	  LOG_LEVEL${t}1  (info)
 
 	Tell build_iso to pull a remote iso and store in /tmp/\$TH_CKSUM.iso:
-	  export \
-	      TH_SRC=https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso \
+	  export \\
+	      TH_SRC=https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso \\
 	      TH_CKSUM=eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
-	  ./build_iso -o ~/modified.iso
+	  ./build_iso -o ~/teckhost.iso
 	EOF
 }
-
 
 safety_checks() {
 	log "$DEBUG" 'Running sanity checks'
@@ -152,13 +149,11 @@ _get_websource() {
 	wget -qO "$iso" "$TH_SRC" && TH_SRC="$iso"
 }
 
-
 # Insert an auto-only grub boot config
 inject_grubconfig() {
 	log "$DEBUG" 'Copying grub config'
 	cp "$TH_GRUB" "$TH_TEMP/boot/grub/grub.cfg"
 }
-
 
 # Inject a custom preseed into initrd
 inject_preseed() {
@@ -182,10 +177,9 @@ inject_preseed() {
 	gunzip install.amd/initrd.gz
 	echo 'preseed.cfg' | cpio --quiet -o -H newc -A -F install.amd/initrd
 	gzip install.amd/initrd
-	find -follow -type f -print0 2>/dev/null | xargs --null md5sum >md5sum.txt
+	find . -follow -type f -print0 2>/dev/null | xargs --null md5sum >md5sum.txt
 	popd >/dev/null || return 1
 }
-
 
 # Build the modified ISO
 build_iso() {
@@ -199,7 +193,7 @@ build_iso() {
 		-b isolinux/isolinux.bin -c isolinux/boot.cat -boot-load-size 4 \
 		-boot-info-table -no-emul-boot -eltorito-alt-boot \
 		-e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -isohybrid-apm-hfsplus \
-		-o "$TH_DST" "$TH_TEMP" 2>/dev/null || log "$ERROR" 'Building ISO failed'
+		-o "$TH_DST" "$TH_TEMP" || die 'Building ISO failed'
 	# -w is annoying, so we undo it right away
 	chmod -R +w "$TH_TEMP"
 }
@@ -214,14 +208,12 @@ DEBUG=0; INFO=1; WARN=2; ERROR=3
 readonly DEBUG INFO WARN ERROR
 export DEBUG INFO WARN ERROR
 
-
 # Check if a command (or alias/function) is available.
 command_present() {
 	command -v "$1" >/dev/null && return 0
 	alias | grep -q "\s$1=" 2>/dev/null && return 0
 	return 1
 }
-
 
 # Print a formatted (critical) message and exit with status.
 die() {
@@ -234,7 +226,6 @@ die() {
 	printf '*** CRITICAL: %s ***\n' "$1"
 	exit "$_exit_status"
 }
-
 
 # Print a formatted message if env[LOG_LEVEL] >= level.
 log() {
@@ -251,7 +242,6 @@ log() {
 	fi
 }
 
-
 # Evaluate if a given string is an integer.
 is_int() {
 	_i="$1"
@@ -263,7 +253,6 @@ is_int() {
 		(*) return 0;;
 	esac
 }
-
 
 # Evaluate if a given string is true-like (True, TrUE, true, 0).
 is_true() {
