@@ -25,7 +25,7 @@ main() {
 	apt-get install -y salt-minion || die 'Failed to install salt-minion'
 
 	# Run Highstate and Configure System
-	salt-call --local state.highstate || die 'Provisioning process (highstate) failed'
+	run_highstate || die 'Provisioning process (highstate) failed'
 
 	# Cleanup
 	lock destroy "$0"
@@ -101,6 +101,14 @@ install_dependencies() {
 		EOF
 	apt-get update
 	apt-get -y install gpg python3-pygit2 wget
+}
+
+# Run a highstate
+run_highstate() {
+	# Requiring a second highstate is often a sign of bad code. In this case,
+	# it's because some package installations cause networking hiccups.
+	salt-call --local state.highstate ||
+		salt-call --local state.highstate
 }
 
 # Create default minion configuration
