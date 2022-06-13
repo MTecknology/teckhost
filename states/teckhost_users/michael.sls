@@ -15,9 +15,63 @@ teckhost-michael-extras:
       - python3-flake8
       - texlive-latex-base
       - texlive-latex-recommended
+      - steam:i386
       - vagrant
+      # TODO
+      #- virtualgl
       {% endif %}
 
+##
+# Extra Partitioning
+##
+{% if salt.match.glob('mikepc*') %}
+
+overflow:
+  lvm.lv_present:
+    - vgname: sys
+    - size: 150G
+    - force: True
+    - require:
+      - lvm: preseed-lvm-scratch
+  blockdev.formatted:
+    - name: /dev/mapper/sys-overflow
+    - fs_type: xfs
+    - require:
+      - lvm: overflow
+  mount.mounted:
+    - name: /srv/overflow
+    - device: /dev/mapper/sys-overflow
+    - mkmnt: True
+    - fstype: xfs
+    - dump: 0
+    - pass_num: 2
+    - persist: True
+    - require:
+      - blockdev: overflow
+
+{% for link, target in [
+    ('.steam', '/srv/overflow/steam'),
+    ('.vbox', '/srv/overflow/vbox'),
+    ] %}
+{{ target }}:
+  file.directory:
+    - user: michael
+    - group: michael
+    - require:
+      - user: michael
+      - mount: overflow
+
+/home/michael/{{ link }}:
+  file.symlink:
+    - target: {{ target }}
+    - force: True
+    - user: michael
+    - group: michael
+    - require:
+      - user: michael
+{% endfor %}
+
+{% endif %}
 
 ##
 # Symlinks / Directories
@@ -71,7 +125,6 @@ teckhost-michael-extras:
     ('.dput.cf', 'repos/data/.homedir/.dput.cf'),
     ('.gbp.conf', 'repos/data/.homedir/.gbp.conf'),
     ('.gnupg/gpg.conf', 'repos/private/.gnupg/gpg.conf'),
-    ('.gnupg/secring.gpg', 'repos/private/.gnupg/secring.gpg'),
     ('.gitconfig', 'repos/data/.homedir/.gitconfig'),
     ('.pass.kdbx', 'crypt/mnt/vault/pass.kdbx'),
     ('.pbuilderrc', 'repos/data/.homedir/.pbuilderrc'),
@@ -79,9 +132,9 @@ teckhost-michael-extras:
     ('.quiltrc', 'repos/data/.homedir/.quiltrc'),
     ('.sbuildrc', 'repos/data/.homedir/.sbuildrc'),
     ('.screenrc', 'repos/data/.homedir/.screenrc'),
-    ('.ssh/config', 'repos/data/.private/.ssh/config'),
-    ('.ssh/id_ed25519', 'repos/data/.private/.ssh/id_ed25519'),
-    ('.ssh/id_ed25519.pub', 'repos/data/.private/.ssh/id_ed25519.pub'),
+    ('.ssh/config', '.crypt/mnt/vault/ssh/config'),
+    ('.ssh/id_ed25519', '.crypt/mnt/vault/ssh/id_ed25519'),
+    ('.ssh/id_ed25519.pub', '.crypt/mnt/vault/ssh/id_ed25519.pub'),
     ('.signature', 'repos/data/.homedir/.signature'),
     ('.vimrc', 'repos/data/.homedir/.vimrc'),
     ('.vim/ftdetect', 'repos/data/.homedir/.vim/ftdetect'),
@@ -105,6 +158,8 @@ teckhost-michael-extras:
 /home/michael/p:
   file.symlink:
     - target: /srv/webapps/mtpaste
+    - user: michael
+    - group: michael
     - require:
       - user: michael
 {% endif %}

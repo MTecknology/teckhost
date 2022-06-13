@@ -59,4 +59,17 @@ root:
       - group: {{ user }}
 {% endif %}
 
+{% if attr.get('teckuser', False) %}
+{% if 'init' in attr %}
+/home/{{ user }}/firstlogin:
+  file.managed:
+    - contents_pillar: users:{{ user }}:init
+    - user: {{ user }}
+    - group: {{ user }}
+    - mode: 750
+    {% if 'init_unless' in attr %}
+    - unless: {{ attr['init_unless']|json }}
+    {% endif %}
+{% endif %}{% endif %}
+
 {% endfor %}

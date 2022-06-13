@@ -6,6 +6,18 @@ running an IRC bot and debating a replacement auto-deploy tool for personal
 devices, I decided to build a solution that was flexible enough that it too
 could be left in public view and be used to manage personal and family devices.
 
+To Do
+-----
+
+- Why does salt hang with lvm.lv_absent(scratch)?
+  + Is this only within d-i?
+- Should nvidia-driver be installed?
+  + Is it worth benchmarking?
+- Option to test with "local" data instead of git[master].
+- Install virtualbox
+- Install VirtualGL?
+  + Is it really worth the headache?
+
 Deployment
 ----------
 
@@ -17,12 +29,12 @@ which can be triggered at the end of a machine installation or VPS creation.
 General Process:
 
 1. Obtain a copy of a current netinstall iso (most likely `version w/ firmware`_)
-2. Build ISO with ``iso/build_iso -i <netinst.iso> -o ~/teckhost.iso``
-3. Copy to flash drive with ``mbuffer -i ~/teckhost.iso -o /dev/sdX``
-4. Insert flash drive and select as boot device
-5. Select installation option
-6. Provide networking (wifi) info, host/domain, and salt/luks keys
-7. Wait for system to reboot (or check Alt+F4 for details)
+2. Build ISO with ``./build_iso -i <netinst.iso> -o ~/teckhost.iso``
+3. Copy ISO to flash drive (with mbuffer or dd)
+4. Insert flash drive and select as **EFI** boot device
+5. Boot to ISO and choose either LVM or Encrypted
+6. Provide network/hostname/keys
+7. Wait for completion notice; "Running preseed ..." will take a while to run
 
 Salt Bootstrap
 ~~~~~~~~~~~~~~
@@ -89,6 +101,13 @@ variables.
 
 This is a long-winded way to set d-i options from grub menu entries. There's
 probably a better way, but I haven't found it.
+
+Common Issues
+-------------
+
+- Boot menu displays standard installation menu.
+
+Current modifications are for EFI boots ONLY.
 
 Ngxbot Host
 -----------

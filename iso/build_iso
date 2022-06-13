@@ -193,7 +193,7 @@ build_iso() {
 		-b isolinux/isolinux.bin -c isolinux/boot.cat -boot-load-size 4 \
 		-boot-info-table -no-emul-boot -eltorito-alt-boot \
 		-e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -isohybrid-apm-hfsplus \
-		-o "$TH_DST" "$TH_TEMP" || die 'Building ISO failed'
+		-o "$TH_DST" "$TH_TEMP" 2>/dev/null || die 'Building ISO failed'
 	# -w is annoying, so we undo it right away
 	chmod -R +w "$TH_TEMP"
 }

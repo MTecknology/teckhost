@@ -1,9 +1,4 @@
-name: Integration Tests
-##
-# 1. Build a "teckhost" iso from upstream release,
-# 2. Install OS on VM using teckhost.iso (testing option),
-# 3. Verify we can log in using the "tester" account
-##
+name: CI/CD Tests
 
 on:
   push:
@@ -14,6 +9,32 @@ on:
       - master
 
 jobs:
+
+  ##
+  # Lint Checker(s):
+  # 1. Shellcheck
+  ##
+
+  shellcheck:
+    name:  ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # 1. Shellcheck
+      # Looks for +x files
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        env:
+          SHELLCHECK_OPTS: -e SC1091
+          # https://github.com/koalaman/shellcheck/wiki/SC1091
+
+  ##
+  # Test installed OS from built ISO:
+  # 1. Build a "teckhost" iso from upstream release,
+  # 2. Install OS on VM using teckhost.iso (testing option),
+  # 3. Verify we can log in using the "tester" account
+  ##
 
   buildiso:
     name:  Build Teckhost ISO

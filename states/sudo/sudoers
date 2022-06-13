@@ -22,6 +22,8 @@ root    ALL=(ALL:ALL) ALL
 # Allow members of group sudo to execute any command
 %sudo   ALL=(ALL:ALL) ALL
 
-# See sudoers(5) for more information on "@include" directives:
+# Allow all users access to crypto-related commands
+ALL ALL=(root:root) NOPASSWD:/usr/bin/ykchalresp,/sbin/cryptsetup,/bin/mount,/bin/umount
 
+# See sudoers(5) for more information on "@include" directives:
 #@includedir /etc/sudoers.d

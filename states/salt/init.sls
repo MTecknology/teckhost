@@ -10,6 +10,7 @@ salt-minion:
 salt-solo:
   service.dead:
     - name: salt-minion
+    - enable: False
     - require:
       - pkg: salt-minion
   cron.present:

@@ -3,12 +3,15 @@ common-desktop-apps:
     - pkgs:
       - chromium
       - gimp
+      - gmrun
       - keepassxc
+      - mesa-utils
       - simple-scan
       - terminator
       - totem
       - yubikey-personalization
       - wireshark
       - zathura
+      - zenity
       # Currently problematic packaging state
       #- virtualbox
