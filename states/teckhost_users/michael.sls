@@ -31,8 +31,6 @@ overflow:
     - vgname: sys
     - size: 150G
     - force: True
-    - require:
-      - lvm: preseed-lvm-scratch
   blockdev.formatted:
     - name: /dev/mapper/sys-overflow
     - fs_type: xfs
