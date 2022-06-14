@@ -31,11 +31,13 @@ show_usage() {
 	Options:
 	  -i [path]${t}Location of installer ISO
 	  -n [name]${t}Name of VM
+	  -s [path]${t}Path to use for screenshots
 	  -h${t}${t}Print this help text
 
 	Defaults (Environment Variables):
 	  TH_ISOPATH${t}./teckhost.iso
 	  TH_VMNAME${t}testpc1
+	  TH_SHOTS${t}""
 	EOF
 }
 
@@ -45,12 +47,14 @@ parse_options() {
 	# Default values
 	export TH_ISOPATH="${TH_ISOPATH:-./teckhost.iso}"
 	export TH_VMNAME="${TH_VMNAME:-testpc1}"
+	export TH_SHOTS="${TH_SHOTS}"
 
 	# Modify defaults
-	while getopts 'i:n:d:h' opt; do
+	while getopts 'i:n:s:h' opt; do
 		case "$opt" in
 			(i) TH_ISOPATH="$OPTARG";;
 			(n) TH_VMNAME="$OPTARG";;
+			(s) TH_SHOTS="$OPTARG";;
 			(h) show_usage; exit 0;;
 			(*) die "Invalid option: $opt"
 		esac
@@ -102,15 +106,27 @@ install_os() {
 	# Press "t" for testing install (see --hotkey=t in iso/auto-grub.cfg)
 	VBoxManage controlvm "$TH_VMNAME" keyboardputstring "t" || return 1
 
-	# Local testing took approximately 15 minutes
-	printf 'Waiting (up to 60 minutes) for install to finish ...'
-	for i in {1..60}; do
-		sleep 60
-		printf ' %s ...' "$i"
+	# Local testing took approximately 17 minutes
+	printf 'Waiting (up to 30 minutes) for install to finish ...'
+	# (10s*6)*30m == 1800s == 30m
+	for i in {1..180}; do
+		# If path is set, take a screenshot before sleeping
+		if [[ "$TH_SHOTS" ]]; then
+			VBoxManage controlvm "$TH_VMNAME" screenshotpng "$TH_SHOTS-$i.png"
+			# Switch to TTY4 around preseed invokation
+			VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3E BE B8 9D
+		fi
+		sleep 10; printf '.'
 		# The installer iso will remain mounted until the installer triggers an eject.
 		VBoxManage showvminfo "$TH_VMNAME" | grep -q "$TH_ISOPATH" || break
 	done
-	printf ' Done\n'
+	if [[ "$TH_SHOTS" ]]; then
+		# Return to TTY1 and take final screenshot
+		VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3B BB B8 9D
+		VBoxManage controlvm "$TH_VMNAME" screenshotpng "$TH_SHOTS-final.png"
+		tar -czf "$TH_SHOTS.tgz" "$TH_SHOTS"-*.png
+	fi
+	printf 'Done\n'
 
 	# If iso is still mounted, something broke (or timed out)
 	VBoxManage showvminfo "$TH_VMNAME" | grep -q "$TH_ISOPATH" && return 1

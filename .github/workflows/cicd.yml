@@ -54,6 +54,7 @@ jobs:
 
       # 1. Build a "teckhost" iso from upstream release,
       - name: Build Teckhost ISO
+        id: build_iso
         run: bash ./iso/build_iso -g iso/auto-grub.cfg -d /dev/sda -o /tmp/teckhost.iso -s /tmp/testseed.cfg
         env:
           TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
@@ -80,10 +81,19 @@ jobs:
 
       # 2. Install OS on VM using teckhost.iso (testing option),
       - name: Create VM and Install (Testing) Teckhost
+        id: install_os
         run: bash ./test/vbox_create
         env:
           TH_ISOPATH: /Users/runner/work/teckhost/teckhost/teckhost.iso
           TH_VMNAME: testpc1
+          TH_SHOTS: ./testpc1-shot
+
+      - name: (on failure) Upload Screenshots
+        if: failure() && steps.install_os.outcome == 'failure'
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots.tgz
+          path: ./testpc1-shot.tgz
 
       - name: Fix SSH Key Permissions
         run: |
@@ -92,4 +102,5 @@ jobs:
 
       # 3. Verify we can log in using the "tester" account
       - name: User (tester) Login
+        id: basic_validation
         run: ssh -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'

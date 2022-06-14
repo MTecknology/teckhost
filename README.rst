@@ -9,13 +9,9 @@ could be left in public view and be used to manage personal and family devices.
 To Do
 -----
 
-- Should nvidia-driver be installed?
-  + Is it worth benchmarking?
+- Apps to consider: virtualgl, virtualbox, nvidia-driver
 - Option to test with "local" data instead of git[master].
   + Parameter similar to "TEST" to configure a test repo/branch?
-- Install virtualbox
-- Install VirtualGL?
-  + Is it really worth the headache?
 
 Deployment
 ----------
