@@ -10,6 +10,7 @@ To Do
 -----
 
 - Apps to consider: virtualgl, virtualbox, nvidia-driver
+- Printer/Scanner
 - Option to test with "local" data instead of git[master].
   + Parameter similar to "TEST" to configure a test repo/branch?
 

@@ -13,5 +13,3 @@ common-desktop-apps:
       - wireshark
       - zathura
       - zenity
-      # Currently problematic packaging state
-      #- virtualbox

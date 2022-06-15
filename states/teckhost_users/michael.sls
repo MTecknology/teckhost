@@ -15,16 +15,17 @@ teckhost-michael-extras:
       - python3-flake8
       - texlive-latex-base
       - texlive-latex-recommended
-      - steam:i386
       - vagrant
       # TODO
+      #- steam:i386
       #- virtualgl
+      #- virtualbox
       {% endif %}
 
 ##
 # Extra Partitioning
 ##
-{% if salt.match.glob('mikepc*') %}
+{% if salt.match.glob('mikepc*') and not salt.chroot.in_chroot() %}
 
 overflow:
   lvm.lv_present:

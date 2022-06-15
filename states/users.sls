@@ -44,6 +44,7 @@ root:
       {% endif %}
     - remove_groups: False
     - require:
+      - group: {{ user }}
       {% for group in attr['groups'] %}
       - group: {{ group }}
       {% endfor %}

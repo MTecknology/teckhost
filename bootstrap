@@ -105,10 +105,12 @@ install_dependencies() {
 
 # Run a highstate
 run_highstate() {
-	# Requiring a second highstate is often a sign of bad code. In this case,
-	# it's because some package installations cause networking hiccups.
-	salt-call --local state.highstate ||
-		salt-call --local state.highstate
+	# This is an ugly hack because of some networking hiccups during some deployments.
+	if ! salt-call --local -l debug state.highstate; then
+		echo 'FIRST HIGHSTATE FAILED; Sleeping a few minutes before retrying.'
+		sleep 240
+		salt-call --local -l debug state.highstate
+	fi
 }
 
 # Create default minion configuration
