@@ -4,6 +4,7 @@
         deb http://deb.debian.org/debian/ bullseye main non-free contrib
         deb http://security.debian.org/debian-security bullseye-security main non-free contrib
         deb http://deb.debian.org/debian/ bullseye-updates main non-free contrib
+        deb http://deb.debian.org/debian/ testing main non-free contrib
         deb http://deb.debian.org/debian/ sid main non-free contrib
     - require:
       - file: /etc/apt/preferences.d/pinning
@@ -16,5 +17,9 @@
         Pin-Priority: 900
 
         Package: *
-        Pin: release n=sid
+        Pin: release n=testing
         Pin-Priority: 800
+
+        Package: *
+        Pin: release n=sid
+        Pin-Priority: 700

@@ -97,7 +97,7 @@ overflow:
   file.directory:
     - user: michael
     - group: michael
-    - mode: 700
+    - mode: "0700"
     - require:
       - user: michael
 
@@ -105,7 +105,7 @@ overflow:
   file.directory:
     - user: michael
     - group: michael
-    - mode: 700
+    - mode: "0700"
     - require:
       - user: michael
 

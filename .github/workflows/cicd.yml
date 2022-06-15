@@ -1,4 +1,12 @@
 name: CI/CD Tests
+##
+# This github workflow is used to run tests on all commits to the master branch
+# to verify all basic processes function correctly.
+#
+# Notes:
+# - virtualbox can only run on some versions (10.5, 12) of macosx runners
+# - updating the installer in mac sucks
+##
 
 on:
   push:
@@ -11,29 +19,48 @@ on:
 jobs:
 
   ##
-  # Lint Checker(s):
+  # Lint Checkers
   # 1. Shellcheck
+  # 2. SLS Lint
+  # 3. Python Lint
   ##
 
-  shellcheck:
-    name:  ShellCheck
+  lint:
+    name: Lint Checkers
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
       # 1. Shellcheck
       # Looks for +x files
-      - name: Run shellcheck
+      - name: ShellCheck
         uses: ludeeus/action-shellcheck@master
         env:
           SHELLCHECK_OPTS: -e SC1091
-          # https://github.com/koalaman/shellcheck/wiki/SC1091
+
+      # 2. SLS Lint
+      - name: SLS Lint
+        uses: roaldnefs/salt-lint-action@master
+
+      # 3. Python Lint
+      - name: Set Up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Flake8 Lint
+        uses: py-actions/flake8@v2
+        with:
+          # E501: Ignore long lines for tests
+          ignore: 'E501'
+
 
   ##
   # Test installed OS from built ISO:
   # 1. Build a "teckhost" iso from upstream release,
-  # 2. Install OS on VM using teckhost.iso (testing option),
-  # 3. Verify we can log in using the "tester" account
+  # 2a. Install OS on VM using teckhost.iso (testing option) using EFI,
+  # 2b. Install OS on VM using teckhost.iso (testing option) using BIOS,
+  # 3*. Verify we can log in using the "tester" account
+  # 4. Run unit tests against the installed EFI image
   ##
 
   buildiso:
@@ -45,31 +72,77 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install virtualbox libarchive-tools syslinux xorriso isolinux
 
-      - name: Tweak Preseed (for testing only)
-        run: |
-            sed -e '/netcfg\/dhcp_options/d' iso/preseed.cfg >/tmp/testseed.cfg
-            echo 'd-i netcfg/get_hostname string testpc1' >>/tmp/testseed.cfg
-            echo 'd-i netcfg/get_domain string domain.tld' >>/tmp/testseed.cfg
-            echo 'd-i finish-install/reboot_in_progress note' >>/tmp/testseed.cfg
+      - name: Patch Preseed
+        run: patch iso/preseed.cfg test/preseed.patch
 
       # 1. Build a "teckhost" iso from upstream release,
       - name: Build Teckhost ISO
         id: build_iso
-        run: bash ./iso/build_iso -g iso/auto-grub.cfg -d /dev/sda -o /tmp/teckhost.iso -s /tmp/testseed.cfg
+        run: cd iso; ./build_iso -o /tmp/teckhost.iso -d /dev/sda
         env:
+          # current stable
           TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
           TH_CKSUM: eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
 
-      - name: Push ISO (teckhost.iso)
+      - name: Save ISO (teckhost.iso)
         uses: actions/upload-artifact@v3
         with:
           name: teckhost.iso
           path: /tmp/teckhost.iso
 
-  testinstall:
-    name:  Testing Install
+  testinstall-efi:
+    name:  Testing Install (EFI) & Unit Tests
     needs: buildiso
-    # virtualbox can only run on some versions (10.5, 12) of macosx runners
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: pip3 install pytest-testinfra
+
+      - name: Pull ISO (teckhost.iso)
+        uses: actions/download-artifact@v3
+        with:
+          name: teckhost.iso
+
+      # 2a. Install OS on VM using teckhost.iso (testing option) using EFI,
+      - name: Create VM and Install (Testing) Teckhost
+        id: install_os
+        run: bash ./test/vbox_create
+        env:
+          TH_ISOPATH: /Users/runner/work/teckhost/teckhost/teckhost.iso
+          TH_VMNAME: testpc1
+          TH_SHOTS: ./testpc1-efi
+          TH_BOOT: efi
+
+      - name: (on failure) Upload Screenshots
+        if: failure() && steps.install_os.outcome == 'failure'
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots-efi.tar
+          path: ./testpc1-efi.tar
+
+      - name: Fix SSH Key Permissions
+        run: |
+            chmod 700 test/.ssh
+            chmod 600 test/.ssh/id_ed25519
+
+      # 3a. Verify we can log in using the "tester" account
+      - name: User (tester) Login
+        id: basic_validation
+        run: ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
+
+      # 4. Run unit tests against the installed EFI image
+      - name: User Validation Tests
+        id: validation_tests_user
+        run: python3 -m pytest --ssh-config=.ssh/config --ssh-identity-file=.ssh/id_ed25519 --hosts=ssh://tester@testpc1 --type user
+      - name: Admin Validation Tests
+        id: validation_tests_admin
+        run: python3 -m pytest --ssh-config=.ssh/config --ssh-identity-file=.ssh/id_ed25519 --hosts=ssh://testadmin@testpc1 --type admin
+
+  testinstall-bios:
+    name:  Testing Install (BIOS)
+    needs: buildiso
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
@@ -79,28 +152,29 @@ jobs:
         with:
           name: teckhost.iso
 
-      # 2. Install OS on VM using teckhost.iso (testing option),
+      # 2b. Install OS on VM using teckhost.iso (testing option) using BIOS,
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
         run: bash ./test/vbox_create
         env:
           TH_ISOPATH: /Users/runner/work/teckhost/teckhost/teckhost.iso
           TH_VMNAME: testpc1
-          TH_SHOTS: ./testpc1-shot
+          TH_SHOTS: ./testpc1-bios
+          TH_BOOT: bios
 
       - name: (on failure) Upload Screenshots
         if: failure() && steps.install_os.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
-          name: screenshots.tgz
-          path: ./testpc1-shot.tgz
+          name: screenshots-bios.tar
+          path: ./testpc1-bios.tar
 
       - name: Fix SSH Key Permissions
         run: |
             chmod 700 test/.ssh
             chmod 600 test/.ssh/id_ed25519
 
-      # 3. Verify we can log in using the "tester" account
+      # 3b. Verify we can log in using the "tester" account
       - name: User (tester) Login
         id: basic_validation
-        run: ssh -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
+        run: ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'

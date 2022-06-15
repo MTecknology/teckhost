@@ -1,11 +1,13 @@
 #!yaml|gpg
 
 users:
-  tester:
-    ugid: 4242
-    teckuser: True
+  # NOTE: This user is a clone of 'tester' with added groups
+  testadmin:
+    ugid: 4243
+    teckuser: False
     groups:
       - ssh-user
+      - sudo
     # SuperInsecurePassword4Testing
     pwd: |
         -----BEGIN PGP MESSAGE-----

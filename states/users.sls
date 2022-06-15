@@ -67,7 +67,7 @@ root:
     - contents_pillar: users:{{ user }}:init
     - user: {{ user }}
     - group: {{ user }}
-    - mode: 750
+    - mode: "0750"
     {% if 'init_unless' in attr %}
     - unless: {{ attr['init_unless']|json }}
     {% endif %}

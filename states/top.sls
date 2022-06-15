@@ -25,6 +25,5 @@ base:
     - teckhost_agent.client
 
   # Test Systems
-  # - Should use salt:pillar_root: test/pillar
   'test*':
     - ssh

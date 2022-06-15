@@ -11,8 +11,11 @@ To Do
 
 - Apps to consider: virtualgl, virtualbox, nvidia-driver
 - Printer/Scanner
-- Option to test with "local" data instead of git[master].
-  + Parameter similar to "TEST" to configure a test repo/branch?
+- Improve synopsis to explain this repo
+- find "device" option in preseed.cfg for bios
+  + add test for bios boot
+- firstlogin created on irc host (check rendered sls after test deploy)
+- grep TODO
 
 Deployment
 ----------
@@ -97,17 +100,5 @@ variables.
 
 This is a long-winded way to set d-i options from grub menu entries. There's
 probably a better way, but I haven't found it.
-
-Common Issues
--------------
-
-- Boot menu displays standard installation menu.
-
-Current modifications are for EFI boots ONLY.
-
-Ngxbot Host
------------
-
-This repository was cloned from https://github.com/ngx/ngxbot-host.
 
 .. _version w/ firmware: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/

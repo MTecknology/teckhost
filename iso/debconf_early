@@ -7,16 +7,13 @@
 # Requirements:
 # - Run inside of a debian-installer TTY
 # - Run outside of in-target
-#
-# TEST_MODE: This script will behave different if the $TEST_MODE environment
-#            variable is set. This is meant for (insecure) automated testing.
 ##
 . /usr/share/debconf/confmodule
 
 main() {
 	safety_checks
-	# If $TEST_MODE is set, then write known test values and return
-	if [ -n "$TEST_MODE" ]; then
+	# If BS_pillar_root=test/pillar, then use testing values
+	if [ -n "$BS_pillar_root" ]; then
 		printf 'AWeakLink' >/tmp/gpgpassphrase
 		db_set partman-auto/method lvm
 	else

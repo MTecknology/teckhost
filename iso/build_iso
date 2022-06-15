@@ -32,20 +32,24 @@ parse_options() {
 	export TH_SRC="${TH_SRC:-./debian-netinst.iso}"
 	export TH_DST="${TH_DST:-./teckhost.iso}"
 	export TH_SEED="${TH_SEED:-preseed.cfg}"
-	export TH_GRUB="${TH_GRUB:-./auto-grub.cfg}"
+	export TH_GRUBb="${TH_GRUBb:-./grub-bios.cfg}"
+	export TH_GRUBe="${TH_GRUBe:-./grub-efi.cfg}"
+	export THT_GRUBTEST="${THT_GRUBTEST:-TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
 	export TH_KEEP="${TH_KEEP:-False}"
 	export THT_DEVICE="${THT_DEVICE:-/dev/nvme0n1}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
 
-	while getopts 'c:i:o:s:g:kd:l:h' OPT; do
+	while getopts 'c:i:o:s:f:g:kd:b:l:h' OPT; do
 		case "$OPT" in
 			c) TH_CKSUM="$OPTARG";;
 			i) TH_SRC="$OPTARG";;
 			o) TH_DST="$OPTARG";;
 			s) TH_SEED="$OPTARG";;
-			g) TH_GRUB="$OPTARG";;
+			f) TH_GRUBb="$OPTARG";;
+			g) TH_GRUBe="$OPTARG";;
 			k) TH_KEEP=True;;
 			d) THT_DEVICE="$OPTARG";;
+			b) THT_GRUBTEST="$OPTARG";;
 			l) LOG_LEVEL="$OPTARG";;
 			h) show_help; exit 1;;
 			*) die "Unexpected argument provided: '$OPT'";;
@@ -66,8 +70,10 @@ show_help() {
 	  -i X${t}Pristine ISO to be modified (can be http)
 	  -o X${t}Output ISO
 	  -s X${t}Preseed template to embed into ISO
-	  -g X${t}Grub configuration file
+	  -f X${t}Grub (bios) configuration file
+	  -g X${t}Grub (efi) configuration file
 	  -d X${t}Installation device
+	  -b X${t}Options added to test entry in grub boot menu
 	  -l X${t}Log level (0=Debug, 1=Info, 2=Warn, 3=Error)
 	  -k${t}Keep temporary directory
 	  -h${t}Print this help text and exit
@@ -77,9 +83,11 @@ show_help() {
 	  TH_SRC${t}./debian-netinst.iso
 	  TH_DST${t}./teckhost.iso
 	  TH_SEED${t}./preseed.cfg
-	  TH_GRUB${t}./auto-grub.cfg
+	  TH_GRUBb${t}./grub-bios.cfg
+	  TH_GRUBe${t}./grub-efi.cfg
 	  TH_KEEP${t}True
 	  THT_DEVICE${t}/dev/nvme0n1
+	  THT_GRUBTEST${t}TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg
 	  LOG_LEVEL${t}1  (info)
 
 	Tell build_iso to pull a remote iso and store in /tmp/\$TH_CKSUM.iso:
@@ -100,7 +108,7 @@ safety_checks() {
 
 	# Verify provided values point at files
 	[ -f "$TH_SEED" ] || die 'Seed file not found'
-	[ -f "$TH_GRUB" ] || die 'Grub configuration not found'
+	[ -f "$TH_GRUBe" ] || die 'Grub v2 configuration not found'
 
 	# Other option checks
 	is_int "$LOG_LEVEL" || die 'Log level must be an integer (0-3)'
@@ -152,17 +160,17 @@ _get_websource() {
 # Insert an auto-only grub boot config
 inject_grubconfig() {
 	log "$DEBUG" 'Copying grub config'
-	cp "$TH_GRUB" "$TH_TEMP/boot/grub/grub.cfg"
+
+	# Copy template and update template value(s)
+	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST|" "$TH_GRUBb" >"$TH_TEMP/isolinux/menu.cfg"
+	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST|" "$TH_GRUBe" >"$TH_TEMP/boot/grub/grub.cfg"
 }
 
 # Inject a custom preseed into initrd
 inject_preseed() {
-	# Copy template and update template value(s)
 	log "$DEBUG" 'Generating preseed file'
+	# Copy template and update template value(s)
 	sed -e "s|TEMPLATE_DEVICE|$THT_DEVICE|" "$TH_SEED" > "$TH_TEMP/preseed.cfg"
-		# This was "replaced" because of issues with multi-preseed options.
-		# See preseed.cfg header for more information.
-		#-e "s|TEMPLATE_METHOD|$THT_METHOD|" \
 
 	# Not the cleanest assumption, but we error if files are missisg
 	basedir="$(dirname "$0")/../"

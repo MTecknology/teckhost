@@ -2,3 +2,5 @@
 *.vdi
 *.png
 *.tgz
+__pycache__
+.pytest_cache/

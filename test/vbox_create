@@ -10,7 +10,7 @@ main() {
 
 	# Prep
 	safety_checks
-	lock acquire "$0" || die 'Unable to acquire lock'
+	lock acquire "$0$TH_VMNAME" || die 'Unable to acquire lock'
 
 	# Flight
 	destroy_vm
@@ -32,29 +32,32 @@ show_usage() {
 	  -i [path]${t}Location of installer ISO
 	  -n [name]${t}Name of VM
 	  -s [path]${t}Path to use for screenshots
+	  -b [type]${t}Boot type (efi*|bios)
 	  -h${t}${t}Print this help text
 
 	Defaults (Environment Variables):
 	  TH_ISOPATH${t}./teckhost.iso
 	  TH_VMNAME${t}testpc1
 	  TH_SHOTS${t}""
+	  TH_BOOT${t}efi
 	EOF
 }
 
 # Parse options, prioritizing args > env > defaults
-# Exports: TH_SALTGPG
 parse_options() {
 	# Default values
 	export TH_ISOPATH="${TH_ISOPATH:-./teckhost.iso}"
 	export TH_VMNAME="${TH_VMNAME:-testpc1}"
 	export TH_SHOTS="${TH_SHOTS}"
+	export TH_BOOT="${TH_BOOT:-efi}"
 
 	# Modify defaults
-	while getopts 'i:n:s:h' opt; do
+	while getopts 'i:n:s:b:h' opt; do
 		case "$opt" in
 			(i) TH_ISOPATH="$OPTARG";;
 			(n) TH_VMNAME="$OPTARG";;
 			(s) TH_SHOTS="$OPTARG";;
+			(b) TH_BOOT="$OPTARG";;
 			(h) show_usage; exit 0;;
 			(*) die "Invalid option: $opt"
 		esac
@@ -79,7 +82,9 @@ create_vm() {
 	VBoxManage modifyvm "$TH_VMNAME" --ioapic on
 	VBoxManage modifyvm "$TH_VMNAME" --cpus 4
 	VBoxManage modifyvm "$TH_VMNAME" --memory 1024 --vram 128
-	VBoxManage modifyvm "$TH_VMNAME" --firmware efi || return 1
+	if [[ "$TH_BOOT" = 'efi' ]]; then
+		VBoxManage modifyvm "$TH_VMNAME" --firmware efi || return 1
+	fi
 
 	# Networking
 	VBoxManage modifyvm "$TH_VMNAME" --nic1 nat
@@ -105,6 +110,10 @@ install_os() {
 
 	# Press "t" for testing install (see --hotkey=t in iso/auto-grub.cfg)
 	VBoxManage controlvm "$TH_VMNAME" keyboardputstring "t" || return 1
+	if [[ "$TH_BOOT" = 'bios' ]]; then
+		# BIOS mode requires pressing enter
+		VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1C 9C
+	fi
 
 	# Local testing took approximately 17 minutes
 	printf 'Waiting (up to 30 minutes) for install to finish ...'
@@ -114,7 +123,7 @@ install_os() {
 		if [[ "$TH_SHOTS" ]]; then
 			VBoxManage controlvm "$TH_VMNAME" screenshotpng "$TH_SHOTS-$i.png"
 			# Switch to TTY4 around preseed invokation
-			VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3E BE B8 9D
+			[ "$i" = 18 ] && VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3E BE B8 9D
 		fi
 		sleep 10; printf '.'
 		# The installer iso will remain mounted until the installer triggers an eject.
@@ -124,7 +133,7 @@ install_os() {
 		# Return to TTY1 and take final screenshot
 		VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3B BB B8 9D
 		VBoxManage controlvm "$TH_VMNAME" screenshotpng "$TH_SHOTS-final.png"
-		tar -czf "$TH_SHOTS.tgz" "$TH_SHOTS"-*.png
+		tar -cf "$TH_SHOTS.tar" "$TH_SHOTS"-*.png
 	fi
 	printf 'Done\n'
 

@@ -1,0 +1,47 @@
+#!/bin/bash
+##
+# Validate Virtualbox Testing Image
+##
+
+main() {
+	echo 'This is very basic and only serves to validate the test process.'
+	run_tests || die 'Some tests failed'
+}
+
+run_tests() {
+	[[ -f '/home/tester/fuz' ]] || return 1
+	# TODO ...
+}
+##
+# Disabled Tests
+# - pgrep salt-minion:
+#   ^ Some states can't cleanly apply inside an install environment,
+#   ^ including salt-minion service
+##
+
+
+##
+# Copied from https://github.com/MTecknology/script-helpers
+##
+
+# Print a formatted (critical) message and exit with status.
+# Usage: die [exit_status] message
+die() {
+        lock destroy "$0"
+
+        # If first argument was an integer, use as exit_status
+        case "$1" in
+                (*[!0123456789]*) _exit_status=1;;
+                (*) _exit_status="$1"; shift;;
+        esac
+
+        printf '*** CRITICAL: %s ***\n' "$1"
+        exit "$_exit_status"
+}
+
+
+##
+# Kick off the script
+##
+
+main "$@"
