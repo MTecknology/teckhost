@@ -16,8 +16,8 @@ def pytest_addoption(parser):
     Add extra options to pytest command. See: ``pytest --help``
     '''
     parser.addoption(
-            '--type', choices=['user', 'admin'], default='user',
-            help='Some tests expect user-level access and some expect admin.')
+        '--type', choices=['user', 'admin'], default='user',
+        help='Some tests expect user-level access and some expect admin.')
 
 
 def pytest_configure(config):
@@ -25,11 +25,11 @@ def pytest_configure(config):
     Add extra configuration options.
     '''
     config.addinivalue_line(
-            'markers',
-            'user: mark a test to run only for standard (non-admin) users')
+        'markers',
+        'user: mark a test to run only for standard (non-admin) users')
     config.addinivalue_line(
-            'markers',
-            'admin: mark a test to run only for admin users')
+        'markers',
+        'admin: mark a test to run only for admin users')
 
 
 def pytest_collection_modifyitems(config, items):

@@ -57,8 +57,8 @@ jobs:
   ##
   # Test installed OS from built ISO:
   # 1. Build a "teckhost" iso from upstream release,
-  # 2a. Install OS on VM using teckhost.iso (testing option) using EFI,
-  # 2b. Install OS on VM using teckhost.iso (testing option) using BIOS,
+  # 2a. Install OS on VM using teckhost-sda.iso (testing option) using EFI,
+  # 2b. Install OS on VM using teckhost-sda.iso (testing option) using BIOS,
   # 3*. Verify we can log in using the "tester" account
   # 4. Run unit tests against the installed EFI image
   ##
@@ -72,23 +72,20 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install virtualbox libarchive-tools syslinux xorriso isolinux
 
-      - name: Patch Preseed
-        run: patch iso/preseed.cfg test/preseed.patch
-
       # 1. Build a "teckhost" iso from upstream release,
       - name: Build Teckhost ISO
         id: build_iso
-        run: cd iso; ./build_iso -o /tmp/teckhost.iso -d /dev/sda
+        run: make teckhost-sda.iso
         env:
           # current stable
           TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
           TH_CKSUM: eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
 
-      - name: Save ISO (teckhost.iso)
+      - name: Save ISO (teckhost-sda.iso)
         uses: actions/upload-artifact@v3
         with:
-          name: teckhost.iso
-          path: /tmp/teckhost.iso
+          name: teckhost-sda.iso
+          path: teckhost-sda.iso
 
   testinstall-efi:
     name:  Testing Install (EFI) & Unit Tests
@@ -100,19 +97,18 @@ jobs:
       - name: Install Dependencies
         run: pip3 install pytest-testinfra
 
-      - name: Pull ISO (teckhost.iso)
+      - name: Pull ISO (teckhost-sda.iso)
         uses: actions/download-artifact@v3
         with:
-          name: teckhost.iso
+          name: teckhost-sda.iso
 
-      # 2a. Install OS on VM using teckhost.iso (testing option) using EFI,
+      # 2a. Install OS on VM using teckhost-sda.iso (testing option) using EFI,
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
-        run: bash ./test/vbox_create
+        run: touch testseed.cfg; make testpc1
         env:
-          TH_ISOPATH: /Users/runner/work/teckhost/teckhost/teckhost.iso
-          TH_VMNAME: testpc1
-          TH_SHOTS: ./testpc1-efi
+          TH_ISOPATH: teckhost-sda.iso
+          TH_SHOTS: testpc1-efi
           TH_BOOT: efi
 
       - name: (on failure) Upload Screenshots
@@ -120,25 +116,19 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: screenshots-efi.tar
-          path: ./testpc1-efi.tar
-
-      - name: Fix SSH Key Permissions
-        run: |
-            chmod 700 test/.ssh
-            chmod 600 test/.ssh/id_ed25519
+          path: testpc1-efi.tar
 
       # 3a. Verify we can log in using the "tester" account
       - name: User (tester) Login
         id: basic_validation
-        run: ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
+        run: |
+            make testprep
+            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
 
       # 4. Run unit tests against the installed EFI image
-      - name: User Validation Tests
-        id: validation_tests_user
-        run: python3 -m pytest --ssh-config=.ssh/config --ssh-identity-file=.ssh/id_ed25519 --hosts=ssh://tester@testpc1 --type user
-      - name: Admin Validation Tests
-        id: validation_tests_admin
-        run: python3 -m pytest --ssh-config=.ssh/config --ssh-identity-file=.ssh/id_ed25519 --hosts=ssh://testadmin@testpc1 --type admin
+      - name: Validation Tests
+        id: validation_tests
+        run: make test
 
   testinstall-bios:
     name:  Testing Install (BIOS)
@@ -147,19 +137,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Pull ISO (teckhost.iso)
+      - name: Pull ISO (teckhost-sda.iso)
         uses: actions/download-artifact@v3
         with:
-          name: teckhost.iso
+          name: teckhost-sda.iso
 
-      # 2b. Install OS on VM using teckhost.iso (testing option) using BIOS,
+      # 2b. Install OS on VM using teckhost-sda.iso (testing option) using BIOS,
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
-        run: bash ./test/vbox_create
+        run: touch testseed.cfg; make testpc1
         env:
-          TH_ISOPATH: /Users/runner/work/teckhost/teckhost/teckhost.iso
-          TH_VMNAME: testpc1
-          TH_SHOTS: ./testpc1-bios
+          TH_ISOPATH: teckhost-sda.iso
+          TH_SHOTS: testpc1-bios
           TH_BOOT: bios
 
       - name: (on failure) Upload Screenshots
@@ -169,12 +158,9 @@ jobs:
           name: screenshots-bios.tar
           path: ./testpc1-bios.tar
 
-      - name: Fix SSH Key Permissions
-        run: |
-            chmod 700 test/.ssh
-            chmod 600 test/.ssh/id_ed25519
-
       # 3b. Verify we can log in using the "tester" account
       - name: User (tester) Login
         id: basic_validation
-        run: ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
+        run: |
+            make testprep
+            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'

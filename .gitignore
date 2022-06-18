@@ -2,5 +2,10 @@
 *.vdi
 *.png
 *.tgz
+
+# pytest
 __pycache__
 .pytest_cache/
+
+# Makefile
+testseed.cfg

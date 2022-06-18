@@ -1,39 +1,42 @@
 MTecknology Host
 ================
 
-After using a fully-public repository to deploy, configure, and back up a server
-running an IRC bot and debating a replacement auto-deploy tool for personal
-devices, I decided to build a solution that was flexible enough that it too
-could be left in public view and be used to manage personal and family devices.
+This repository is used to automate the building, testing, deployment, and
+maintenance of servers and endpoints that are managed by MTecknology.
 
 To Do
 -----
 
 - Apps to consider: virtualgl, virtualbox, nvidia-driver
 - Printer/Scanner
-- Improve synopsis to explain this repo
-- find "device" option in preseed.cfg for bios
-  + add test for bios boot
 - firstlogin created on irc host (check rendered sls after test deploy)
-- grep TODO
 
 Deployment
 ----------
 
 Salt is the primary tool for maintaining systems. Most of the deployment process
 is wrapper processes meant to get salt installed and running as quickly as
-possible. Salt installation is meant to be done using a ``bootstrap`` script
+possible. Salt installation is meant to be done using the ``bootstrap`` script
 which can be triggered at the end of a machine installation or VPS creation.
 
 General Process:
 
-1. Obtain a copy of a current netinstall iso (most likely `version w/ firmware`_)
-2. Build ISO with ``./build_iso -i <netinst.iso> -o ~/teckhost.iso``
-3. Copy ISO to flash drive (with mbuffer or dd)
-4. Insert flash drive and select as **EFI** boot device
-5. Boot to ISO and choose either LVM or Encrypted
-6. Provide network/hostname/keys
-7. Wait for completion notice; "Running preseed ..." will take a while to run
+1. Obtain netinstall iso (most likely `version w/ firmware`_)
+2. Build ISO with ``build_iso`` (Step 1 can be replaced with env vars)
+3. Copy ISO to flash drive (with ``mbuffer`` or ``dd``)
+4. Boot to installer and choose either LVM or Encrypted
+5. Provide network/hostname/keys
+
+Usage Example::
+
+    # Tell build_iso to download the current installer
+    export TH_SRC='https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso'
+    export TH_CKSUM='eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4'
+
+    # Build the modified ISO
+    make teckhost.iso
+    mbuffer -i teckhost.iso -o /dev/sda
+
 
 Salt Bootstrap
 ~~~~~~~~~~~~~~
@@ -77,28 +80,9 @@ The ``iso/build_iso`` script will unpack an existing ISO, inject preseed files,
 update grub menu options, and repack a new ISO that can be used for
 installation.
 
-Example usage::
+Usage Example::
 
     ./build_iso -i ~/downloads/debian-11.3.0-amd64-netinst.iso -o ~/teckhost.iso
     sudo mbuffer -i teckhost.iso -o /dev/sda
-
-Install Options
----------------
-
-I ran into many issues when trying to provide multiple preseed files on the same
-install media. The files could be found by passing file=preseed-foo.cfg, but
-then md5sums needed to be added to the grub config, and other issues followed.
-Embedding a preseed just works best when there's a single file named
-``preseed.cfg``.
-
-In order to provide multiple installation options while using the same
-``preseed.cfg``, environment variables (i.e. ``$TEMPLATE_METHOD``) are passed as
-grub boot arguments (see: ``auto-grub.cfg``). During ``d-i partman/early_command``,
-a special "preload" function (``debconf_preload()``) in the ``bootstrap`` script is
-run that uses ``db_set`` to update the installer environment from environment
-variables.
-
-This is a long-winded way to set d-i options from grub menu entries. There's
-probably a better way, but I haven't found it.
 
 .. _version w/ firmware: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/
