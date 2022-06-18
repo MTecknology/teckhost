@@ -13,7 +13,6 @@ main() {
 	lock acquire "$0$TH_VMNAME" || die 'Unable to acquire lock'
 
 	# Flight
-	destroy_vm
 	create_vm || die 'VM creation failed'
 	install_os || die 'OS install failed'
 
@@ -33,12 +32,16 @@ show_usage() {
 	  -n [name]${t}Name of VM
 	  -s [path]${t}Path to use for screenshots
 	  -b [type]${t}Boot type (efi*|bios)
+	  -p [port]${t}Local port for SSH connections
+	  -m [path]${t}Host directory to share with guest
 	  -h${t}${t}Print this help text
 
 	Defaults (Environment Variables):
 	  TH_ISOPATH${t}./teckhost.iso
 	  TH_VMNAME${t}testpc1
 	  TH_SHOTS${t}""
+	  TH_DEVDIR${t}""
+	  TH_PORT${t}4222
 	  TH_BOOT${t}efi
 	EOF
 }
@@ -49,14 +52,18 @@ parse_options() {
 	export TH_ISOPATH="${TH_ISOPATH:-./teckhost.iso}"
 	export TH_VMNAME="${TH_VMNAME:-testpc1}"
 	export TH_SHOTS="${TH_SHOTS}"
+	export TH_DEVDIR="${TH_DEVDIR}"
+	export TH_PORT="${TH_PORT:-4222}"
 	export TH_BOOT="${TH_BOOT:-efi}"
 
 	# Modify defaults
-	while getopts 'i:n:s:b:h' opt; do
+	while getopts 'i:n:s:d:p:b:h' opt; do
 		case "$opt" in
 			(i) TH_ISOPATH="$OPTARG";;
 			(n) TH_VMNAME="$OPTARG";;
 			(s) TH_SHOTS="$OPTARG";;
+			(d) TH_DEVDIR="$OPTARG";;
+			(p) TH_PORT="$OPTARG";;
 			(b) TH_BOOT="$OPTARG";;
 			(h) show_usage; exit 0;;
 			(*) die "Invalid option: $opt"
@@ -88,20 +95,27 @@ create_vm() {
 
 	# Networking
 	VBoxManage modifyvm "$TH_VMNAME" --nic1 nat
-	VBoxManage modifyvm "$TH_VMNAME" --natpf1 "vm-ssh,tcp,,4222,,22"
+	VBoxManage modifyvm "$TH_VMNAME" --natpf1 "vm-ssh,tcp,,$TH_PORT,,22" || return 1
 
 	# Add HD (~250G)
 	path="$(dirname "$(VBoxManage showvminfo "$TH_VMNAME" --machinereadable | grep '^CfgFile=' | cut -d'"' -f2)")"
-	VBoxManage createhd --filename "$path/disk0.vdi" --size 250000 --format VDI || return 1
+	VBoxManage createhd --filename "$path/disk0.vdi" --size 250000 --format VDI
 	VBoxManage storagectl "$TH_VMNAME" --name "SATA Controller" --add sata --controller IntelAhci
-	VBoxManage storageattach "$TH_VMNAME" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "$path/disk0.vdi"
+	VBoxManage storageattach "$TH_VMNAME" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "$path/disk0.vdi" || return 1
 
 	# Attach ISO
 	VBoxManage storagectl "$TH_VMNAME" --name "IDE Controller" --add ide --controller PIIX4
-	VBoxManage storageattach "$TH_VMNAME" --storagectl "IDE Controller" --port 1 --device 0 --type dvddrive --medium "$TH_ISOPATH"
+	VBoxManage storageattach "$TH_VMNAME" --storagectl "IDE Controller" --port 1 --device 0 --type dvddrive --medium "$TH_ISOPATH" || return 1
 
 	# Boot Order
-	VBoxManage modifyvm "$TH_VMNAME" --boot1 dvd --boot2 disk --boot3 none --boot4 none
+	VBoxManage modifyvm "$TH_VMNAME" --boot1 dvd --boot2 disk --boot3 none --boot4 none || return 1
+
+	# Share Folder
+	if [[ -n "$TH_DEVDIR" ]]; then
+		VBoxManage sharedfolder add "$TH_VMNAME" --name devdir --hostpath "$TH_DEVDIR" || return 1
+	fi
+
+	return 0
 }
 
 install_os() {
@@ -115,7 +129,7 @@ install_os() {
 		VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1C 9C
 	fi
 
-	# Local testing took approximately 17 minutes
+	# Local testing took ~17 minutes to build testpc1
 	printf 'Waiting (up to 30 minutes) for install to finish ...'
 	# (10s*6)*30m == 1800s == 30m
 	for i in {1..180}; do
@@ -142,7 +156,7 @@ install_os() {
 
 	# Verify VM is powered on
 	VBoxManage list runningvms | grep -q "$TH_VMNAME" || return 1
-	# Give VM time to boot up on slow hosts
+	# Give VM time to boot up and bring up services on slow hosts
 	sleep 60
 }
 

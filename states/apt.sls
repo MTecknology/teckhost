@@ -13,13 +13,17 @@
   file.managed:
     - contents: |
         Package: *
-        Pin: release n=bullseye
-        Pin-Priority: 900
-
-        Package: *
-        Pin: release n=testing
-        Pin-Priority: 800
-
-        Package: *
-        Pin: release n=sid
+        Pin: release a=stable
         Pin-Priority: 700
+
+        Package: *
+        Pin: release a=stable-security
+        Pin-Priority: 700
+
+        Package: *
+        Pin: release a=testing
+        Pin-Priority: 400
+
+        Package: *
+        Pin: release a=unstable
+        Pin-Priority: 300

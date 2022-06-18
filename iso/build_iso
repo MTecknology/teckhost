@@ -35,11 +35,12 @@ parse_options() {
 	export TH_GRUBb="${TH_GRUBb:-./grub-bios.cfg}"
 	export TH_GRUBe="${TH_GRUBe:-./grub-efi.cfg}"
 	export THT_GRUBTEST="${THT_GRUBTEST:-TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
+	export THT_GRUBTXTRA="${THT_GRUBTXTRA}"
 	export TH_KEEP="${TH_KEEP:-False}"
 	export THT_DEVICE="${THT_DEVICE:-/dev/nvme0n1}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
 
-	while getopts 'c:i:o:s:f:g:kd:b:l:h' OPT; do
+	while getopts 'c:i:o:s:f:g:kd:b:x:l:h' OPT; do
 		case "$OPT" in
 			c) TH_CKSUM="$OPTARG";;
 			i) TH_SRC="$OPTARG";;
@@ -50,6 +51,7 @@ parse_options() {
 			k) TH_KEEP=True;;
 			d) THT_DEVICE="$OPTARG";;
 			b) THT_GRUBTEST="$OPTARG";;
+			x) THT_GRUBTXTRA="$OPTARG";;
 			l) LOG_LEVEL="$OPTARG";;
 			h) show_help; exit 1;;
 			*) die "Unexpected argument provided: '$OPT'";;
@@ -73,7 +75,8 @@ show_help() {
 	  -f X${t}Grub (bios) configuration file
 	  -g X${t}Grub (efi) configuration file
 	  -d X${t}Installation device
-	  -b X${t}Options added to test entry in grub boot menu
+	  -b X${t}Options added to test entry in grub boot menu (replace)
+	  -x X${t}Additional options added to test entry (append)
 	  -l X${t}Log level (0=Debug, 1=Info, 2=Warn, 3=Error)
 	  -k${t}Keep temporary directory
 	  -h${t}Print this help text and exit
@@ -88,6 +91,7 @@ show_help() {
 	  TH_KEEP${t}True
 	  THT_DEVICE${t}/dev/nvme0n1
 	  THT_GRUBTEST${t}TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg
+	  THT_GRUBTXTRA${t}""
 	  LOG_LEVEL${t}1  (info)
 
 	Tell build_iso to pull a remote iso and store in /tmp/\$TH_CKSUM.iso:
@@ -162,8 +166,8 @@ inject_grubconfig() {
 	log "$DEBUG" 'Copying grub config'
 
 	# Copy template and update template value(s)
-	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST|" "$TH_GRUBb" >"$TH_TEMP/isolinux/menu.cfg"
-	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST|" "$TH_GRUBe" >"$TH_TEMP/boot/grub/grub.cfg"
+	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST $THT_GRUBTXTRA|" "$TH_GRUBb" >"$TH_TEMP/isolinux/menu.cfg"
+	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST $THT_GRUBTXTRA|" "$TH_GRUBe" >"$TH_TEMP/boot/grub/grub.cfg"
 }
 
 # Inject a custom preseed into initrd

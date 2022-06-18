@@ -1,20 +1,10 @@
-name: CI/CD Tests
+name: CI/CD
 ##
 # This github workflow is used to run tests on all commits to the master branch
 # to verify all basic processes function correctly.
-#
-# Notes:
-# - virtualbox can only run on some versions (10.5, 12) of macosx runners
-# - updating the installer in mac sucks
 ##
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+on: [push, pull_request]
 
 jobs:
 
@@ -56,11 +46,10 @@ jobs:
 
   ##
   # Test installed OS from built ISO:
-  # 1. Build a "teckhost" iso from upstream release,
-  # 2a. Install OS on VM using teckhost-sda.iso (testing option) using EFI,
-  # 2b. Install OS on VM using teckhost-sda.iso (testing option) using BIOS,
-  # 3*. Verify we can log in using the "tester" account
-  # 4. Run unit tests against the installed EFI image
+  # 1. Build a "teckhost" iso from upstream release
+  # 2. Install OS on VM using teckhost-sda.iso (testing option)
+  # 3. Verify we can log in using the "tester" account
+  # 4. Run validation tests against the installed OS
   ##
 
   buildiso:
@@ -72,7 +61,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install virtualbox libarchive-tools syslinux xorriso isolinux
 
-      # 1. Build a "teckhost" iso from upstream release,
+      # 1. Build a "teckhost" iso from upstream release
       - name: Build Teckhost ISO
         id: build_iso
         run: make teckhost-sda.iso
@@ -87,9 +76,13 @@ jobs:
           name: teckhost-sda.iso
           path: teckhost-sda.iso
 
-  testinstall-efi:
-    name:  Testing Install (EFI) & Unit Tests
+  testinstall:
+    strategy:
+      matrix:
+        boot: [efi, bios]
+    name: "[${{ matrix.boot }}] Install and Validate"
     needs: buildiso
+    # virtualbox can only run on some versions (10.5, 12) of macosx runners
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
@@ -102,65 +95,50 @@ jobs:
         with:
           name: teckhost-sda.iso
 
-      # 2a. Install OS on VM using teckhost-sda.iso (testing option) using EFI,
+      # 2. Install OS on VM using teckhost-sda.iso (testing option)
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
         run: touch testseed.cfg; make testpc1
         env:
           TH_ISOPATH: teckhost-sda.iso
-          TH_SHOTS: testpc1-efi
-          TH_BOOT: efi
+          TH_SHOTS: testpc1-${{ matrix.boot }}
+          TH_BOOT: ${{ matrix.boot }}
 
       - name: (on failure) Upload Screenshots
         if: failure() && steps.install_os.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
-          name: screenshots-efi.tar
-          path: testpc1-efi.tar
+          name: testpc1-${{ matrix.boot }}_screenshots.tar
+          path: testpc1-${{ matrix.boot }}.tar
 
-      # 3a. Verify we can log in using the "tester" account
+      # 3. Verify we can log in using the "tester" account
       - name: User (tester) Login
         id: basic_validation
         run: |
             make testprep
             ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
 
-      # 4. Run unit tests against the installed EFI image
+      # 4. Run validation tests against the installed OS
       - name: Validation Tests
         id: validation_tests
         run: make test
 
-  testinstall-bios:
-    name:  Testing Install (BIOS)
-    needs: buildiso
-    runs-on: macos-12
+
+  ##
+  # Merge develop into master after tests pass
+  ##
+
+  deploy:
+    # CICD: develop->master
+    name: Release Deployment
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [lint, testinstall]
     steps:
       - uses: actions/checkout@v3
-
-      - name: Pull ISO (teckhost-sda.iso)
-        uses: actions/download-artifact@v3
+      - uses: everlytic/branch-merge@1.1.2
         with:
-          name: teckhost-sda.iso
-
-      # 2b. Install OS on VM using teckhost-sda.iso (testing option) using BIOS,
-      - name: Create VM and Install (Testing) Teckhost
-        id: install_os
-        run: touch testseed.cfg; make testpc1
-        env:
-          TH_ISOPATH: teckhost-sda.iso
-          TH_SHOTS: testpc1-bios
-          TH_BOOT: bios
-
-      - name: (on failure) Upload Screenshots
-        if: failure() && steps.install_os.outcome == 'failure'
-        uses: actions/upload-artifact@v3
-        with:
-          name: screenshots-bios.tar
-          path: ./testpc1-bios.tar
-
-      # 3b. Verify we can log in using the "tester" account
-      - name: User (tester) Login
-        id: basic_validation
-        run: |
-            make testprep
-            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_ref: ${{ github.ref }}
+          target_branch: 'master'
+          commit_message_template: '[Automated] Merged {source_ref} into master after CICD-Pass'

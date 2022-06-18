@@ -68,8 +68,11 @@ root:
     - user: {{ user }}
     - group: {{ user }}
     - mode: "0750"
-    {% if 'init_unless' in attr %}
-    - unless: {{ attr['init_unless']|json }}
+    {% if 'init_installif' in attr %}
+    - onlyif: {{ attr['init_installif']|json }}
+    {% endif %}
+    {% if 'init_installunless' in attr %}
+    - unless: {{ attr['init_installunless']|json }}
     {% endif %}
 {% endif %}{% endif %}
 

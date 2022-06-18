@@ -112,16 +112,20 @@ configure_apt() {
 		EOF
 	cat >/etc/apt/preferences.d/pinning <<-EOF
 		Package: *
-		Pin: release n=bullseye
-		Pin-Priority: 900
-
-		Package: *
-		Pin: release n=testing
-		Pin-Priority: 800
-
-		Package: *
-		Pin: release n=sid
+		Pin: release a=stable
 		Pin-Priority: 700
+
+		Package: *
+		Pin: release a=stable-security
+		Pin-Priority: 700
+
+		Package: *
+		Pin: release a=testing
+		Pin-Priority: 400
+
+		Package: *
+		Pin: release a=unstable
+		Pin-Priority: 300
 		EOF
 	apt-get update
 }
@@ -132,7 +136,8 @@ run_highstate() {
 	if ! salt-call --local -l debug state.highstate; then
 		log "$WARN" 'FIRST HIGHSTATE FAILED; Sleeping a few minutes before retrying.'
 		sleep 240
-		salt-call --local -l debug state.highstate
+		# Less verbosity to help with information gathering
+		salt-call --local --state-output=mixed --state-verbose=False state.highstate
 	fi
 }
 
@@ -150,6 +155,7 @@ configure_minion() {
 	# Write temporary config file; Salt will overwrite using (bootstrap.conf) grains.
 	cat >/etc/salt/minion.d/saltsolo.conf <<-EOF
 		file_client: local
+		top_file_merging_strategy: same
 		fileserver_backend:
 		  - gitfs
 		gitfs_remotes:

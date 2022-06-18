@@ -4,13 +4,6 @@ MTecknology Host
 This repository is used to automate the building, testing, deployment, and
 maintenance of servers and endpoints that are managed by MTecknology.
 
-To Do
------
-
-- Apps to consider: virtualgl, virtualbox, nvidia-driver
-- Printer/Scanner
-- firstlogin created on irc host (check rendered sls after test deploy)
-
 Deployment
 ----------
 
@@ -36,7 +29,6 @@ Usage Example::
     # Build the modified ISO
     make teckhost.iso
     mbuffer -i teckhost.iso -o /dev/sda
-
 
 Salt Bootstrap
 ~~~~~~~~~~~~~~
@@ -67,7 +59,6 @@ To encrypt a password suitable for usage in pillar data::
 
     # Pipe the secret data through gpg
     echo -n 'S3cr!t' | gpg --trust-model always -ear salt@teckhost.lustfield.net
-
 
 Preseed
 -------
