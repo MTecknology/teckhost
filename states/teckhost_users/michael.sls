@@ -16,10 +16,7 @@ teckhost-michael-extras:
       - texlive-latex-base
       - texlive-latex-recommended
       - vagrant
-      # TODO
-      #- steam:i386
-      #- virtualgl
-      #- virtualbox
+      #- virtualbox # TODO: This is pending unstable->stable
       {% endif %}
 
 ##
