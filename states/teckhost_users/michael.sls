@@ -110,6 +110,7 @@ overflow:
     ('.config/autostart', 'repos/data/.homedir/.config/autostart'),
     ('.config/autostart-scripts', 'repos/data/.homedir/.config/autostart-scripts/'),
     ('.config/compiz', 'repos/data/.homedir/.config/compiz'),
+    ('.config/keepassxc', 'repos/data/.homedir/.config/keepassxc/'),
     ('.config/mate-menu', 'repos/data/.homedir/.config/mate-menu/'),
     ('.config/openbox', 'repos/data/.homedir/.config/openbox/'),
     ('.config/terminator', 'repos/data/.homedir/.config/terminator/'),
