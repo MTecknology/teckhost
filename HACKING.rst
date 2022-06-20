@@ -10,8 +10,8 @@ To Do
 -----
 
 - Add automated "releases" for teckhost.iso; tag??  teckhost-1.0
+  * Make sure tag only applies to master
 - Finish getting local file system testing working
-- grep TODO . -R
 
 .. _branches:
 
@@ -19,9 +19,9 @@ Branches
 --------
 
 - master: Production deployment
-- develop: Pre-deployment
+- deploy: Pre-deployment
 
-All changes are pushed to ``develop`` and then promoted to ``master`` after
+All changes are pushed to ``deploy`` and then promoted to ``master`` after
 the CI/CD (build+install+validate) pipeline tests pass. The ``master`` branch
 should be protected to prevent unexpected changes.
 

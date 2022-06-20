@@ -17,6 +17,7 @@ jobs:
 
   lint:
     name: Lint Checkers
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -53,7 +54,8 @@ jobs:
   ##
 
   buildiso:
-    name:  Build Teckhost ISO
+    name: Build Teckhost ISO
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -77,11 +79,10 @@ jobs:
           path: teckhost-sda.iso
 
   testinstall:
-    strategy:
-      matrix:
-        boot: [efi, bios]
     name: "[${{ matrix.boot }}] Install and Validate"
     needs: buildiso
+
+    strategy: {"matrix": {"boot": ["efi", "bios"]} }
     # virtualbox can only run on some versions (10.5, 12) of macosx runners
     runs-on: macos-12
     steps:
@@ -125,20 +126,35 @@ jobs:
 
 
   ##
-  # Merge develop into master after tests pass
+  # Merge deploy into master after tests pass
   ##
 
   deploy:
-    # CICD: develop->master
-    name: Release Deployment
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
+    name: Deploy Changes
     needs: [lint, testinstall]
+    if: github.ref == 'refs/heads/deploy'
+
+    permissions:
+      pull-requests: write
+      contents: write
+
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: everlytic/branch-merge@1.1.2
+      - uses: actions/checkout@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_ref: ${{ github.ref }}
-          target_branch: 'master'
-          commit_message_template: '[Automated] Merged {source_ref} into master after CICD-Pass'
+          fetch-depth: '0'
+          ref: deploy
+
+      # CICD: deploy->master
+      - name: Go Live!
+        uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
+        with:
+          branchtomerge: ${{ github.sha }}
+          branch: master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#git config --local user.email "actions@github.com"
+#git config --local user.name "Github Actions"
+#git config --local --add safe.directory .
+#git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merged ${{ github.sha }} into master"
