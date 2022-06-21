@@ -6,11 +6,6 @@ Teckhost Hacking
 1. Read the comments.
 2. Write comments.
 
-To Do
------
-
-- Finish getting local file system testing working
-
 .. _branches:
 
 Branches
