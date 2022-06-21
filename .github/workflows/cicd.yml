@@ -44,7 +44,6 @@ jobs:
           # E501: Ignore long lines for tests
           ignore: 'E501'
 
-
   ##
   # Test installed OS from built ISO:
   # 1. Build a "teckhost" iso from upstream release
@@ -124,7 +123,6 @@ jobs:
         id: validation_tests
         run: make test
 
-
   ##
   # Merge deploy into master after tests pass
   ##
@@ -153,8 +151,3 @@ jobs:
           branch: master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#git config --local user.email "actions@github.com"
-#git config --local user.name "Github Actions"
-#git config --local --add safe.directory .
-#git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merged ${{ github.sha }} into master"

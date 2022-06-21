@@ -9,8 +9,6 @@ Teckhost Hacking
 To Do
 -----
 
-- Add automated "releases" for teckhost.iso; tag??  teckhost-1.0
-  * Make sure tag only applies to master
 - Finish getting local file system testing working
 
 .. _branches:

@@ -1,0 +1,95 @@
+name: Release
+##
+# Although systems are managed through a CI/CD process, it can be helpful to
+# periodically "make a release" (snapshot) of the assets, in order to reduce
+# some repetitive strain injury (re-installing deps to rebuild assets).
+##
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+
+jobs:
+
+  ##
+  # Release Workflow
+  # 0. When master branch is tagged with "v*"
+  # 1. Build "production" ISO (teckhost.iso)
+  # 2. Begin release
+  # 3. Upload assets to release
+  # 4. Finalize release
+  ##
+
+  release:
+    name: Teckhost Release
+    # Verify it is a merge commit
+    #if: TODO
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Build Dependencies
+        run: sudo apt-get install libarchive-tools syslinux xorriso isolinux
+
+      - name: Get Tag Name
+        id: tag_name
+        uses: actions/github-script@0.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            return context.payload.ref.replace(/\/refs\/tags\/v/, '');
+
+      # 1. Build "production" ISO (teckhost.iso)
+      - name: Build Teckhost ISO
+        id: build_iso
+        run: make teckhost.iso
+        env:
+          # current stable
+          TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
+          TH_CKSUM: eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
+
+      # 2. Begin release
+      - name: Draft Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag.outputs.result }}
+          release_name: Teckhost ${{ steps.tag_name.outputs.result }}
+          draft: true
+          prerelease: false
+
+      # 3. Upload assets to release
+      - name: Upload ISO (teckhost.iso)
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: teckhost.iso
+          asset_name: teckhost.iso
+          asset_content_type: application/octet-stream
+
+      # 3. Upload assets to release
+      - name: Upload Bootstrap
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: bootstrap
+          asset_name: bootstrap
+          asset_content_type: text/plain
+
+      # 4. Finalize release
+      - name: Publish Release
+        uses: actions/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
