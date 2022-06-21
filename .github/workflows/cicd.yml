@@ -138,16 +138,28 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
-          ref: deploy
+          ref: ${{ github.sha }}
+
+      - name: Set Git Config
+        run: |
+            git config --local user.email "actions@github.com"
+            git config --local user.name "Github Actions"
+            git config --local --add safe.directory .
+            git config --local http.sslVerify false
+
+      - name: Refresh Target
+        run: |
+            git checkout master
+            git pull
+
+      - name: Merge Changes
+        run: |
+            git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merged ${{ github.sha }} into master"
 
       # CICD: deploy->master
       - name: Go Live!
-        uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
-        with:
-          branchtomerge: ${{ github.sha }}
-          branch: master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            git push origin master
