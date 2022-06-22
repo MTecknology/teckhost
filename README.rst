@@ -1,3 +1,11 @@
+.. figure:: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml/badge.svg?branch=deploy
+    :target: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml
+    :alt: CI/CD
+
+.. figure:: https://img.shields.io/github/issues/MTecknology/teckhost.svg
+    :target: https://github.com/MTecknology/teckhost/issues
+    :alt: Github Issues
+
 .. _teckhost:
 
 MTecknology Host
