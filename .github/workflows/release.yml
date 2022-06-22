@@ -32,17 +32,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Build Dependencies
-        run: sudo apt-get install libarchive-tools syslinux xorriso isolinux
-
-      - name: Get Tag Name
-        id: tag_name
-        uses: actions/github-script@0.2.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-              return context.payload.ref.replace(/\/refs\/tags\/v/, '');
-
       # 1. Pre-Release Checks
       - name: Pre-Release Checks
         run: |
@@ -51,19 +40,17 @@ jobs:
             # Check: Commit author is GA
             git show -s --format='%ae' "${{ github.sha }}" || exit 9
 
-      # 2a. Build "Production" ISO (teckhost.iso)
+      - name: Install Build Dependencies
+        run: sudo apt-get install libarchive-tools syslinux xorriso isolinux
+
+      # 2. Build "Production" ISO (teckhost.iso)
       - name: Build Teckhost ISO
         id: build_iso
         run: make teckhost.iso
         env:
-          TH_DST: ./teckhost-${{ steps.tag_name.outputs.result }}.iso
           # current stable
           TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
           TH_CKSUM: eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
-
-      # 2b. Add version tag to bootstrap script
-      - name: Rename Bootstrap
-        run: mv bootstrap bootstrap-${{ steps.tag_name.outputs.result }}
 
       # 3. Publish Release w/ Artifacts
       - name: Create Release
@@ -71,5 +58,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            bootstrap*
-            teckhost*.iso
+            bootstrap
+            teckhost.iso
