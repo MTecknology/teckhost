@@ -27,3 +27,7 @@ base:
   # Test Systems
   'test*':
     - ssh
+
+  # Dev Systems
+  'dev*':
+    - ssh

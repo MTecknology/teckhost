@@ -34,16 +34,16 @@ salt-solo:
 ##
 # Mount devdir (Development Directory) for local development
 ##
-
-#TODO :: BREAKPOINT :: First, get the VM to boot to this point, then move on ...
-#vbox-extras:
-#  pkg.installed:
-#    - name: linux-headers-$(uname -r) vbox-add-iso #FIXME
-#  cmd.wait:
-#    unpack; build; load ??
-#  modprob.present: #FIXME
-#    - name: ??
-#
-#devdir:
-#  #mount -t vboxsf [-o OPTIONS] sharename mountpoint
+salt-devdir:
+  pkg.installed:
+    - names:
+      - build-essential
+      - virtualbox-guest-dkms
+      - virtualbox-guest-utils
+  mount.mounted:
+    - name: {{ salt.grains.get('bootstrap:devdir') }}
+    - device: devdir
+    - fstype: vboxsf
+    - require:
+      - pkg: salt-devdir
 {% endif %}
