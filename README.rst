@@ -36,6 +36,10 @@ Bare Metal:
 3. Boot to installer and choose either LVM or Encrypted
 4. Provide network/hostname/keys
 
+.. figure:: .github/misc/teckhost_pipeline.png
+    :align: center
+    :alt: teckhost-pipeline
+
 .. _Download: https://github.com/MTecknology/teckhost/releases
 
 .. _bootstrap:

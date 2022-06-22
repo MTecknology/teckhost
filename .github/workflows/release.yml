@@ -14,10 +14,9 @@ jobs:
 
   ##
   # Release Workflow:
-  # 1.  Pre-Release Checks
-  # 2a. Build "Production" ISO (teckhost.iso)
-  # 2b. Add version tag to bootstrap script
-  # 3.  Publish Release w/ Artifacts
+  # 1. Pre-Release Checks
+  # 2. Build "Production" ISO (teckhost.iso)
+  # 3. Publish Release w/ Artifacts
   ##
 
   release:
@@ -34,11 +33,7 @@ jobs:
 
       # 1. Pre-Release Checks
       - name: Pre-Release Checks
-        run: |
-            # Check: Commit message mentions CICD-Pass
-            git cat-file -p "${{ github.sha }}" | grep -q 'CICD-Pass' || exit 2
-            # Check: Commit author is GA
-            git show -s --format='%ae' "${{ github.sha }}" || exit 9
+        run: echo "need to create some pre-release checks ..."
 
       - name: Install Build Dependencies
         run: sudo apt-get install libarchive-tools syslinux xorriso isolinux
