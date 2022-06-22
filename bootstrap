@@ -137,7 +137,7 @@ run_highstate() {
 		log "$WARN" 'FIRST HIGHSTATE FAILED; Sleeping a few minutes before retrying.'
 		sleep 240
 		# Less verbosity to help with information gathering
-		salt-call --local --state-output=mixed --state-verbose=False state.highstate
+		salt-call --local -l quiet --state-verbose=false state.highstate
 	fi
 }
 

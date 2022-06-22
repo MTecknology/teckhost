@@ -11,8 +11,8 @@ Teckhost Hacking
 Branches
 --------
 
-- master: Production deployment
-- deploy: Pre-deployment
+- master: Production Deployment
+- deploy: CI/CD Pipeline
 
 All changes are pushed to ``deploy`` and then promoted to ``master`` after
 the CI/CD (build+install+validate) pipeline tests pass. The ``master`` branch
@@ -23,7 +23,7 @@ should be protected to prevent unexpected changes.
 devdir
 ------
 
-The ``devdir`` is a salt grain that is provides ``salt-minion`` a local file
+The ``devdir`` is a salt grain that provides ``salt-minion`` a local file
 system path where states should be found--instead of git. This allows other
 scripts to intercept that value and ensure the directory is shared to the VM.
 
@@ -49,16 +49,6 @@ General Process:
 3. Copy ISO to flash drive (with ``mbuffer`` or ``dd``)
 4. Boot to installer and choose either LVM or Encrypted
 5. Provide network/hostname/keys
-
-Usage Example::
-
-    # Tell build_iso to download the current installer
-    export TH_SRC='https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso'
-    export TH_CKSUM='eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4'
-
-    # Build the modified ISO
-    make teckhost.iso
-    mbuffer -i teckhost.iso -o /dev/sda
 
 .. _build-iso:
 

@@ -24,7 +24,7 @@ teckhost-sda.iso: testseed.cfg
 # Intended for local developmnt
 teckhost-local.iso: testseed.cfg
 	./iso/build_iso -s testseed.cfg -o teckhost-local.iso \
-	    -d /dev/sda -x "hostname=devpc1 BS_devdir=$(WORKSPACE)" \
+	    -d /dev/sda -x "hostname=devpc1 BS_devdir=/srv" \
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
 ##
