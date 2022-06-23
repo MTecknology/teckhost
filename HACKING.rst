@@ -6,6 +6,21 @@ Teckhost Hacking
 1. Read the comments.
 2. Write comments.
 
+.. _todo:
+
+To Do
+-----
+
+Future Cleanup:
+
+- After virtualbox reaches testing and/or stable
+- After salt>=3004.0 reaches stable
+
+Roadmap/Goldplating:
+
+- Move "teckhost_agent" to salt states
+- Support devices other than nvme and sda
+
 .. _branches:
 
 Branches
@@ -15,8 +30,8 @@ Branches
 - deploy: CI/CD Pipeline
 
 All changes are pushed to ``deploy`` and then promoted to ``master`` after
-the CI/CD (build+install+validate) pipeline tests pass. The ``master`` branch
-should be protected to prevent unexpected changes.
+the CI/CD (build+install+validate) tests pass. The ``master`` branch should be
+protected to prevent unexpected changes.
 
 .. _devdir:
 
@@ -24,13 +39,11 @@ devdir
 ------
 
 The ``devdir`` is a salt grain that provides ``salt-minion`` a local file
-system path where states should be found--instead of git. This allows other
-scripts to intercept that value and ensure the directory is shared to the VM.
+system path where states should be found--instead of git.
 
-1. Makefile builds an iso with ``build_iso -x BS_devdir``
-2. Makefile deploys a test VM and configures the local mount
-3. Bootstrap writes ``devdir`` value to salt grains
-4. Bootstrap runs a ``highstate`` and updates the salt configuration file
+.. note::
+    The ``devdir`` variable will have different values in different scripts.
+    1) /srv/salt inside the vm; 2) $PWD outside the vm
 
 .. _Deployment:
 
@@ -64,19 +77,26 @@ Usage Example::
     ./build_iso -i ~/downloads/debian-11.3.0-amd64-netinst.iso -o ~/teckhost.iso
     sudo mbuffer -i teckhost.iso -o /dev/sda
 
-More information is available in the `Preseed <preseed>`_ section.
-
-.. _preseed:
-
 Preseed
--------
+~~~~~~~
 
-The intended use of the ``bootstrap`` script is at the end of a "standard" OS
-install. This can either be done by logging into an installed system to execute
-as root, or by the installer itself (via preseed).
+In order to provide as few prompts as possible, the default ``teckhost.iso``
+includes a preseed file that makes assumptions about hardware (nvme, >100G).
+This preseed file has two primary goals: 1) get minimum information (wifi,
+hostname, decryption key(s)) from the user, and 2) use :ref:`Salt Bootstrap
+<bootstrap>` to run a ``highstate``.
 
-The ``iso/build_iso`` script will unpack an existing ISO, inject preseed files,
-update grub menu options, and repack a new ISO that can be used for
-installation.
+Makefile
+--------
+
+Key Targets:
+
+- ``make teckhost.iso``
+- ``make teckhost-sda.iso``
+- ``make test``
+- ``make devpc1``
+- ``make devpc1-ssh``
+- ``make devpc1-root``
+- ``make clean``
 
 .. _version w/ firmware: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/
