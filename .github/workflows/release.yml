@@ -38,12 +38,10 @@ jobs:
       - name: Install Build Dependencies
         run: sudo apt-get install libarchive-tools syslinux xorriso isolinux
 
-      # 2. Build "Production" ISO (teckhost.iso)
+      # 2. Build "Production" ISO (teckhost*.iso)
       - name: Build Teckhost ISO
         id: build_iso
-        run:
-          make teckhost.iso teckhost-sda.iso
-          mv teckhost.iso teckhost-nvme.iso
+        run: make teckhost.iso teckhost-sda.iso teckhost-nvme0n1.iso
         env:
           # current stable
           TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
@@ -55,5 +53,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            bootstrap
-            teckhost*.iso
+              bootstrap
+              teckhost*.iso
