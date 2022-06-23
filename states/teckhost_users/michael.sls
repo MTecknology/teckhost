@@ -173,3 +173,17 @@ homedata:
     - user: michael
     - require:
       - file: /home/michael/repos
+
+##
+# Misc.
+##
+
+/etc/cups/printers.conf:
+  file.managed:
+    - contents_pillar: teckhost_extra:printers_config
+    - user: root
+    - group: lp
+    - mode: 0600
+    - unless:
+      - fun: file.file_exists
+      - path: /etc/cups/printers.conf

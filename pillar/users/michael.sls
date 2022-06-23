@@ -84,3 +84,32 @@ users:
     init_installunless:
       - fun: file.directory_exists
         path: /home/michael/repos/data/.private
+
+# Extra stuff for my laptops
+teckhost_extra:
+  printers_config: |
+      -----BEGIN PGP MESSAGE-----
+
+      hQIMA7+DShJS+9zMAQ/8Cg+/+Vg7OaTvfM+QX0DcKMc8bLaqktJ0Tr+v41UAYOA4
+      9iq8kC8vhAxvXPIoivWliSLY/+wJmVw8NPvQ9UCge21g7h2PhQz6nNOgnMG6N6Wf
+      AC5JXLM1uzhXVunDfcQLb3GHM3x2WGFRTYq2IQqm1Y8ZIAhoWLKoeHOLjJafSrJy
+      pnWQ9v73Naqkh3uXC87oajnMzuH+k9xSbmJ9ZBS2pCzvgZGmeIFEqUY63UbX1jTK
+      GuBrpqTngvqG8sY3K65cm5mlWw5YfZGdD11zTy5mmJFWu084gbULIGT4238GeqgZ
+      gn/msChUxDs9EVc6g63TkOAfIeqRzAw7zNWZqus/ecK1fcf+1IVjrlSl9kUcKDVr
+      RO1Jv3vsHvX1DmYEipbzj6SriZexK41OFY49nBm2pTrBikmcjzBa+OF7uttE9by+
+      7t1CctZnBs/D1tf+ea6dAPqbyvVqXpImEQpDdLB7CWcDd+R0WQS/A1iETSZi2eAz
+      AxQHFWLhoIC5Oi54evxo608J9HVyF9fu+/mciP6rptyfUSpv9mEj/jthwSUz14f0
+      RxTE7v9M81S+8eTyJTDJE+AQXMbwC1hfZEjQb7D0NstN4bCM34rx/NvPlfiU8AvW
+      jCG9OSFTr3KYu9cpGt+9cTovmQtYByaZKzFzh0TxlRhgGS6hrmyLXywnsP0YGPTS
+      wR0Bfc47BoY1pWy/TMJBBmbMZJpbU0dJNp6+jvt6jqmfPCoDvYSzK9S4ASwYaiAd
+      iUM8LHRiP0rCPK+JzgyfRZp/lUvFiSG2mNX5aqcA/RY04Tg1YjMuXqOZYN0nDun5
+      b9ObrZi59dI5aCwYp0Im2wBdz3zhaUpngO3kpUJYSFaaY1DeCpRHqccpqJGUAUJu
+      LkG9lQ2LioKQkI0PO9GvgK9bkoUNpoWtjdSxTLayCTGFbhtkAdrA0G2uGnJYMtvh
+      A+ikuYok0MNDDFPTENF894hFSGahvY65vcPj0I6psPMVfgcomG/4FWJyPW+j2WqJ
+      A1hknpyFgHVO6tE4FltJJGsbwd+30NUOB6kl6/QTF/q/vU8cXuPUFD0nmPTXFxbF
+      zWEL+6eqlH6gp+T+rWienPqoxh81Ejj5NaKZYusinEeEZCEvFG/cY2/r8rMxjxse
+      A+R34pZ8yEzfrJ2FZKO6MS871+FiWyMfNgyxBsy47LGSchNvSchjtR5+PenQOMda
+      LGw9vmoPkfzW1nSWHS4u9Q0tTgfQzyXYmyW/woQdxYlGJzqjtHfm7n2+R9ANhDCx
+      yRm6CrHdk7wvSBAztJgpoE73x+Fh8NBIEj6mH5VhLMvkNxjkvRReyX1UKyX3rDY=
+      =D4np
+      -----END PGP MESSAGE-----
