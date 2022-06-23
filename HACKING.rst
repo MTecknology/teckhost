@@ -38,12 +38,16 @@ Download and cache "latest" ``debian-netinst.iso``::
 Build the Default ISO::
 
     make teckhost.iso
+    OR
+    make teckhost-sda.iso
+    OR
+    make teckhost-nvme0.iso
 
 Run tests::
 
     make test
 
-Build and log into dev box (requires virtualbox)::
+Build and log in to dev box (requires virtualbox)::
 
     make devpc1
     make devpc1-ssh
