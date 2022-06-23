@@ -41,7 +41,7 @@ Build the Default ISO::
     OR
     make teckhost-sda.iso
     OR
-    make teckhost-nvme0.iso
+    make teckhost-nvme0n1.iso
 
 Run tests::
 
