@@ -41,7 +41,9 @@ jobs:
       # 2. Build "Production" ISO (teckhost.iso)
       - name: Build Teckhost ISO
         id: build_iso
-        run: make teckhost.iso
+        run:
+          make teckhost.iso teckhost-sda.iso
+          mv teckhost.iso teckhost-nvme.iso
         env:
           # current stable
           TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso
@@ -54,4 +56,4 @@ jobs:
         with:
           files: |
             bootstrap
-            teckhost.iso
+            teckhost*.iso
