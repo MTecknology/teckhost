@@ -8,7 +8,7 @@
 #       | gpg --symmetric --cipher-algo TWOFISH -o skeys.gpg
 #
 # BS_*: This script will dump all "BS_*" environment variables into a configuration
-#       file for salt-minion; this provides a way to mangle saltsolo.conf.
+#       file for salt-minion; this provides a way to mangle teckhost.conf.
 ##
 
 main() {
@@ -153,7 +153,7 @@ configure_minion() {
 	done
 
 	# Write temporary config file; Salt will overwrite using (bootstrap.conf) grains.
-	cat >/etc/salt/minion.d/saltsolo.conf <<-EOF
+	cat >/etc/salt/minion.d/teckhost.conf <<-EOF
 		file_client: local
 		top_file_merging_strategy: same
 		fileserver_backend:
