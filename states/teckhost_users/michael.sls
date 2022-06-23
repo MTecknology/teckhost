@@ -186,4 +186,4 @@ homedata:
     - mode: 0600
     - unless:
       - fun: file.file_exists
-      - path: /etc/cups/printers.conf
+        path: /etc/cups/printers.conf

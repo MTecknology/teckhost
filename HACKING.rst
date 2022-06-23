@@ -19,7 +19,34 @@ Future Cleanup:
 Roadmap/Goldplating:
 
 - Move "teckhost_agent" to salt states
-- Support devices other than nvme and sda
+
+.. _quickstart:
+
+Quickstart
+----------
+
+Install dependencies::
+
+    apt install virtualbox libarchive-tools syslinux xorriso isolinux
+
+Download and cache "latest" ``debian-netinst.iso``::
+
+    # TH_SRC can also be a local path (TH_CKSUM will be ignored)
+    export TH_SRC='https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso'
+    export TH_CKSUM='eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4'
+
+Build the Default ISO::
+
+    make teckhost.iso
+
+Run tests::
+
+    make test
+
+Build and log into dev box (requires virtualbox)::
+
+    make devpc1
+    make devpc1-ssh
 
 .. _branches:
 

@@ -4,27 +4,37 @@
 # See env[TH_SRC] and env[TH_CKSUM] for ISO building
 ##
 export WORKSPACE ?= $(abspath $(PWD)/)
+export GRUB_EXTRA ?= hostname=testpc1
 
 
 ##
 # ISO
 ##
 
-# Intended for production use
+# Intended for production use (assumes nvme)
 teckhost.iso:
-	./iso/build_iso -s iso/preseed.cfg -o teckhost.iso \
-		-f iso/grub-bios.cfg -g iso/grub-efi.cfg
-
-# Intended for testing with virtualbox
-teckhost-sda.iso: testseed.cfg
-	./iso/build_iso -s testseed.cfg -o teckhost-sda.iso \
-	    -d /dev/sda -x "hostname=testpc1" \
+	./iso/build_iso \
+	    -s iso/preseed.cfg \
+	    -o teckhost.iso \
+	    -x "$(GRUB_EXTRA)" \
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
-# Intended for local developmnt
+# Intended for use with automated testing
+teckhost-%.iso: testseed.cfg
+	./iso/build_iso \
+	    -s testseed.cfg \
+	    -o teckhost-$(subst teckhost-,,$(subst .iso,,$@)).iso \
+	    -d /dev/$(subst teckhost-,,$(subst .iso,,$@)) \
+	    -x "$(GRUB_EXTRA)" \
+	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
+
+# Intended for local developmnt with virtualbox
 teckhost-local.iso: testseed.cfg
-	./iso/build_iso -s testseed.cfg -o teckhost-local.iso \
-	    -d /dev/sda -x "hostname=devpc1 BS_devdir=/srv" \
+	./iso/build_iso \
+	    -s testseed.cfg \
+	    -o teckhost-local.iso \
+	    -d /dev/sda \
+	    -x "hostname=devpc1 BS_devdir=/srv" \
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
 ##
@@ -113,15 +123,15 @@ endif
 # Cleanup
 ##
 
-clean:
+clean: clean-testpc1 clean-devcp1
 	$(RM) testseed.cfg teckhost*.iso
-ifneq (,$(findstring testpc1,$(shell VBoxManage list vms)))
-	VBoxManage controlvm testpc1 poweroff || true
-	VBoxManage unregistervm testpc1 --delete
-endif
-ifneq (,$(findstring devpc1,$(shell VBoxManage list vms)))
-	VBoxManage controlvm devpc1 poweroff || true
-	VBoxManage unregistervm devpc1 --delete
+
+clean-%:
+ifneq (,$(findstring pc,$(shell VBoxManage list vms)))
+	VBoxManage controlvm $(subst clean-,,$@) poweroff || true
+	VBoxManage unregistervm $(subst clean-,,$@) --delete
+else
+	@echo 'No VMs could match $(subst clean-,,$@); skipping'
 endif
 
 
