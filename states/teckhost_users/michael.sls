@@ -13,9 +13,11 @@ teckhost-michael-extras:
       - pylint3
       - python3-pudb
       - python3-flake8
+      - syslinux
       - texlive-latex-base
       - texlive-latex-recommended
       - vagrant
+      - xorriso
       #- virtualbox # TODO: This is pending unstable->stable
       {% endif %}
 
@@ -121,7 +123,7 @@ overflow:
     ('.crypt', 'repos/data/.private/.crypt'),
     ('.dput.cf', 'repos/data/.homedir/.dput.cf'),
     ('.gbp.conf', 'repos/data/.homedir/.gbp.conf'),
-    ('.gnupg/gpg.conf', 'repos/private/.gnupg/gpg.conf'),
+    ('.gnupg/gpg.conf', 'repos/data/.private/.gnupg/gpg.conf'),
     ('.gitconfig', 'repos/data/.homedir/.gitconfig'),
     ('.pass.kdbx', 'crypt/mnt/vault/pass.kdbx'),
     ('.pbuilderrc', 'repos/data/.homedir/.pbuilderrc'),

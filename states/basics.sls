@@ -5,6 +5,7 @@ base_pkgs:
       - build-essential
       - file
       - git
+      - gnupg
       - lsof
       - net-tools
       - openssh-client
