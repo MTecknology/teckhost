@@ -55,21 +55,19 @@ testprep:
 	chmod 0700 test/.ssh
 	chmod 0600 test/.ssh/id_ed25519
 
-# Run all tests
-test: test-user test-admin
+# Run all tests against testpc1
+test: testpc1 test-testpc1-user test-testpc1-admin
 
-# Rut pytest for user-targeted tests
-test-user: testpc1 testprep
+# Run all tests against devpc1
+test-devpc1: devpc1 test-devpc1-user test-devpc1-admin
+
+# Run tests against a host (test-<host>-<type>)
+_target = $(word $2,$(subst -, ,$@))
+test-%:
 	python3 -m pytest \
 	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://testuser@testpc1 --type user
-
-# Rut pytest for admin-targeted tests
-test-admin: testpc1 testprep
-	python3 -m pytest \
-	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://testadmin@testpc1 --type admin
-
+	    --hosts=ssh://test$(call _target,$*,3)@$(call _target,$*,2) \
+	    --type $(call _target,$*,3)
 
 ##
 # Dev Stuff
@@ -85,18 +83,9 @@ devpc1-root: devpc1
 	ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" \
 	    -i test/.ssh/id_ed25519 ssh://testadmin@localhost:4224
 
-# Run tests on dev box
-devpc1-test: devpc1
-	python3 -m pytest \
-	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://testuser@devpc1 --type user
-	python3 -m pytest \
-	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://testadmin@devpc1 --type admin
-
 
 ##
-# Test Boxes
+# Virtual Machines
 ##
 
 # TEST: The standard virtualbox deployment; replicates production
@@ -135,4 +124,4 @@ else
 endif
 
 
-.PHONY: test-admin test-user test testprep testpc1 devpc1 devpc1-ssh devcp1-root clean
+.PHONY: testprep test testpc1 devpc1 devpc1-user devcp1-admin clean

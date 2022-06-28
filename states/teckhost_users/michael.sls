@@ -13,7 +13,10 @@ teckhost-michael-extras:
       - pylint3
       - python3-pudb
       - python3-flake8
+      - python3-pytest
+      - python3-testinfra
       - syslinux
+      - isolinux
       - texlive-latex-base
       - texlive-latex-recommended
       - vagrant
