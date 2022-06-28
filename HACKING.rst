@@ -19,6 +19,7 @@ Future Cleanup:
 Roadmap/Goldplating:
 
 - Move "teckhost_agent" to salt states
+- MOK certificate (for virtualbox)
 
 .. _quickstart:
 
