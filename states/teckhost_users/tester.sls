@@ -1,8 +1,8 @@
-/home/tester/fuz:
+/home/testuser/fuz:
   file.managed:
-    - user: tester
-    - group: tester
+    - user: testuser
+    - group: testuser
     - contents: |
         buz
     - require:
-      - user: tester
+      - user: testuser

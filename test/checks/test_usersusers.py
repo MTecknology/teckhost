@@ -5,7 +5,7 @@
 import pytest
 
 
-@pytest.mark.parametrize('user', ['tester', 'testadmin'])
+@pytest.mark.parametrize('user', ['testuser', 'testadmin'])
 def test_user_present(host, user):
     '''Verify specific users are present on the system'''
     assert host.user(user).exists

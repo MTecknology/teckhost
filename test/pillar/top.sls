@@ -2,4 +2,4 @@ base:
   '*':
     - users.root
     - users.testadmin
-    - users.tester
+    - users.testuser
