@@ -62,7 +62,7 @@ test: test-user test-admin
 test-user: testpc1 testprep
 	python3 -m pytest \
 	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://tester@testpc1 --type user
+	    --hosts=ssh://testuser@testpc1 --type user
 
 # Rut pytest for admin-targeted tests
 test-admin: testpc1 testprep
@@ -78,7 +78,7 @@ test-admin: testpc1 testprep
 # Connect to dev host as user
 devpc1-ssh: devpc1
 	ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" \
-	    -i test/.ssh/id_ed25519 ssh://tester@localhost:4224
+	    -i test/.ssh/id_ed25519 ssh://testuser@localhost:4224
 
 # Connect to dev host as admin
 devpc1-root: devpc1
@@ -89,7 +89,7 @@ devpc1-root: devpc1
 devpc1-test: devpc1
 	python3 -m pytest \
 	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://tester@devpc1 --type user
+	    --hosts=ssh://testuser@devpc1 --type user
 	python3 -m pytest \
 	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
 	    --hosts=ssh://testadmin@devpc1 --type admin

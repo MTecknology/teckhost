@@ -6,7 +6,7 @@ Run validation tests against a host installed in "testing" mode.
 Usage:
   python3 -m pytest \
     --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-    --hosts=ssh://tester@testpc1 --type user
+    --hosts=ssh://testuser@testpc1 --type user
 '''
 import pytest
 

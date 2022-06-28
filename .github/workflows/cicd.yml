@@ -48,7 +48,7 @@ jobs:
   # Test installed OS from built ISO:
   # 1. Build a "teckhost" iso from upstream release
   # 2. Install OS on VM using teckhost-sda.iso (testing option)
-  # 3. Verify we can log in using the "tester" account
+  # 3. Verify we can log in using the "testuser" account
   # 4. Run validation tests against the installed OS
   ##
 
@@ -111,12 +111,12 @@ jobs:
           name: testpc1-${{ matrix.boot }}_screenshots.tar
           path: testpc1-${{ matrix.boot }}.tar
 
-      # 3. Verify we can log in using the "tester" account
-      - name: User (tester) Login
+      # 3. Verify we can log in using the "testuser" account
+      - name: User (testuser) Login
         id: basic_validation
         run: |
             make testprep
-            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://tester@localhost:4222 'echo ping'
+            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://testuser@localhost:4222 'echo ping'
 
       # 4. Run validation tests against the installed OS
       - name: Validation Tests

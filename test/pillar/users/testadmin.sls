@@ -1,7 +1,7 @@
 #!yaml|gpg
 
 users:
-  # NOTE: This user is a clone of 'tester' with added groups
+  # NOTE: This user is a clone of 'testuser' with added groups
   testadmin:
     ugid: 4243
     teckuser: False

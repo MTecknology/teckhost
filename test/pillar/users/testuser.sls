@@ -1,7 +1,7 @@
 #!yaml|gpg
 
 users:
-  tester:
+  testuser:
     ugid: 4242
     teckuser: True
     groups:
