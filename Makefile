@@ -12,7 +12,7 @@ export GRUB_EXTRA ?= hostname=testpc1
 ##
 
 # Intended for production use (assumes nvme)
-teckhost.iso:
+teckhost.iso: iso/preseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 	./iso/build_iso \
 	    -s iso/preseed.cfg \
 	    -o teckhost.iso \
@@ -20,7 +20,7 @@ teckhost.iso:
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
 # Intended for use with automated testing
-teckhost-%.iso: testseed.cfg
+teckhost-%.iso: testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 	./iso/build_iso \
 	    -s testseed.cfg \
 	    -o teckhost-$(subst teckhost-,,$(subst .iso,,$@)).iso \
@@ -29,7 +29,7 @@ teckhost-%.iso: testseed.cfg
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
 # Intended for local developmnt with virtualbox
-teckhost-local.iso: testseed.cfg
+teckhost-local.iso: testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 	./iso/build_iso \
 	    -s testseed.cfg \
 	    -o teckhost-local.iso \
@@ -41,7 +41,7 @@ teckhost-local.iso: testseed.cfg
 # Preeseed
 ##
 
-testseed.cfg:
+testseed.cfg: iso/preseed.cfg test/preseed.patch
 	cp iso/preseed.cfg testseed.cfg
 	patch testseed.cfg test/preseed.patch
 
