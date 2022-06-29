@@ -63,7 +63,7 @@ test-devpc1: devpc1 test-devpc1-user test-devpc1-admin
 
 # Run tests against a host (test-<host>-<type>)
 _target = $(word $2,$(subst -, ,$@))
-test-%:
+test-%: testprep
 	python3 -m pytest \
 	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
 	    --hosts=ssh://test$(call _target,$*,3)@$(call _target,$*,2) \
