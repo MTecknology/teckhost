@@ -41,7 +41,7 @@ teckhost-local.iso: testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 # Preeseed
 ##
 
-testseed.cfg: iso/grub-bios.cfg iso/grub-efi.cfg
+testseed.cfg: iso/preseed.cfg test/preseed.patch
 	cp iso/preseed.cfg testseed.cfg
 	patch testseed.cfg test/preseed.patch
 
