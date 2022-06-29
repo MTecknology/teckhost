@@ -19,6 +19,7 @@ base:
   # Laptop w/ Gnome3
   '*pc*':
     - desktop.gnome3
+    - mokcert
 
   # Managed Device
   '*pcm*':
