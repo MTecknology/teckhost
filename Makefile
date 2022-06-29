@@ -47,7 +47,7 @@ testseed.cfg:
 
 
 ##
-# Test Stuff
+# Test/Dev Stuff
 ##
 
 # This can't be cleanly checked into git
@@ -69,20 +69,11 @@ test-%: testprep
 	    --hosts=ssh://test$(call _target,$*,3)@$(call _target,$*,2) \
 	    --type $(call _target,$*,3)
 
-##
-# Dev Stuff
-##
-
-# Connect to dev host as user
-devpc1-ssh: devpc1
-	ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" \
-	    -i test/.ssh/id_ed25519 ssh://testuser@localhost:4224
-
-# Connect to dev host as admin
-devpc1-root: devpc1
-	ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" \
-	    -i test/.ssh/id_ed25519 ssh://testadmin@localhost:4224
-
+# Connect to a host using ssh (ssh-<host>-<user>)
+ssh-%:
+	ssh \
+	    -F test/.ssh/config -i test/.ssh/id_ed25519 \
+	    ssh://test$(call _target,$*,3)@$(call _target,$*,2)
 
 ##
 # Virtual Machines
@@ -112,9 +103,10 @@ endif
 # Cleanup
 ##
 
-clean: clean-testpc1 clean-devcp1
+clean: clean-testpc1 clean-devpc1
 	$(RM) testseed.cfg teckhost*.iso
 
+# Delete a VM if it exists
 clean-%:
 ifneq (,$(findstring pc,$(shell VBoxManage list vms)))
 	VBoxManage controlvm $(subst clean-,,$@) poweroff || true
@@ -124,4 +116,4 @@ else
 endif
 
 
-.PHONY: testprep test testpc1 devpc1 devpc1-user devcp1-admin clean
+.PHONY: testprep test testpc1 devpc1 clean
