@@ -11,6 +11,10 @@ base:
     - users
     - teckhost_users
 
+  'efi-secure-boot:True':
+    - match: grain
+    - mokcert
+
     # Hostname(Role)-Based Extras
     {% filter indent(width=4, indentfirst=0) -%}
     {% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}
@@ -19,7 +23,6 @@ base:
   # Laptop w/ Gnome3
   '*pc*':
     - desktop.gnome3
-    - mokcert
 
   # Managed Device
   '*pcm*':
