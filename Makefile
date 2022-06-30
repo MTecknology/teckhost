@@ -2,6 +2,8 @@
 ##
 # Makefile for Teckhost systems
 # See env[TH_SRC] and env[TH_CKSUM] for ISO building
+#
+# See git history before trying to "clean up" anything in this file.
 ##
 export WORKSPACE ?= $(abspath $(PWD)/)
 export GRUB_EXTRA ?= hostname=testpc1
@@ -106,13 +108,22 @@ endif
 clean: clean-testpc1 clean-devpc1
 	$(RM) testseed.cfg teckhost*.iso
 
-# Delete a VM if it exists
-clean-%:
-ifneq (,$(findstring pc,$(shell VBoxManage list vms)))
-	VBoxManage controlvm $(subst clean-,,$@) poweroff || true
-	VBoxManage unregistervm $(subst clean-,,$@) --delete
+# Delete testpc1 if it exists
+clean-testpc1:
+ifneq (,$(findstring testpc1,$(shell VBoxManage list vms)))
+	VBoxManage controlvm testpc1 poweroff || true
+	VBoxManage unregistervm testpc1 --delete
 else
-	@echo 'No VMs could match $(subst clean-,,$@); skipping'
+	@echo 'No VMs could match testpc1; skipping'
+endif
+
+# Delete testpc1 if it exists
+clean-devpc1:
+ifneq (,$(findstring devpc1,$(shell VBoxManage list vms)))
+	VBoxManage controlvm devpc1 poweroff || true
+	VBoxManage unregistervm devpc1 --delete
+else
+	@echo 'No VMs could match devpc1; skipping'
 endif
 
 
