@@ -81,7 +81,10 @@ jobs:
     name: "[${{ matrix.boot }}] Install and Validate"
     needs: buildiso
 
-    strategy: {"matrix": {"boot": ["efi", "bios"]} }
+    strategy:
+      matrix:
+        boot: [efi, bios]
+
     # virtualbox can only run on some versions (10.5, 12) of macosx runners
     runs-on: macos-12
     steps:
