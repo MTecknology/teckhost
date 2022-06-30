@@ -98,7 +98,7 @@ jobs:
       # 2. Install OS on VM using teckhost-sda.iso (testing option)
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
-        run: touch testseed.cfg; make testpc1
+        run: touch testseed.cfg; touch teckhost-sda.iso; make testpc1
         env:
           TH_ISOPATH: teckhost-sda.iso
           TH_SHOTS: testpc1-${{ matrix.boot }}
