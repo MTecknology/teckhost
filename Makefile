@@ -111,12 +111,12 @@ clean: clean-testpc1 clean-devpc1
 
 # Delete a VM if it exists
 clean-%: explicit_phony
-ifneq (,$(findstring $*,$(shell VBoxManage list vms)))
-	-VBoxManage controlvm $* poweroff
-	VBoxManage unregistervm $* --delete
-else
-	@echo 'No VMs could match $*; skipping'
-endif
+	@if [[ -n "$(findstring $*,$(shell VBoxManage list vms))" ]]; then \
+		VBoxManage controlvm $* poweroff || true; \
+		VBoxManage unregistervm $* --delete; \
+	else \
+		echo "No VMs could match $*; skipping"; \
+	fi
 
 
 explicit_phony:
