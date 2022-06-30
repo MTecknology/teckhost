@@ -23,8 +23,8 @@ teckhost.iso: iso/preseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 teckhost-%.iso: testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 	./iso/build_iso \
 	    -s testseed.cfg \
-	    -o teckhost-$(subst teckhost-,,$(subst .iso,,$@)).iso \
-	    -d /dev/$(subst teckhost-,,$(subst .iso,,$@)) \
+	    -o "$@" \
+	    -d "/dev/$*" \
 	    -x "$(GRUB_EXTRA)" \
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
@@ -56,24 +56,27 @@ testprep:
 	chmod 0600 test/.ssh/id_ed25519
 
 # Run all tests against testpc1
-test: testpc1 test-testpc1-user test-testpc1-admin
+test: test-testpc1 
+test-testpc1: test-testpc1-user test-testpc1-admin
 
 # Run all tests against devpc1
-test-devpc1: devpc1 test-devpc1-user test-devpc1-admin
+test-devpc1: test-devpc1-user test-devpc1-admin
 
 # Run tests against a host (test-<host>-<type>)
-_target = $(word $2,$(subst -, ,$@))
-test-%: testprep
+_target = $(word $2,$(subst -, ,$1))
+
+.SECONDEXPANSION:
+test-%: testprep $$(call _target,$$*,1) explicit_phony
 	python3 -m pytest \
 	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://test$(call _target,$*,3)@$(call _target,$*,2) \
-	    --type $(call _target,$*,3)
+	    --hosts=ssh://test$(call _target,$*,2)@$(call _target,$*,1) \
+	    --type $(call _target,$*,2)
 
 # Connect to a host using ssh (ssh-<host>-<user>)
-ssh-%:
+ssh-%: $$(call _target,$$*,1) explicit_phony
 	ssh \
 	    -F test/.ssh/config -i test/.ssh/id_ed25519 \
-	    ssh://test$(call _target,$*,3)@$(call _target,$*,2)
+	    ssh://test$(call _target,$*,2)@$(call _target,$*,1)
 
 ##
 # Virtual Machines
@@ -107,13 +110,14 @@ clean: clean-testpc1 clean-devpc1
 	$(RM) testseed.cfg teckhost*.iso
 
 # Delete a VM if it exists
-clean-%:
-ifneq (,$(findstring pc,$(shell VBoxManage list vms)))
-	VBoxManage controlvm $(subst clean-,,$@) poweroff || true
-	VBoxManage unregistervm $(subst clean-,,$@) --delete
+clean-%: explicit_phony
+ifneq (,$(findstring $*,$(shell VBoxManage list vms)))
+	-VBoxManage controlvm $* poweroff
+	VBoxManage unregistervm $* --delete
 else
-	@echo 'No VMs could match $(subst clean-,,$@); skipping'
+	@echo 'No VMs could match $*; skipping'
 endif
 
 
-.PHONY: testprep test testpc1 devpc1 clean
+explicit_phony:
+.PHONY: testprep test testpc1 devpc1 clean explicit_phony
