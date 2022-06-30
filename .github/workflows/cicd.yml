@@ -50,6 +50,7 @@ jobs:
   # 2. Install OS on VM using teckhost-sda.iso (testing option)
   # 3. Verify we can log in using the "testuser" account
   # 4. Run validation tests against the installed OS
+  # 5. Ensure make clean produces no errors
   ##
 
   buildiso:
@@ -81,7 +82,10 @@ jobs:
     name: "[${{ matrix.boot }}] Install and Validate"
     needs: buildiso
 
-    strategy: {"matrix": {"boot": ["efi", "bios"]} }
+    strategy:
+      matrix:
+        boot: [efi, bios]
+
     # virtualbox can only run on some versions (10.5, 12) of macosx runners
     runs-on: macos-12
     steps:
@@ -122,6 +126,11 @@ jobs:
       - name: Validation Tests
         id: validation_tests
         run: make test
+
+      # 5. Ensure make clean produces no errors
+      - name: Run Cleanup
+        id: cleanup
+        run: make clean
 
   ##
   # Merge deploy into master after tests pass
