@@ -57,16 +57,16 @@ testprep:
 
 # Run all tests against testpc1
 test: test-testpc1 
-test-testpc1: test-testpc1-user test-testpc1-admin
+test-testpc1: pytest-testpc1-user pytest-testpc1-admin
 
 # Run all tests against devpc1
-test-devpc1: test-devpc1-user test-devpc1-admin
+test-devpc1: pytest-devpc1-user pytest-devpc1-admin
 
 # Run tests against a host (test-<host>-<type>)
 _target = $(word $2,$(subst -, ,$1))
 
 .SECONDEXPANSION:
-test-%: testprep $$(call _target,$$*,1) explicit_phony
+pytest-%: testprep $$(call _target,$$*,1) explicit_phony
 	python3 -m pytest \
 	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
 	    --hosts=ssh://test$(call _target,$*,2)@$(call _target,$*,1) \
