@@ -133,14 +133,14 @@ jobs:
         run: make clean
 
   ##
-  # Merge deploy into master after tests pass
+  # Merge master into cicd-release after tests pass
   # NOTE: From this point forward, a force push is non-trivial!
   ##
 
   deploy:
     name: Deploy Changes
     needs: [lint, testinstall]
-    if: github.ref == 'refs/heads/deploy'
+    if: github.ref == 'refs/heads/master'
 
     permissions:
       pull-requests: write
@@ -157,9 +157,9 @@ jobs:
         run: |
             git config --local user.email "actions@github.com"
             git config --local user.name "Github Actions"
-            git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merge ${{ github.sha }} into master"
+            git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merge ${{ github.sha }} into cicd-release"
 
       # CICD: deploy->master
       - name: Go Live!
         run: |
-            git push origin master
+            git push origin cicd-release
