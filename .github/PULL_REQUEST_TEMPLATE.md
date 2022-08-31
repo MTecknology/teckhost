@@ -1,5 +1,5 @@
 <!--
-    1. Make sure you are targeting the `deploy` branch; directly to `master` is only for "emergency" changes.
+    1. Make sure you are targeting the `master` branch; directly to `cicd-release` is only for "emergency" changes.
     2. Describe what your pull request does and which issue you're targeting (if any).
 -->
 
@@ -12,10 +12,6 @@
 Yes/No
 
 ### Commits signed with GPG
-
-Yes/No
-
-### PR against 'deploy' branch
 
 Yes/No
 

@@ -16,7 +16,7 @@ base:
     - mokcert
 
     # Hostname(Role)-Based Extras
-    {% filter indent(width=4, indentfirst=0) -%}
+    {% filter indent(width=4, first=0) -%}
     {% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}
     {% endfilter %}
 
