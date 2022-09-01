@@ -1,6 +1,4 @@
-Build: |cicd-init|, Release|cicd-release|
-
-|issues|
+|issues|, Build: |cicd-init|, Release: |cicd-release|
 
 .. _teckhost:
 

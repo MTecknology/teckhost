@@ -158,6 +158,8 @@ configure_minion() {
 		top_file_merging_strategy: same
 		fileserver_backend:
 		  - gitfs
+		gitfs_base: cicd-release
+		gitfs_saltenv_whitelist: [base]
 		gitfs_remotes:
 		  - ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
 		    - root: ${BS_states_root:-states}
