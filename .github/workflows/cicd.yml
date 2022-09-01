@@ -50,6 +50,7 @@ jobs:
   # 2. Install OS on VM using teckhost-sda.iso (testing option)
   # 3. Verify we can log in using the "testuser" account
   # 4. Run validation tests against the installed OS
+  # 5. Ensure make clean produces no errors
   ##
 
   buildiso:
@@ -81,7 +82,10 @@ jobs:
     name: "[${{ matrix.boot }}] Install and Validate"
     needs: buildiso
 
-    strategy: {"matrix": {"boot": ["efi", "bios"]} }
+    strategy:
+      matrix:
+        boot: [efi, bios]
+
     # virtualbox can only run on some versions (10.5, 12) of macosx runners
     runs-on: macos-12
     steps:
@@ -123,15 +127,20 @@ jobs:
         id: validation_tests
         run: make test
 
+      # 5. Ensure make clean produces no errors
+      - name: Run Cleanup
+        id: cleanup
+        run: make clean
+
   ##
-  # Merge deploy into master after tests pass
+  # Merge master into cicd-release after tests pass
   # NOTE: From this point forward, a force push is non-trivial!
   ##
 
   deploy:
     name: Deploy Changes
     needs: [lint, testinstall]
-    if: github.ref == 'refs/heads/deploy'
+    if: github.ref == 'refs/heads/master'
 
     permissions:
       pull-requests: write
@@ -148,9 +157,9 @@ jobs:
         run: |
             git config --local user.email "actions@github.com"
             git config --local user.name "Github Actions"
-            git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merge ${{ github.sha }} into master"
+            git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merge ${{ github.sha }} into cicd-release"
 
       # CICD: deploy->master
       - name: Go Live!
         run: |
-            git push origin master
+            git push origin cicd-release

@@ -58,12 +58,12 @@ Build and log in to dev box (requires virtualbox)::
 Branches
 --------
 
-- master: Production Deployment
-- deploy: CI/CD Pipeline
+- cicd-release: Production Deployment
+- master: Root of CI/CD Pipeline
 
-All changes are pushed to ``deploy`` and then promoted to ``master`` after
-the CI/CD (build+install+validate) tests pass. The ``master`` branch should be
-protected to prevent unexpected changes.
+All changes are pushed to ``master`` and then promoted to ``cicd-release`` after
+the CI/CD (build+install+validate) tests pass. The ``cicd-release`` branch should
+be protected to prevent unexpected changes.
 
 .. _devdir:
 

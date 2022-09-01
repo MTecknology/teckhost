@@ -2,6 +2,7 @@ common-desktop-apps:
   pkg.installed:
     - pkgs:
       - chromium
+      - feh
       - gimp
       - gmrun
       - keepassxc

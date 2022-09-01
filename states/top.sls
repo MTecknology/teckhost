@@ -15,10 +15,8 @@ base:
     - match: grain
     - mokcert
 
-    # Hostname(Role)-Based Extras
-    {% filter indent(width=4, first=0) -%}
-    {% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}
-    {% endfilter %}
+    # Hostname(Role)-Based Extras [all lines should have 4 spaces]
+{% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}
 
   # Laptop w/ Gnome3
   '*pc*':

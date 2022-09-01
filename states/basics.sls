@@ -3,6 +3,7 @@ base_pkgs:
     - names:
       - apt-transport-https
       - build-essential
+      - console-setup
       - file
       - git
       - gnupg
