@@ -1,4 +1,4 @@
-- ssh
-- irssi
-- teckhost_agent.server
-- webapps
+    - ssh
+    - irssi
+    - teckhost_agent.server
+    - webapps
