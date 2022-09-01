@@ -1,4 +1,6 @@
-|cicd| |issues|
+Build: |cicd-init|, Release|cicd-release|
+
+|issues|
 
 .. _teckhost:
 
@@ -87,7 +89,11 @@ To encrypt data for pillar::
 
 .. _state.highstate: https://docs.saltproject.io/en/latest/topics/tutorials/states_pt1.html
 
-.. |cicd| image:: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml/badge.svg?branch=deploy
+.. |cicd-release| image:: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml/badge.svg?branch=release
+    :target: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml
+    :alt: CI/CD
+
+.. |cicd-init| image:: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml/badge.svg?branch=master
     :target: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml
     :alt: CI/CD
 
