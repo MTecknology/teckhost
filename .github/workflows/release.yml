@@ -36,7 +36,9 @@ jobs:
         run: echo "need to create some pre-release checks ..."
 
       - name: Install Build Dependencies
-        run: sudo apt-get install libarchive-tools syslinux xorriso isolinux
+        run: |
+            sudo apt-get update
+            sudo apt-get install libarchive-tools syslinux xorriso isolinux
 
       # 2. Build "Production" ISO (teckhost*.iso)
       - name: Build Teckhost ISO
