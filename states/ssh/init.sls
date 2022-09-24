@@ -1,5 +1,5 @@
-include:
-  - sshguard
+#include:
+#  - sshguard
 
 ssh:
   pkg.installed:
