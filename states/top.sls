@@ -20,7 +20,7 @@ base:
 
   # Laptop w/ Gnome3
   '*pc*':
-    - desktop.gnome3
+    - desktop.cinnamon
 
   # Managed Device
   '*pcm*':
