@@ -46,8 +46,8 @@ jobs:
         run: make teckhost.iso teckhost-sda.iso teckhost-nvme0n1.iso
         env:
           # current stable
-          TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.4.0-amd64-netinst.iso
-          TH_CKSUM: d7429945025497a4fe34a6b94b901a9f3670a052821cfea315c28eb0542327343ee3ffa29fd96374c9b9a4554f345ca726feb21f798406c34809a633858344b9
+          TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.5.0-amd64-netinst.iso
+          TH_CKSUM: 2fde00391688f569d2df4ac655f9bda32f6522635514a28de7ef10e684c752af296c4e4eadca7a2afba487780ef559a61051131e7f6e758d7792fa87660b57b8
 
       # 3. Publish Release w/ Artifacts
       - name: Create Release
