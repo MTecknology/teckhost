@@ -1,6 +1,8 @@
 ##
 # Extra Packages
 ##
+include:
+  - signal
 
 teckhost-michael-extras:
   pkg.installed:
