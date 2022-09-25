@@ -3,7 +3,7 @@ common-desktop-apps:
     - pkgs:
       - chromium
       - feh
-      - firefox
+      - firefox-esr
       - gimp
       - gmrun
       - keepassxc
