@@ -3,5 +3,6 @@ include:
 
 signal-desktop:
   pkg.installed:
+    - refresh: True
     - require:
-      - file: apt-keyring-signal
+      - file: apt-repo-signal
