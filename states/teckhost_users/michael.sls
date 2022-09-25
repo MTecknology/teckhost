@@ -17,6 +17,7 @@ teckhost-michael-extras:
       - python3-flake8
       - python3-pytest
       - python3-testinfra
+      - redshift-gtk
       - syslinux
       - isolinux
       - texlive-latex-base
@@ -120,6 +121,7 @@ overflow:
     ('.config/keepassxc', 'repos/data/.homedir/.config/keepassxc/'),
     ('.config/mate-menu', 'repos/data/.homedir/.config/mate-menu/'),
     ('.config/openbox', 'repos/data/.homedir/.config/openbox/'),
+    ('.config/redshift.conf', 'repos/data/.homedir/.config/redshift.conf'),
     ('.config/terminator', 'repos/data/.homedir/.config/terminator/'),
     ('.bash_aliases', 'repos/data/.homedir/.bash_aliases'),
     ('.bash_logout', 'repos/data/.homedir/.bash_logout'),
