@@ -3,6 +3,7 @@
 ##
 include:
   - signal
+  - virtualbox
 
 teckhost-michael-extras:
   pkg.installed:
