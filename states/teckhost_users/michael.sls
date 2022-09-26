@@ -3,6 +3,7 @@
 ##
 include:
   - signal
+  - spotify
   - virtualbox
 
 teckhost-michael-extras:
