@@ -56,6 +56,10 @@ jobs:
   buildiso:
     name: Build Teckhost ISO
 
+    strategy:
+      matrix:
+        target: [master, cicd-release]
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -73,19 +77,21 @@ jobs:
           # current stable
           TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.5.0-amd64-netinst.iso
           TH_CKSUM: 2fde00391688f569d2df4ac655f9bda32f6522635514a28de7ef10e684c752af296c4e4eadca7a2afba487780ef559a61051131e7f6e758d7792fa87660b57b8
+          THT_GRUBTEST: TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_base=${{ matrix.target }}
 
       - name: Save ISO (teckhost-sda.iso)
         uses: actions/upload-artifact@v3
         with:
-          name: teckhost-sda.iso
+          name: teckhost-sda_${{ matrix.target }}.iso
           path: teckhost-sda.iso
 
   testinstall:
-    name: "[${{ matrix.boot }}] Install and Validate"
+    name: "Install and Validate"
     needs: buildiso
 
     strategy:
       matrix:
+        target: [master, cicd-release]
         boot: [efi, bios]
 
     # virtualbox can only run on some versions (10.5, 12) of macosx runners
@@ -99,14 +105,14 @@ jobs:
       - name: Pull ISO (teckhost-sda.iso)
         uses: actions/download-artifact@v3
         with:
-          name: teckhost-sda.iso
+          name: teckhost-sda_${{ matrix.target }}.iso
 
       # 2. Install OS on VM using teckhost-sda.iso (testing option)
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
         run: touch testseed.cfg; touch teckhost-sda.iso; make testpc1
         env:
-          TH_ISOPATH: teckhost-sda.iso
+          TH_ISOPATH: teckhost-sda_${{ matrix.target }}.iso
           TH_SHOTS: testpc1-${{ matrix.boot }}
           TH_BOOT: ${{ matrix.boot }}
 
