@@ -7,6 +7,10 @@ Package: *
 Pin: release a=stable-security
 Pin-Priority: 800
 
+Package: *
+Pin: release a=stable-updates
+Pin-Priority: 800
+
 {% endif -%}
 Package: *
 Pin: release a=testing
