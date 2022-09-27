@@ -1,15 +1,17 @@
 base:
 
   '*':
-    # Basic Inclusions
     - basics
     - cleanup
-    - apt
     #- ferm : obsolete, need a replacement
     - salt
     - sudo
     - users
     - teckhost_users
+
+  'os_family:Debian':
+    - match: grain
+    - apt
 
   'efi-secure-boot:True':
     - match: grain
