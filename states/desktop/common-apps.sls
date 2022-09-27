@@ -12,6 +12,7 @@ common-desktop-apps:
       - terminator
       - totem
       - yubikey-personalization
+      - wcalc
       - wireshark
       - zathura
       - zenity
