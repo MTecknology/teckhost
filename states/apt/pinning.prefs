@@ -1,0 +1,17 @@
+{% if salt.grains.get('osrelease') not in ['testing'] -%}
+Package: *
+Pin: release a=stable
+Pin-Priority: 800
+
+Package: *
+Pin: release a=stable-security
+Pin-Priority: 800
+
+{% endif -%}
+Package: *
+Pin: release a=testing
+Pin-Priority: 700
+
+Package: *
+Pin: release a=unstable
+Pin-Priority: 600
