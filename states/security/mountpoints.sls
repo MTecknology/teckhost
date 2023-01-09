@@ -46,13 +46,13 @@ mount-opt:
     - opts: nosuid,nodev
     - pass_num: 2
 
-mount-srv:
-  mount.mounted:
-    - name: /srv
-    - device: /dev/mapper/sys-srv
-    - fstype: ext4
-    - opts: nosuid,nodev,noexec
-    - pass_num: 2
+#mount-srv:
+#  mount.mounted:
+#    - name: /srv
+#    - device: /dev/mapper/sys-srv
+#    - fstype: ext4
+#    - opts: nosuid,nodev,noexec
+#    - pass_num: 2
 
 /dev/mapper/sys-swap:
   mount.swap

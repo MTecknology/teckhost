@@ -15,7 +15,7 @@ base:
     - drivers
     - basics
     - cleanup
-    #- ntp
+    - ntp
     - pam
     - salt
     - security
