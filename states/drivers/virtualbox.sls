@@ -4,5 +4,5 @@ virtualbox-guest:
   cmd.run:
     - name: 'mount /usr/share/virtualbox/VBoxGuestAdditions.iso /mnt; /mnt/VBoxLinuxAdditions.run; umount /mnt'
     - unless: 'test -e /sys/module/vboxsf'
-    - watch:
+    - require:
       - pkg: virtualbox-guest
