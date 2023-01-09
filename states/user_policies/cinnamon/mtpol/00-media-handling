@@ -1,0 +1,4 @@
+[org/cinnamon/desktop/media-handling]
+automount=false
+automount-open=true
+autoprompt-never=true

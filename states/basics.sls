@@ -1,7 +1,7 @@
 base_pkgs:
   pkg.installed:
     - names:
-      - apt-transport-https
+      - auditd
       - build-essential
       - console-setup
       - file
@@ -22,10 +22,6 @@ base_pkgs_removed:
       - apt-listchanges
       - nano
       - vim-tiny
-
-systemd-reload:
-  cmd.wait:
-    - name: systemctl daemon-reload
 
 vim-sanity:
   file.managed:

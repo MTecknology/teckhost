@@ -1,0 +1,19 @@
+[org/cinnamon/desktop/screensaver]
+allow-keyboard-shortcuts=false
+allow-media-control=false
+idle-activation-enabled=true
+lock-delay=uint32 10
+lock-enabled=true
+show-album-art=false
+show-clock=true
+show-info-panel=true
+show-notifications=false
+
+[org/cinnamon/desktop/session]
+idle-delay=uint32 600
+session-daemon-uses-logind=true
+session-name='cinnamon'
+settings-daemon-uses-logind=true
+
+[org/cinnamon/settings-daemon/plugins/power]
+lock-on-suspend=true
