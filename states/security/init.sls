@@ -1,5 +1,5 @@
-#include:
-#  - .mountpoints
+include:
+  - .mountpoints
 
 /etc/security/access.conf:
   file.managed:
