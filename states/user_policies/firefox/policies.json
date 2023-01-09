@@ -1,0 +1,11 @@
+{
+  "policies": {
+    "BlockAboutConfig": true,
+    "OverrideFirstRunPage": "",
+    "Homepage": {
+      "URL": "https://www.google.com/",
+      "Locked": true,
+      "StartPage": "homepage"
+    }
+  }
+}

@@ -75,8 +75,8 @@ jobs:
         run: make teckhost-sda.iso
         env:
           # current stable
-          TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.5.0-amd64-netinst.iso
-          TH_CKSUM: 2fde00391688f569d2df4ac655f9bda32f6522635514a28de7ef10e684c752af296c4e4eadca7a2afba487780ef559a61051131e7f6e758d7792fa87660b57b8
+          TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.6.0-amd64-netinst.iso
+          TH_CKSUM: 33bf983fb389bb72f9a20584c04f55d393cb0b048ba1a150190c8756d7259ac0ac7438b54635a39daecdf4d5fe18ebe7620272ac708f3003ed257194a79f8260
           THT_GRUBTEST: TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_base=${{ matrix.target }}
 
       - name: Save ISO (teckhost-sda.iso)

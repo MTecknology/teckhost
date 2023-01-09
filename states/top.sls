@@ -1,21 +1,28 @@
 base:
 
-  '*':
-    - basics
-    - cleanup
-    #- ferm : obsolete, need a replacement
-    - salt
-    - sudo
-    - users
-    - teckhost_users
+  # Secure Boot / Machine Owner Key
+  'efi-secure-boot:True':
+    - match: grain
+    - mokcert
 
+  # Debian-Based Systems
   'os_family:Debian':
     - match: grain
     - apt
 
-  'efi-secure-boot:True':
-    - match: grain
-    - mokcert
+  # Baseline
+  '*':
+    - drivers
+    - basics
+    - cleanup
+    #- ntp
+    - pam
+    - salt
+    - security
+    - sudo
+    - users
+    - user_policies
+    - teckhost_users
 
     # Hostname(Role)-Based Extras [all lines should have 4 spaces]
 {% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}

@@ -1,0 +1,11 @@
+[org/cinnamon/settings-daemon/plugins/power]
+button-hibernate='hibernate'
+button-power='suspend'
+button-suspend='suspend'
+critical-battery-action='hibernate'
+inhibit-lid-switch=true
+percentage-low=10
+percentage-critical=5
+percentage-action=3
+time-low=1200
+time-critical=600

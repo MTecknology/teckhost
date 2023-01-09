@@ -1,0 +1,44 @@
+# 00-lockdown
+/org/cinnamon/development-tools
+/org/cinnamon/enable-app-monitoring
+/org/cinnamon/desktop/lockdown/disable-application-handlers
+/org/cinnamon/desktop/lockdown/disable-command-line
+/org/cinnamon/desktop/lockdown/disable-user-switching
+
+# 00-session
+/org/cinnamon/cinnamon-session/debug
+/org/cinnamon/cinnamon-session/prefer-hybrid-sleep
+/org/cinnamon/cinnamon-session/x-sync
+
+# 00-screensaver
+/org/cinnamon/desktop/screensaver/allow-keyboard-shortcuts
+/org/cinnamon/desktop/screensaver/allow-media-control
+/org/cinnamon/desktop/screensaver/idle-activation-enabled
+/org/cinnamon/desktop/screensaver/lock-delay
+/org/cinnamon/desktop/screensaver/lock-enabled
+/org/cinnamon/desktop/screensaver/show-album-art
+/org/cinnamon/desktop/screensaver/show-clock
+/org/cinnamon/desktop/screensaver/show-info-panel
+/org/cinnamon/desktop/screensaver/show-notifications
+/org/cinnamon/desktop/session/idle-delay
+/org/cinnamon/desktop/session/session-daemon-uses-logind
+/org/cinnamon/desktop/session/session-name
+/org/cinnamon/desktop/session/settings-daemon-uses-logind
+/org/cinnamon/settings-daemon/plugins/power/lock-on-suspend
+
+# 00-media-handling
+/org/cinnamon/desktop/media-handling/automount
+/org/cinnamon/desktop/media-handling/automount-open
+/org/cinnamon/desktop/media-handling/autoprompt-never
+
+# 00-power
+/org/cinnamon/settings-daemon/plugins/power/button-hibernate
+/org/cinnamon/settings-daemon/plugins/power/button-power
+/org/cinnamon/settings-daemon/plugins/power/button-suspend
+/org/cinnamon/settings-daemon/plugins/power/critical-battery-action
+/org/cinnamon/settings-daemon/plugins/power/inhibit-lid-switch
+/org/cinnamon/settings-daemon/plugins/power/percentage-low
+/org/cinnamon/settings-daemon/plugins/power/percentage-critical
+/org/cinnamon/settings-daemon/plugins/power/percentage-action
+/org/cinnamon/settings-daemon/plugins/power/time-low
+/org/cinnamon/settings-daemon/plugins/power/time-critical

@@ -1,0 +1,8 @@
+[org/cinnamon]
+development-tools=false
+enable-app-monitoring=false
+
+[org/cinnamon/desktop/lockdown]
+disable-application-handlers=false
+disable-command-line=false
+disable-user-switching=true

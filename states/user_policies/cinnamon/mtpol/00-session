@@ -1,0 +1,4 @@
+[org/cinnamon/cinnamon-session]
+debug=false
+prefer-hybrid-sleep=true
+x-sync=false

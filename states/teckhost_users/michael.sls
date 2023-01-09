@@ -104,7 +104,7 @@ overflow:
   file.directory:
     - user: michael
     - group: michael
-    - mode: "0700"
+    - mode: '0700'
     - require:
       - user: michael
 
@@ -112,7 +112,7 @@ overflow:
   file.directory:
     - user: michael
     - group: michael
-    - mode: "0700"
+    - mode: '0700'
     - require:
       - user: michael
 
@@ -194,7 +194,7 @@ homedata:
     - contents_pillar: teckhost_extra:printers_config
     - user: root
     - group: lp
-    - mode: 0600
+    - mode: '0600'
     - unless:
       - fun: file.file_exists
         path: /etc/cups/printers.conf

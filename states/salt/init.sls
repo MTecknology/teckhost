@@ -35,17 +35,13 @@ salt-devdir:
     - special: '@reboot'
     - require:
       - pkg: salt-minion
-  pkg.installed:
-    - name: virtualbox-guest-utils
-    # TODO: This is a temporary hack, required while vbox is only in unstable
-    - fromrepo: unstable
 {% if not salt.chroot.in_chroot() %}
   mount.mounted:
     - name: {{ salt.grains.get('bootstrap:devdir') }}
     - device: devdir
     - fstype: vboxsf
     - require:
-      - pkg: salt-devdir
+      - cmd: virtualbox-guest
     - require_in:
       - file: salt-minion
 {% endif %}
