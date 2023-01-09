@@ -46,13 +46,15 @@ mount-opt:
     - opts: nosuid,nodev
     - pass_num: 2
 
-#mount-srv:
-#  mount.mounted:
-#    - name: /srv
-#    - device: /dev/mapper/sys-srv
-#    - fstype: ext4
-#    - opts: nosuid,nodev,noexec
-#    - pass_num: 2
+{% if salt.grains.get('virtual', 'none').lower() != 'virtualbox' %}
+mount-srv:
+  mount.mounted:
+    - name: /srv
+    - device: /dev/mapper/sys-srv
+    - fstype: ext4
+    - opts: nosuid,nodev,noexec
+    - pass_num: 2
+{% endif  %}
 
 /dev/mapper/sys-swap:
   mount.swap
