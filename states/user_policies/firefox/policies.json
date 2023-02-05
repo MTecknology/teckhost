@@ -1,6 +1,6 @@
 {
   "policies": {
-    "BlockAboutConfig": true,
+    "BlockAboutConfig": false,
     "OverrideFirstRunPage": "",
     "Homepage": {
       "URL": "https://www.google.com/",

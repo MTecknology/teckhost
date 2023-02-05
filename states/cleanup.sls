@@ -31,6 +31,7 @@ unapproved-packages:
       - gnome-software
       - gist
       - os-prober
+      - spotify-client
       - ppp
       - software-properties-gtk
       - software-properties-common
