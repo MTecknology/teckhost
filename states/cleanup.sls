@@ -32,7 +32,6 @@ unapproved-packages:
       - gist
       - os-prober
       - ppp
-      - rubygems-integration
       - software-properties-gtk
       - software-properties-common
       - synaptic
