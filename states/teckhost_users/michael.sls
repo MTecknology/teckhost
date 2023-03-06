@@ -13,7 +13,7 @@ teckhost-michael-extras:
       {% if salt.match.glob('mikepc*') %}
       - claws-mail
       - claws-mail-multi-notifier
-      - pylint3
+      - pylint
       - python3-pudb
       - python3-flake8
       - python3-pytest
