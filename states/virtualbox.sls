@@ -3,7 +3,7 @@ include:
 
 virtualbox:
   pkg.installed:
-    - name: virtualbox-6.1
+    - name: virtualbox
     - refresh: True
     - require:
       - file: apt-repo-virtualbox
