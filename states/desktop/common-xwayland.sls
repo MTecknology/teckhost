@@ -11,5 +11,7 @@ common-X:
       - xserver-xorg-input-all
       - xwayland
       - kwayland-integration
-      - firmware-linux-nonfree
       - firmware-misc-nonfree
+      {% if salt.grains.get('lsb_distrib_release', 12)|int <= 11 %}
+      - firmware-linux-nonfree
+      {% endif %}
