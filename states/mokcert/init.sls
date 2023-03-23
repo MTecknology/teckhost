@@ -50,4 +50,4 @@ mokcert-enroll:
   cmd.run:
     - name: 'mokutil --timeout 800; mokutil --import /root/.mok/client.der'
     - stdin: 'GR3en\nGR3en\n'
-    - unless: '! mokutil --test-key /root/.mok/client.der'
+    - unless: 'mokutil --test-key /root/.mok/client.der'
