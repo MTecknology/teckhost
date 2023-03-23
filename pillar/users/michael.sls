@@ -8,24 +8,25 @@ users:
       - ssh-user
       - sudo
     {% if (salt.match.glob('*pc*') and not salt.match.glob('mikepc*')) %}
+    # Password used for remote support
     pwd: |
         -----BEGIN PGP MESSAGE-----
 
-        hQIMA7+DShJS+9zMARAAsDEv00ExBFMD7kiMyor6RSRggYT22HtFiNJf4dfIukMF
-        kg0vtTdEslRng6L8nBoQA08+K+1IetEJw8WZ1gZSVHE3o5Ot2wWoTwc5jT4tH2lN
-        NoFIQvZ/1gPBO2+qxcoPUPt6t013/KhZOS5U+UYBL/beNS4iyD/VULC4kfPNqway
-        X/KfyYgilC+8/8MAqmFJZyASEMP9twJ8az8UIfoKLVO4zWG1V5491WACdtepRJ0J
-        tOktuBBiAh/hgLmGu6Zxqo1I9rutoiBX2r9B5BQ9aKNVaI+sO2wCAALSpCD5BXb8
-        6axwr5bkKH1RPfCi3yKhn63Q3s6zrUhhazGP92KS+AuCaoRl7gRf92WFikuISZeT
-        khbchpKpAsMewJQTrjBPLORsz0VstZ9awYglGLYaLpDEvNyPvfHmZrRiPuVD4fzK
-        3fO7nwdG420PvuQgVspV2Ag0Ifa4fFgxE7yejvvcP2bUOgABDv89eDEuHl8OVimi
-        jYlFyfwJKDA6+ZezDPxu/WrQ5zcYAPvu3kBO3j64ri89eilh2tyyIUNDTrFUVESE
-        xspRSdvTLJfytkTCAYTrIP/g+3NV/+myLi72mEdvvS+gVRgoAy1ZBXTzLVn4PeIb
-        Woz7Iuri0moPPlT8pLVwpQSkKn2wg+aWyLe4Z/i82ZhxEQJPMsgfr7Npvoh5elTS
-        hAH1a1Pd4FhttrFQ1X5WE61hp22IIoPMrUbWQTjTtoEQZc3lgoljZRXiEX6RbaYb
-        /iF1T+rqK6DNjDZ7zhc6HvOyXXkewhFMOQR84rIt2Y4pIqPlLcoH5YrJq6wYcThZ
-        sD8pLgq3sdvawWPdlRlpwJKSb50V3sqzeOCgMl/DpduU6tww4g==
-        =jk+2
+        hQIMA7+DShJS+9zMAQ/8Cf8RDavi/QyCFn12LARY83cEJA3X5qQ5KM4UYOk4zrWB
+        LuKVRNtgF1mrf3YkoDKt7i+23Xwqfd7vw9QO3yzZIEZepm20GyUagN9gG8yMUu8O
+        sqmBoY3Bsk+ojIfCAHgoY6jkLQqite3Gxp4sGXknUwdx1GTWGoeqhuM3HEKE5efU
+        GKm19DWrSGHjcfROmeNPqMOxc9Nkv0LJY/QHiJTLyAfMwsM1VKPYL+heHm64gUsf
+        PM1anQBPgGM+SUWChVhGRA19+pJ4ZAdq9U1CEIQuGMlbXOjoiFxhUhqp8XUc5Oov
+        cP1xvUjxRIojiuIV6+GHGgifFQeNkSnICrmki/0AdGZEt35LGo9at6woPiijbznN
+        gNoA1bVkJpKqxOS0FRfBStRnVsI9CVpVInRWxiUQm0MlQG8lDbV1seE+VU8ZtUMY
+        b0JxOD9NUsxJ2Ky8USE9q0Dewwg35NZmo12A+pMEVPUMZKgFvaXUF55SsFDT9uIz
+        sJgReYzZv37d8r9FZRiESY7KEoJRyaCE5y1ep+g8wnGDXnkoawNFypIEZraYRb5c
+        Tuj+wZCraNVXzYQIMmRazbBSRAjxA0v4qOTf7KCRcEpxRM629CDyyB8dl/kumx3n
+        WjQ4CPv9MXD/D8xaOBX6R7hBQLcYJGPUJJ6QiCruTup87YWDQtRu/hnPlBWCh8PS
+        hQGquhM7hzaimStGhMdASKHmQDwoVQUF0gkV6BbIGeNRd6Yb/befH2X3UaDsw3S7
+        wXu93pUBlBCLOlqth1Wta4alPb1wi+xBTGDKPqPNSXrsvetiHinaFJRK33dcWPtQ
+        5vAsJC34zzcxRw5Q+LkT6Lua2R9QDFIF9eY5vmQHzLXrVcIHV8U=
+        =HJ3a
         -----END PGP MESSAGE-----
     {% else %}
     pwd: |
