@@ -1,0 +1,12 @@
+{% set conf = salt.grains.filter_by(
+  {
+    'default': {
+      'helpid': None,
+    },
+    'dgcomp1': {
+      'helpid': 9002,
+    },
+  },
+  grain = 'id',
+  merge = salt.pillar.get('pcsupport')
+) %}

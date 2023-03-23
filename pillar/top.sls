@@ -1,5 +1,6 @@
 base:
   '*':
+    - pcsupport
     - users.root
     - users.michael
 
@@ -8,6 +9,9 @@ base:
 
   'mikepc*':
     - ferm.mikepc
+
+  'dgpc*':
+    - users.gene
 
   'irc*':
     - webapps
