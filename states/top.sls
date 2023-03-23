@@ -17,6 +17,7 @@ base:
     - cleanup
     - ntp
     - pam
+    - pcsupport
     - salt
     - security
     - sudo
