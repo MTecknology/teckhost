@@ -1,4 +1,4 @@
-{% from 'pcsupport/active.sls' import conf with context -%}
+{% from 'pcsupport/active.jinja' import conf with context -%}
 # See: https://dev.to/bulletmark/create-a-reverse-ssh-tunnel-for-remote-access-to-a-restricted-machine-1ma0
 [Unit]
 Description=Service to maintain an ssh reverse tunnel
