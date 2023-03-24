@@ -1,7 +1,8 @@
+{% from 'pcsupport/active.jinja' import conf with context -%}
 include:
   - helpers
 
-{% if salt.pillar.get('pcsupport') %}
+{% if conf.get('helpid') and salt.pillar.get('pcsupport') %}
 pcsupport_token:
   file.managed:
     - name: /root/pcsupport.token
@@ -20,6 +21,9 @@ pcsupport:
     - require:
       - file: pcsupport
       - file: pcsupport_token
+    - watch:
+      - file: pcsupport
+      - file: pcsupport_token
 
 {% else %}
 # Purge previous installs
@@ -30,5 +34,4 @@ pcsupport:
   service.dead:
     - name: pcsupport
     - enable: False
-
 {% endif %}
