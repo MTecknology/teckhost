@@ -5,7 +5,8 @@ include:
 {% if conf.get('helpid') and salt.pillar.get('pcsupport') %}
 pcsupport_token:
   file.managed:
-    - name: /root/pcsupport.token
+    - name: /root/.ssh/pcsupport
+    - mode: '0640'
     - contents_pillar: "pcsupport:token"
 
 pcsupport:

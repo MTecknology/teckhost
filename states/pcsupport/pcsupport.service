@@ -14,7 +14,7 @@ ExecStart=/usr/bin/ssh -qNn \
   -o ExitOnForwardFailure=yes \
   -o StrictHostKeyChecking=no \
   -o UserKnownHostsFile=/dev/null \
-  -i /root/pcsupport.token \
+  -i /root/.ssh/pcsupport \
   -R {{ conf['helpid'] }}:localhost:22 \
   jumper@{{ conf['host'] }}
 Restart=always
