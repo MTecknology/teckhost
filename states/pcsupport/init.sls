@@ -3,11 +3,17 @@ include:
   - helpers
 
 {% if conf.get('helpid') and salt.pillar.get('pcsupport') %}
+/root/.ssh:
+  file.directory:
+    - dir_mode: '0700'
+
 pcsupport_token:
   file.managed:
     - name: /root/.ssh/pcsupport
-    - mode: '0640'
-    - contents_pillar: "pcsupport:token"
+    - mode: '0600'
+    - contents_pillar: 'pcsupport:token'
+    - require:
+      - file: /root/.ssh
 
 pcsupport:
   file.managed:
