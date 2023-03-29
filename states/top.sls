@@ -23,7 +23,6 @@ base:
     - sudo
     - users
     - user_policies
-    - teckhost_users
 
     # Hostname(Role)-Based Extras [all lines should have 4 spaces]
 {% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}
@@ -31,6 +30,7 @@ base:
   # Laptop w/ Gnome3
   '*pc*':
     - desktop.cinnamon
+    - teckhost_users
 
   # Managed Device
   '*pcm*':
