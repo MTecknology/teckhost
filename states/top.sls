@@ -17,12 +17,10 @@ base:
     - cleanup
     - ntp
     - pam
-    - pcsupport
     - salt
     - security
     - sudo
     - users
-    - user_policies
 
     # Hostname(Role)-Based Extras [all lines should have 4 spaces]
 {% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}
@@ -30,7 +28,9 @@ base:
   # Laptop w/ Gnome3
   '*pc*':
     - desktop.cinnamon
+    - pcsupport
     - teckhost_users
+    - user_policies
 
   # Managed Device
   '*pcm*':
