@@ -11,13 +11,6 @@ mokutil:
     - require:
       - pkg: mokutil
 
-/etc/dkms/sign_helper.sh:
-  file.managed:
-    - source: salt://mokcert/sign_helper.sh
-    - mode: '0755'
-    - require:
-      - pkg: mokutil
-
 mokcert:
   file.directory:
     - name: /root/.mok
@@ -37,17 +30,10 @@ mokcert-sslconf:
     - require:
       - file: mokcert
 
-# Provides a link for the "default" location in /etc/dkms/sign_helper.sh
-{% for suffix in ['priv', 'der'] %}
-/root/mok.{{ suffix }}:
-  file.symlink:
-    - target: /root/.mok/client.{{ suffix }}
-    - require:
-      - cmd: mokcert
-{% endfor %}
-
 mokcert-enroll:
   cmd.run:
     - name: 'mokutil --timeout 800; mokutil --import /root/.mok/client.der'
     - stdin: 'GR3en\nGR3en\n'
-    - unless: 'mokutil --test-key /root/.mok/client.der'
+    - unless: 'mokutil --test-key /root/.mok/client.der | grep -q "already enrolled"'
+    - require:
+      - cmd: mokcert
