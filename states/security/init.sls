@@ -1,5 +1,7 @@
+{% if salt.match.glob('*pc*') %}
 include:
   - .mountpoints
+{% endif %}
 
 /etc/security/access.conf:
   file.managed:
