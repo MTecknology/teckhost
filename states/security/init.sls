@@ -1,6 +1,7 @@
 {% if salt.match.glob('*pc*') %}
 include:
   - .mountpoints
+  - .grub
 {% endif %}
 
 /etc/security/access.conf:

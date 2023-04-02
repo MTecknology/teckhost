@@ -50,6 +50,14 @@ root:
       {% endfor %}
     {% endif %}
 
+/home/{{ user }}:
+  file.directory:
+    - user: {{ user }}
+    - group: {{ user }}
+    - dir_mode: "0700"
+    - require:
+      - user: {{ user }}
+
 {% if 'keys' in attr %}
 {{ user }}-ssh:
   ssh_auth.present:
@@ -57,7 +65,7 @@ root:
     - names: {{ attr['keys']|json }}
     - fingerprint_hash_type: md5
     - require:
-      - group: {{ user }}
+      - user: {{ user }}
 {% endif %}
 
 {% if attr.get('teckuser', False) %}
