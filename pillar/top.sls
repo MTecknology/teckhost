@@ -1,6 +1,7 @@
 base:
   '*':
     - pcsupport
+    - security
     - users.root
     - users.michael
 

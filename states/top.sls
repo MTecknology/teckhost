@@ -12,11 +12,13 @@ base:
 
   # Baseline
   '*':
+    - auditd
     - drivers
     - basics
     - cleanup
     - ntp
     - pam
+    - rsyslog
     - salt
     - security
     - sudo
