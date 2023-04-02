@@ -9,3 +9,4 @@ __pycache__
 
 # Makefile
 testseed.cfg
+testseed.cfg.orig
