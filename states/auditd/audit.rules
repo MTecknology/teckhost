@@ -64,14 +64,14 @@
 -a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete
 -a always,exit -F arch=b32 -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete
 # 4.1.16 Ensure changes to system administration scope (sudoers) is collected
-auditctl -w /etc/sudoers -p wa -k scope
-auditctl -w /etc/sudoers.d -p wa -k scope
+-w /etc/sudoers -p wa -k scope
+-w /etc/sudoers.d -p wa -k scope
 # 4.1.17 Ensure system administrator actions (sudolog) are collected
-auditctl -w /var/log/sudo.log -p wa -k actions
+-w /var/log/sudo.log -p wa -k actions
 # 4.1.18 Ensure kernel module loading and unloading is collected
-auditctl -w /sbin/insmod -p x -k modules
-auditctl -w /sbin/rmmod -p x -k modules
-auditctl -w /sbin/modprobe -p x -k modules
-auditctl -a always,exit -F arch=b64 -S init_module -S delete_module -k modules
+-w /sbin/insmod -p x -k modules
+-w /sbin/rmmod -p x -k modules
+-w /sbin/modprobe -p x -k modules
+-a always,exit -F arch=b64 -S init_module -S delete_module -k modules
 # 4.1.19 Ensure the audit configuration is immutable
-auditctl -e 2
+-e 2
