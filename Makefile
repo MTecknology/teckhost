@@ -107,7 +107,7 @@ endif
 ##
 
 clean: clean-testpc1 clean-devpc1
-	$(RM) testseed.cfg teckhost*.iso
+	$(RM) testseed.cfg* teckhost*.iso
 
 # Delete a VM if it exists
 clean-%: explicit_phony

@@ -11,6 +11,10 @@ Usage:
 import pytest
 
 
+# Simple wrapper to run a command using sudo with known password
+SUDO_WRAPPER = 'echo SuperInsecurePassword4Testing | sudo -S'
+
+
 def pytest_addoption(parser):
     '''
     Add extra options to pytest command. See: ``pytest --help``
