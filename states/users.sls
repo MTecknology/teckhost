@@ -32,6 +32,7 @@ root:
       - {{ group }}
       {% endfor %}
       {% if attr.get('teckuser', False) %}
+      - users
       - cdrom
       - floppy
       - audio

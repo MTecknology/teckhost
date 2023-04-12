@@ -20,6 +20,7 @@ desktop-cinnamon:
       - fonts-ubuntu
       - gnome-calculator
       - gnome-screenshot
+      - thunderbird
       - totem
       - vlc
       - cheese
@@ -61,7 +62,6 @@ desktop-cinnamon-trim:
       - hexchat
       - hexchat-common
       - hexchat-plugins
-      - thunderbird
       - transmission-gtk
       - transmission-common
     - require:
