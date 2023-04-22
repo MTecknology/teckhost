@@ -5,6 +5,7 @@ ssh:
   pkg.installed:
     - name: openssh-server
   service.running:
+    - enable: True
     - require:
       - pkg: ssh
     - watch:

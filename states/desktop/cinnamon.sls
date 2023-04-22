@@ -25,7 +25,6 @@ desktop-cinnamon:
       - vlc
       - cheese
       - cups
-      - deja-dup
       - gimp
       - gnome-disk-utility
       - gnome-font-viewer
@@ -34,6 +33,7 @@ desktop-cinnamon:
       - gstreamer1.0-libav
       - gstreamer1.0-plugins-ugly
       - inkscape
+      - laptop-mode-tools
       - libreoffice-calc
       - libreoffice-gnome
       - libreoffice-impress

@@ -1,4 +1,5 @@
 # Random little things that are nice to clean up after a system is deployed.
+# NOTE: 'order' should almost always be avoided; special exceptions are noted.
 
 /tmp/gpgpassphrase:
   file.absent: []
@@ -26,22 +27,37 @@ unapproved-packages:
       - apache2-bin
       - apport
       - avahi-daemon
+      - deja-dup
+      - duplicity
       - gdebi
       - gdebi-core
+      - gnome-online-accounts
       - gnome-software
       - gist
+      - malcontent
+      - malcontent-gui
       - os-prober
-      - spotify-client
+      - pidgin
+      - pidgin-data
       - ppp
+      - prelink
+      - python3-debian
+      - rubygems-integration
       - software-properties-gtk
       - software-properties-common
+      - spotify-client  # insecure application
       - synaptic
       - tasksel
       - tasksel-data
-      # systemd fluff
+      - xdg-desktop-portal-gtk
+      # installed via Recommends
+      - exim4-daemon-light
+      - exim4-config
+      - exim4-base
+      # systemd cruft ...
       - libnss-myhostname
       - libnss-mymachines
-      - libnss-resolv
+      - libnss-resolve
       - libnss-systemd
       - libsystemd-dev
       - libudev-dev
@@ -55,10 +71,10 @@ unapproved-packages:
       - systemd-standalone-tmpfiles
       - systemd-tests
       - systemd-timesyncd
-    - order: last  # Ensure any accidental installs are followed up with removals
+    - order: last  # Exception: Ensure any accidental installs are followed up with removals
 
 package-cleanup:
   cmd.wait:
-    - name: apt -y autoremove
+    - name: apt-get -y autoremove
     - watch:
       - pkg: unapproved-packages

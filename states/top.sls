@@ -31,6 +31,7 @@ base:
   # Laptop w/ Gnome3
   '*pc*':
     - desktop.cinnamon
+    - grub
     - pcsupport
     - teckhost_users
     - user_policies

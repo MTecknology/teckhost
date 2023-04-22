@@ -1,7 +1,7 @@
 {% for grubconf in ['01_admin', '10_linux'] %}
 /etc/grub.d/{{ grubconf }}:
   file.managed:
-    - source: salt://security/{{ grubconf }}
+    - source: salt://grub/{{ grubconf }}
     - template: jinja
     - mode: '0755'
     - watch_in:
@@ -10,10 +10,10 @@
 
 /etc/default/grub:
   file.managed:
-    - source: salt://security/grub
+    - source: salt://grub/grub
     - template: jinja
 
 update-grub:
-  cmd.wait:
-    - watch:
+  cmd.run:
+    - onchanges:
       - file: /etc/default/grub
