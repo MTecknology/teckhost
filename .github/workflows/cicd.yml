@@ -83,7 +83,7 @@ jobs:
       - name: Save ISO (teckhost-sda.iso)
         uses: actions/upload-artifact@v3
         with:
-          name: teckhost-sda.iso
+          name: teckhost-sda_master.iso
           path: teckhost-sda.iso
 
   testinstall:
@@ -105,14 +105,14 @@ jobs:
       - name: Pull ISO (teckhost-sda.iso)
         uses: actions/download-artifact@v3
         with:
-          name: teckhost-sda.iso
+          name: teckhost-sda_master.iso
 
       # 2. Install OS on VM using teckhost-sda.iso (testing option)
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
         run: touch testseed.cfg; touch teckhost-sda.iso; make testpc1
         env:
-          TH_ISOPATH: teckhost-sda.iso
+          TH_ISOPATH: teckhost-sda_master.iso
           TH_SHOTS: testpc1-${{ matrix.boot }}
           TH_BOOT: ${{ matrix.boot }}
 
