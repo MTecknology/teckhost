@@ -93,7 +93,8 @@ jobs:
 
     strategy:
       matrix:
-        target: [master, cicd-release]
+        #target: [master, cicd-release]
+        target: [master]  # ^ prevents fixes more often than bugs
         boot: [efi, bios]
 
     # virtualbox can only run on some versions (10.5, 12) of macosx runners

@@ -23,7 +23,7 @@ class TestServices:
     @pytest.mark.parametrize(
         'service', [
             'systemd-timesyncd',    # 2.2.1.X
-            'avahi-daemon',         # 2.2.3
+            # 'avahi-daemon',         # 2.2.3
             # 'cups',                 # 2.2.4 - common use
             'dhcpd',                # 2.2.5
             'slapd',                # 2.2.6

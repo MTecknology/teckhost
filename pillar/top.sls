@@ -13,6 +13,10 @@ base:
 
   'dgpc*':
     - users.gene
+    - users.filisha
+
+  'filipc*':
+    - users.filisha
 
   'irc*':
     - webapps
