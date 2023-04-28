@@ -17,7 +17,9 @@ journald:
     - source: salt://rsyslog/journald.conf
     - require:
       - service: auditd
-  service.running:
-    - name: systemd-journald
-    - watch:
-      - file: journald
+#  service.running:
+#    - name: systemd-journald
+#    - watch:
+#      - file: journald
+#    - require:
+#      - service: rsyslog

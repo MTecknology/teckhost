@@ -34,7 +34,7 @@ parse_options() {
 	export TH_SEED="${TH_SEED:-preseed.cfg}"
 	export TH_GRUBb="${TH_GRUBb:-./grub-bios.cfg}"
 	export TH_GRUBe="${TH_GRUBe:-./grub-efi.cfg}"
-	export THT_GRUBTEST="${THT_GRUBTEST:-TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
+	export THT_GRUBTEST="${THT_GRUBTEST:-TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar BS_gitfs_base=master TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
 	export THT_GRUBTXTRA="${THT_GRUBTXTRA}"
 	export TH_KEEP="${TH_KEEP:-False}"
 	export THT_DEVICE="${THT_DEVICE:-/dev/nvme0n1}"
