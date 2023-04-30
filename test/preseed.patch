@@ -1,8 +1,8 @@
-169c169
+170c170
 < d-i netcfg/dhcp_options select Configure network manually
 ---
 > #d-i netcfg/dhcp_options select Configure network manually
-237c237,238
+238c238,239
 < #d-i finish-install/reboot_in_progress note
 ---
 > d-i finish-install/reboot_in_progress note
