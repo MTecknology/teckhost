@@ -1,0 +1,9 @@
+[Allow users to update timezone]
+Identity=unix-group:users
+Action=org.freedesktop.timedate1.set-timezone
+ResultActive=yes
+
+[Allow users to manage printer settings]
+Identity=unix-group:users
+Action=org.opensuse.cupspkhelper.mechanism.all-edit
+ResultActive=yes
