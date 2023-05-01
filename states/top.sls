@@ -18,7 +18,7 @@ base:
     - cleanup
     - ntp
     - pam
-    - polkit
+    #- polkit
     - rsyslog
     - salt
     - security

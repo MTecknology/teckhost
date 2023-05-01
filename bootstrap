@@ -162,10 +162,10 @@ configure_minion() {
 		gitfs_remotes:
 		  - ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
 		    - root: ${BS_states_root:-states}
-		    - base: cicd-release
+		    - base: ${BS_gitfs_base:-cicd-release}
 		ext_pillar:
 		  - git:
-		    - cicd-release ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
+		    - ${BS_gitfs_pillar_base:-cicd-release} ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
 		      - root: ${BS_pillar_root:-pillar}
 		      - env: base
 		EOF
