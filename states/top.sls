@@ -18,7 +18,7 @@ base:
     - cleanup
     - ntp
     - pam
-    - polkit
+    #- polkit
     - rsyslog
     - salt
     - security
@@ -31,6 +31,7 @@ base:
   # Laptop w/ Gnome3
   '*pc*':
     - desktop.cinnamon
+    - grub
     - pcsupport
     - teckhost_users
     - user_policies
