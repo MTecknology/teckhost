@@ -33,7 +33,6 @@ base:
     - desktop.cinnamon
     - grub
     - pcsupport
-    - teckhost_users
     - user_policies
 
   # Managed Device
@@ -47,3 +46,7 @@ base:
   # Dev Systems
   'dev*':
     - ssh
+
+  # TODO: Temporary relocation
+  'mikepc*':
+    - extras.mikepc
