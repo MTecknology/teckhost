@@ -1,7 +1,6 @@
 #!yaml|gpg
 users:
   filisha:
-    teckuser: True
     ugid: 7003
     groups: []
     pwd: |

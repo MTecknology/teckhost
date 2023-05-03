@@ -161,17 +161,6 @@ overflow:
       - user: michael
 {% endfor %}
 
-{% if salt.match.glob('irc.lustfield.net') %}
-/home/michael/p:
-  file.symlink:
-    - target: /srv/webapps/mtpaste
-    - user: michael
-    - group: michael
-    - require:
-      - user: michael
-{% endif %}
-
-
 ##
 # Repositories
 ##
@@ -183,17 +172,3 @@ homedata:
     - user: michael
     - require:
       - file: /home/michael/repos
-
-##
-# Misc.
-##
-
-/etc/cups/printers.conf:
-  file.managed:
-    - contents_pillar: teckhost_extra:printers_config
-    - user: root
-    - group: lp
-    - mode: '0600'
-    - unless:
-      - fun: file.file_exists
-        path: /etc/cups/printers.conf

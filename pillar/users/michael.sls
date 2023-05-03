@@ -3,52 +3,28 @@
 users:
   michael:
     ugid: 1000
-    teckuser: True
     groups:
       - ssh-user
       - sudo
-    {% if (salt.match.glob('*pc*') and not salt.match.glob('mikepc*')) %}
-    # Password used for remote support
     pwd: |
         -----BEGIN PGP MESSAGE-----
 
-        hQIMA7+DShJS+9zMAQ/8Cf8RDavi/QyCFn12LARY83cEJA3X5qQ5KM4UYOk4zrWB
-        LuKVRNtgF1mrf3YkoDKt7i+23Xwqfd7vw9QO3yzZIEZepm20GyUagN9gG8yMUu8O
-        sqmBoY3Bsk+ojIfCAHgoY6jkLQqite3Gxp4sGXknUwdx1GTWGoeqhuM3HEKE5efU
-        GKm19DWrSGHjcfROmeNPqMOxc9Nkv0LJY/QHiJTLyAfMwsM1VKPYL+heHm64gUsf
-        PM1anQBPgGM+SUWChVhGRA19+pJ4ZAdq9U1CEIQuGMlbXOjoiFxhUhqp8XUc5Oov
-        cP1xvUjxRIojiuIV6+GHGgifFQeNkSnICrmki/0AdGZEt35LGo9at6woPiijbznN
-        gNoA1bVkJpKqxOS0FRfBStRnVsI9CVpVInRWxiUQm0MlQG8lDbV1seE+VU8ZtUMY
-        b0JxOD9NUsxJ2Ky8USE9q0Dewwg35NZmo12A+pMEVPUMZKgFvaXUF55SsFDT9uIz
-        sJgReYzZv37d8r9FZRiESY7KEoJRyaCE5y1ep+g8wnGDXnkoawNFypIEZraYRb5c
-        Tuj+wZCraNVXzYQIMmRazbBSRAjxA0v4qOTf7KCRcEpxRM629CDyyB8dl/kumx3n
-        WjQ4CPv9MXD/D8xaOBX6R7hBQLcYJGPUJJ6QiCruTup87YWDQtRu/hnPlBWCh8PS
-        hQGquhM7hzaimStGhMdASKHmQDwoVQUF0gkV6BbIGeNRd6Yb/befH2X3UaDsw3S7
-        wXu93pUBlBCLOlqth1Wta4alPb1wi+xBTGDKPqPNSXrsvetiHinaFJRK33dcWPtQ
-        5vAsJC34zzcxRw5Q+LkT6Lua2R9QDFIF9eY5vmQHzLXrVcIHV8U=
-        =HJ3a
+        hQIMA7+DShJS+9zMARAAjrDYPlj9/B0iHy0d7jfURIQhknAXZoWtXCd4ulSXZA/W
+        G+iEXKQR2PRUKzBV9XBBngCWepL9b8BIPHlXJmL8LmUzbGGcmay7sV1j/Nc7vQ7D
+        Z7AQi5ZwCzEnmpnwz9dLP1pM3rGWCEdvZvHMfBz37vbCT2xxtkivcR3B9xg+0eKV
+        P3+BAX7iCw7gvzAr8Oipjmz6Y+H9GDAH50GEgC7yI0R+2scQ77mrAlk1wqi09csF
+        i9sQIbyWElw7n5fcYAl/6ypWq8Y59Do7wNR24idPJxKyTS8BOzrrCmE4cHITuHUr
+        jQus+j313NoKgnlLPeQ/Ahc0o8oVRHNpuhRaQrecX09U49acXyzMb3P3HJzpu+GN
+        0l/yOuor9+QmerhmK+a7zVt1Z4RUtUhqldoECOhlUfsl0v20b2t3Yjtkjui5DqLn
+        Zbn4YkHIXM3lnmSmQruOgjCKSS3e8cuSKqsST958/LC4OavqvLWw9H5RlxpZhZ2N
+        ukHoEQT3WG85IsvOdKfodbQ/+Lq8HKNDupPULFubKU8sOZPVjmxaX8NHyQmG2yl6
+        9Xx2iZgyTnPnyJozhKUeazSOFWg0tznrVcX4buird3RGjjM06NMMQ4KzYyaC7BJt
+        C7f5Mi3PUSd5Kp3wjCQaI4W5ea6xT1LNrv/QZLuKdc/fiHAShntbcyu88p2ic37S
+        hAFTgfXWawCaA/elSZAAjA/O76Oum6AoaFsplIiU4VJaPgQ97g7HE0P7zXCUWyFb
+        Py+K9+jOeClePqDbL5RdCUdSs24CshiK7STho1aEP2Y3Cx2Y+yANQujm15r8GvPq
+        rVqaJrLwhgwWCvsZlCxMBli/5qKWU1hbiCN7n1kn1WHQ0Bp2Fw==
+        =9f03
         -----END PGP MESSAGE-----
-    {% else %}
-    pwd: |
-        -----BEGIN PGP MESSAGE-----
-
-        hQIMA7+DShJS+9zMARAAnODyFhB8OpnTVDdIDNLDhrcZwAF13+o9m8LTZZ14xAkd
-        nMp4pBgqCzg06U/52B4ymRFMH3gIypPbaRIsbrsnKa/sQ2RpUzpEDd5pV5A0fi5/
-        dYP4TDe0YDDgyB44J+cwXOuPAx5oglZRz++zu+Yta6vKrTHI4vup+NkZgbCpYpEA
-        IN5ldslz+dOiUPPa4mx4sctUJYs0JMt5vAZyZNwKDOZnU9PCwLQnn1bWgYNmAWSL
-        qIHmgDTHdEpopbtH1eviU9S2bcB74mEg87SfnwiTjaljDlGcjZSZGuXV6DCkSIPl
-        fQ6OZ9/S6JjUVUHJPHcICaZvxSjV0QUDK1lOD6Ui8jIgUf9AcWsCuzZyQzX6e86J
-        mF0ZAn/rvoI8in+XXujJx25wc47O1W+AE6L8ELhK1O3OlfnvbWxzjJtIXULxmgEo
-        CCKYGihpLtb3YwhkHoDIEmh3aLqSgLtiEQvupiZs06NBZvQR6usuWL9ucmGEG6jn
-        QhwaYT3orTjN1Z1X5Tu3kFcAdtspHjmZZQCA4sT89qmX9zUaQVDyER7HsSbXVI5S
-        fOi8RnLzFAPdwT5Dwk8VrRP8hfrx0NNm1TG57aW+/PaJaGBY/lOxatd2OmpKFbE1
-        yKHxsl8PTTqlZcUiBcEMJjF91VCaTJDNUtSADblhCoRKGThTNoFZTCGl8et10IPS
-        hAEerleooNcrE7yU9wQ8V/bdwYYX4AiV5KPmjm6ZlF8u3Xwgpy5+peIsJ/f5drwR
-        30QqOZXQHYgCd557Rx2Hs4u6YRrncVVs1MEoY4U51oU5Vxd/NXKWCHZxkul+615b
-        liWgWAaUjUlpLBqNKh2yYsvmFvI70W7WTzweSUgo8eYFK3U0rA==
-        =ECwb
-        -----END PGP MESSAGE-----
-    {% endif %}
     keys:
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDUGwmFHLugs42aNZl10vttqSd5/TyuwlSIAeZ0FRLul michael@mikepc
     init: |
@@ -106,32 +82,3 @@ users:
     init_installunless:
       - fun: file.directory_exists
         path: /home/michael/repos/data/.private
-
-# Extra stuff for my laptops
-teckhost_extra:
-  printers_config: |
-      -----BEGIN PGP MESSAGE-----
-
-      hQIMA7+DShJS+9zMAQ/8Cg+/+Vg7OaTvfM+QX0DcKMc8bLaqktJ0Tr+v41UAYOA4
-      9iq8kC8vhAxvXPIoivWliSLY/+wJmVw8NPvQ9UCge21g7h2PhQz6nNOgnMG6N6Wf
-      AC5JXLM1uzhXVunDfcQLb3GHM3x2WGFRTYq2IQqm1Y8ZIAhoWLKoeHOLjJafSrJy
-      pnWQ9v73Naqkh3uXC87oajnMzuH+k9xSbmJ9ZBS2pCzvgZGmeIFEqUY63UbX1jTK
-      GuBrpqTngvqG8sY3K65cm5mlWw5YfZGdD11zTy5mmJFWu084gbULIGT4238GeqgZ
-      gn/msChUxDs9EVc6g63TkOAfIeqRzAw7zNWZqus/ecK1fcf+1IVjrlSl9kUcKDVr
-      RO1Jv3vsHvX1DmYEipbzj6SriZexK41OFY49nBm2pTrBikmcjzBa+OF7uttE9by+
-      7t1CctZnBs/D1tf+ea6dAPqbyvVqXpImEQpDdLB7CWcDd+R0WQS/A1iETSZi2eAz
-      AxQHFWLhoIC5Oi54evxo608J9HVyF9fu+/mciP6rptyfUSpv9mEj/jthwSUz14f0
-      RxTE7v9M81S+8eTyJTDJE+AQXMbwC1hfZEjQb7D0NstN4bCM34rx/NvPlfiU8AvW
-      jCG9OSFTr3KYu9cpGt+9cTovmQtYByaZKzFzh0TxlRhgGS6hrmyLXywnsP0YGPTS
-      wR0Bfc47BoY1pWy/TMJBBmbMZJpbU0dJNp6+jvt6jqmfPCoDvYSzK9S4ASwYaiAd
-      iUM8LHRiP0rCPK+JzgyfRZp/lUvFiSG2mNX5aqcA/RY04Tg1YjMuXqOZYN0nDun5
-      b9ObrZi59dI5aCwYp0Im2wBdz3zhaUpngO3kpUJYSFaaY1DeCpRHqccpqJGUAUJu
-      LkG9lQ2LioKQkI0PO9GvgK9bkoUNpoWtjdSxTLayCTGFbhtkAdrA0G2uGnJYMtvh
-      A+ikuYok0MNDDFPTENF894hFSGahvY65vcPj0I6psPMVfgcomG/4FWJyPW+j2WqJ
-      A1hknpyFgHVO6tE4FltJJGsbwd+30NUOB6kl6/QTF/q/vU8cXuPUFD0nmPTXFxbF
-      zWEL+6eqlH6gp+T+rWienPqoxh81Ejj5NaKZYusinEeEZCEvFG/cY2/r8rMxjxse
-      A+R34pZ8yEzfrJ2FZKO6MS871+FiWyMfNgyxBsy47LGSchNvSchjtR5+PenQOMda
-      LGw9vmoPkfzW1nSWHS4u9Q0tTgfQzyXYmyW/woQdxYlGJzqjtHfm7n2+R9ANhDCx
-      yRm6CrHdk7wvSBAztJgpoE73x+Fh8NBIEj6mH5VhLMvkNxjkvRReyX1UKyX3rDY=
-      =D4np
-      -----END PGP MESSAGE-----

@@ -1,7 +1,6 @@
 #!yaml|gpg
 users:
   gene:
-    teckuser: True
     ugid: 7002
     groups: []
     pwd: |

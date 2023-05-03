@@ -1,7 +1,6 @@
 #!yaml|gpg
 users:
   patricia:
-    teckuser: True
     ugid: 7001
     groups: []
     pwd: |
