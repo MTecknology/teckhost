@@ -16,15 +16,13 @@ root:
 {% for user, attr in salt.pillar.get('users', {}).items() %}
 {%- if user not in salt.pillar.get('device_users') %}
 {{ user }}:
-  #file.missing:
-  file.managed:
+  file.missing:
     - name: /home/{{ user }}
-    - contents: 'pre-flight test'
-  #user.absent:
-  #  - purge: True
-  #group.absent:
-  #  - require:
-  #    - group: {{ user }}
+  user.absent:
+    - purge: True
+  group.absent:
+    - require:
+      - group: {{ user }}
 {% else %}
 
 {{ user }}:

@@ -34,3 +34,8 @@ vim-sanity:
         set mouse=
         set background=dark
         filetype plugin indent on
+
+/etc/gai.conf:
+  file.managed:
+    - source: salt://basics/gai.conf
+    - mode: '0644'

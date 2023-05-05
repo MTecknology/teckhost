@@ -8,6 +8,7 @@ desktop-cinnamon:
     - names:
       - apparmor
       - apparmor-utils
+      - blueman
       - cinnamon-core
       - dconf-cli
       - eog
@@ -55,7 +56,6 @@ desktop-cinnamon-trim:
   pkg.purged:
     - names:
       - apache2-bin
-      - blueman
       - gnome-games
       - gnome-software-common
       - gnome-user-share
