@@ -19,6 +19,9 @@ main() {
 	lock acquire "$0" || die 'Unable to acquire lock'
 	mkdir -p /etc/salt/minion.d
 
+	# Patch gai.conf
+	echo 'precedence ::ffff:0:0/96  100' >>/etc/gai.conf
+
 	# Install Masterless Salt
 	configure_apt || die 'Failed to configure apt'
 	apt-get -y install gpg python3-pygit2 wget || die 'Failed to install dependencies'
