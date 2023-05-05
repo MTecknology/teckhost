@@ -42,7 +42,6 @@ unapproved-packages:
       - ppp
       - prelink
       - python3-debian
-      - rubygems-integration
       - software-properties-gtk
       - software-properties-common
       - spotify-client  # insecure application
