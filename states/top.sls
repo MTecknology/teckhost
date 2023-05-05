@@ -25,19 +25,13 @@ base:
     - sudo
     - users
 
-    # Hostname(Role)-Based Extras [all lines should have 4 spaces]
-{% include '_hosts/' ~ salt.grains.get('id').split('.')[0] ignore missing %}
-
   # Laptop w/ Gnome3
   '*pc*':
+    - teckhost_agent.client
     - desktop.cinnamon
     - grub
     - pcsupport
     - user_policies
-
-  # Managed Device
-  '*pcm*':
-    - teckhost_agent.client
 
   # Test Systems
   'test*':
@@ -48,5 +42,12 @@ base:
     - ssh
 
   # TODO: Temporary relocation
+  'media*':
+    - ssh
+  'irc*':
+    - ssh
+    - irssi
+    - teckhost_agent.server
+    - webapps
   'mikepc*':
     - extras.mikepc
