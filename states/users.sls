@@ -14,6 +14,18 @@ root:
     - name: /root/.ssh/authorized_keys
 
 {% for user, attr in salt.pillar.get('users', {}).items() %}
+{%- if user not in salt.pillar.get('device_users') %}
+{{ user }}:
+  #file.missing:
+  file.managed:
+    - name: /home/{{ user }}
+    - contents: 'pre-flight test'
+  #user.absent:
+  #  - purge: True
+  #group.absent:
+  #  - require:
+  #    - group: {{ user }}
+{% else %}
 
 {{ user }}:
   group.present:
@@ -69,20 +81,4 @@ root:
       - user: {{ user }}
 {% endif %}
 
-{% if attr.get('teckuser', False) %}
-{% if 'init' in attr %}
-/home/{{ user }}/firstlogin:
-  file.managed:
-    - contents_pillar: users:{{ user }}:init
-    - user: {{ user }}
-    - group: {{ user }}
-    - mode: '0750'
-    {% if 'init_installif' in attr %}
-    - onlyif: {{ attr['init_installif']|json }}
-    {% endif %}
-    {% if 'init_installunless' in attr %}
-    - unless: {{ attr['init_installunless']|json }}
-    {% endif %}
-{% endif %}{% endif %}
-
-{% endfor %}
+{% endif %}{% endfor %}{# for user, attr #}
