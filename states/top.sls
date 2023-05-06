@@ -26,7 +26,7 @@ base:
     - users
 
   # Server
-  '* and not *pc*':
+  'not *pc*':
     - match: compound
     - ssh
 
@@ -37,6 +37,11 @@ base:
     - pcsupport
     - user_policies
     - signal
+
+  # Test/Dev Systems
+  'test* or dev*':
+    - match: compound
+    - ssh
 
   'irc*':
     - irssi
