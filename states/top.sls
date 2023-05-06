@@ -27,11 +27,14 @@ base:
 
   # Laptop w/ Gnome3
   '*pc*':
-    - teckhost_agent.client
     - desktop.cinnamon
     - grub
     - pcsupport
     - user_policies
+    - signal
+
+  'mikepc*':
+    - extras.mikepc
 
   # Test Systems
   'test*':
@@ -47,7 +50,4 @@ base:
   'irc*':
     - ssh
     - irssi
-    - teckhost_agent.server
     - webapps
-  'mikepc*':
-    - extras.mikepc

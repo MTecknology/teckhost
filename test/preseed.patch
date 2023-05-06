@@ -2,8 +2,7 @@
 < d-i netcfg/dhcp_options select Configure network manually
 ---
 > #d-i netcfg/dhcp_options select Configure network manually
-238c238,239
+238c238
 < #d-i finish-install/reboot_in_progress note
 ---
 > d-i finish-install/reboot_in_progress note
-> d-i netcfg/get_domain string domain.tld

@@ -26,7 +26,7 @@ class TestSoftwareUpdates:
         '''1.2.2 Ensure GPG keys are configured'''
         # No practical tests provided
         assert True
-        probe = host.run('apt-cache policy | grep http | grep -v "debian.org"')
+        probe = host.run('apt-cache policy | grep http | grep -Ev "(debian.org|signal.org)"')
         assert probe.rc == 1, 'unexpected exit status'
         stdout = probe.stdout.strip()
         assert stdout == ''
