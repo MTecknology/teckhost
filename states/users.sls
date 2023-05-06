@@ -22,7 +22,7 @@ root:
     - purge: True
   group.absent:
     - require:
-      - group: {{ user }}
+      - user: {{ user }}
 {% else %}
 
 {{ user }}:
@@ -41,7 +41,6 @@ root:
       {% for group in attr['groups'] %}
       - {{ group }}
       {% endfor %}
-      {% if attr.get('teckuser', False) %}
       - users
       - cdrom
       - floppy
@@ -52,7 +51,6 @@ root:
       - netdev
       - bluetooth
       - scanner
-      {% endif %}
     - remove_groups: False
     - require:
       - group: {{ user }}
