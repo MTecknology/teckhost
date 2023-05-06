@@ -1,16 +1,14 @@
 ##
 # Extra Packages
 ##
-include:
-  - signal
-  #- virtualbox
+#include:
+#  - virtualbox
 
 teckhost-michael-extras:
   pkg.installed:
     - names:
       - vim
       # Laptop Extras
-      {% if salt.match.glob('mikepc*') %}
       - claws-mail
       - claws-mail-multi-notifier
       - pylint
@@ -26,12 +24,24 @@ teckhost-michael-extras:
       - vagrant
       - xorriso
       #- virtualbox # TODO: This is pending unstable->stable
-      {% endif %}
+
+/home/michael/firstlogin:
+  file.managed:
+    - contents_pillar: users:michael:init
+    - user: michael
+    - group: michael
+    - mode: '0750'
+    - onlyif:
+      - fun: match.glob
+        tgt: 'mikepc*'
+    - unless:
+      - fun: file.directory_exists
+        path: /home/michael/repos/data/.private
 
 ##
 # Extra Partitioning
 ##
-{% if salt.match.glob('mikepc*') and not salt.chroot.in_chroot() %}
+{% if not salt.chroot.in_chroot() %}
 
 overflow:
   lvm.lv_present:
