@@ -11,7 +11,7 @@ def test_user_present(host, user):
     assert host.user(user).exists
 
 
-@pytest.mark.parametrize('user', ['salt', 'michael', 'invaliduser'])
+@pytest.mark.parametrize('user', ['salt', 'michael', 'invaliduser', 'testgone'])
 def test_user_absent(host, user):
     '''Verify specific users are absent on the system'''
     assert not host.user(user).exists
