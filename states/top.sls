@@ -25,6 +25,11 @@ base:
     - sudo
     - users
 
+  # Server
+  'not *pc*':
+    - match: compound
+    - ssh
+
   # Laptop w/ Gnome3
   '*pc*':
     - desktop.cinnamon
@@ -33,21 +38,14 @@ base:
     - user_policies
     - signal
 
-  'mikepc*':
-    - extras.mikepc
-
-  # Test Systems
-  'test*':
+  # Test/Dev Systems
+  'test* or dev*':
+    - match: compound
     - ssh
 
-  # Dev Systems
-  'dev*':
-    - ssh
-
-  # TODO: Temporary relocation
-  'media*':
-    - ssh
   'irc*':
-    - ssh
     - irssi
     - webapps
+
+  'mikepc*':
+    - extras.mikepc

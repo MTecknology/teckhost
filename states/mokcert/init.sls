@@ -32,7 +32,7 @@ mokcert-sslconf:
 
 mokcert-enroll:
   cmd.run:
-    - name: 'mokutil --timeout 800; mokutil --import /root/.mok/client.der'
+    - name: 'mokutil --timeout 0; mokutil --import /root/.mok/client.der'
     - stdin: 'GR3en\nGR3en\n'
     - unless: 'mokutil --test-key /root/.mok/client.der | grep -q "already enrolled"'
     - require:

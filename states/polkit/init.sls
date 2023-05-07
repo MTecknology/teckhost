@@ -11,6 +11,7 @@ polkit:
     - clean: True
     - require:
       - pkg: polkit
+  {% if not salt.chroot.in_chroot() %}
   service.running:
     - name: polkit
     - enable: True
@@ -18,8 +19,10 @@ polkit:
       - pkg: polkit
     - watch:
       - file: polkit
+      - file: /etc/polkit-1/rules.d
+  {% endif %}
 
 /etc/polkit-1/rules.d:
   file.absent:
-    - watch_in:
-      - service: polkit
+    - require:
+      - pkg: polkit
