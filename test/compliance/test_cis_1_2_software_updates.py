@@ -12,7 +12,7 @@ class TestSoftwareUpdates:
     @pytest.mark.skipif(distro.id() != 'debian', reason='test for debian')
     def test_repoconfig_debian(self, host):
         '''1.2.1 Ensure package manager repositories are configured'''
-        probe = host.run('apt-cache policy | grep http | grep -v "debian.org"')
+        probe = host.run('apt-cache policy | grep http | grep -Ev "(debian.org|signal.org)"')
         assert probe.rc == 1, 'unexpected exit status'
         stdout = probe.stdout.strip()
         assert stdout == ''

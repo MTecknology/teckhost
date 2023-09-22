@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 ##
 # A quick/simple script to get masterless salt deployed and configured.
 # See help text (./bootstrap -h) and README.rst for requirements.
@@ -9,27 +10,34 @@
 #
 # BS_*: This script will dump all "BS_*" environment variables into a configuration
 #       file for salt-minion; this provides a way to mangle teckhost.conf.
+#
+# Critical Order:
+#   1. Prepare apt
+#   2. Install apt/salt dependencies,
+#   3. Add salt repo
+#   4. Install salt
+#   5. Chown salt
 ##
 
 main() {
 	parse_options "$@"
 
-	# Prep
+	# Pre-flight
 	safety_checks
 	lock acquire "$0" || die 'Unable to acquire lock'
+	pristine_apt || die 'Failed to set pristine apt configuration'
 	mkdir -p /etc/salt/minion.d
+	echo 'master: invalid.tld' >/etc/salt/minion.d/teckhost.conf
 
-	# Patch gai.conf
+	# Hack: IPv6 is often incorrectly implemented and first boot is very touchy
 	echo 'precedence ::ffff:0:0/96  100' >>/etc/gai.conf
+	echo 'Acquire::ForceIPv4 "true";' >/etc/apt/apt.conf.d/99force-ipv4
 
-	# Install Masterless Salt
-	configure_apt || die 'Failed to configure apt'
-	apt-get -y install gpg python3-pygit2 wget || die 'Failed to install dependencies'
-	configure_minion || die 'Failed to install salt-minion'
+	# Install and configure salt-minion (solo)
+	install_salt || die 'Failed to install salt-minion service'
+	configure_minion || die 'Failed to configure salt-minion'
 	deploy_gpgkeys || die 'Failed to unpack GPG keys'
-	#TODO: This is TEMPORARY hack because we need >= 3004.0
-	apt-get install -y salt-minion=3004.1+dfsg-2 salt-common=3004.1+dfsg-2 || die 'Failed to install salt-minion'
-	#apt-get install -y salt-minion || die 'Failed to install salt-minion'
+	chown -R root:root /etc/salt/gpgkeys
 
 	# Run Highstate and Configure System
 	run_highstate || die 'Provisioning process (highstate) failed'
@@ -86,7 +94,7 @@ safety_checks() {
 }
 
 # Ensure a clean apt state prior to salt management
-configure_apt() {
+pristine_apt() {
 	# Find $OSCODENAME
 	# Seems excessive when only one path is likely, but who knows how this might get used
 	if [[ -n "$OSCODENAME" ]]; then
@@ -105,13 +113,13 @@ configure_apt() {
 	rm -rf /etc/apt/sources.list*
 	mkdir /etc/apt/sources.list.d
 	cat >/etc/apt/sources.list <<-EOF
-		deb http://deb.debian.org/debian $OSCODENAME main contrib non-free
-		deb http://security.debian.org/debian-security $OSCODENAME-security main contrib non-free
-		deb http://deb.debian.org/debian $OSCODENAME-updates main contrib non-free
+		deb http://deb.debian.org/debian $OSCODENAME main contrib non-free non-free-firmware
+		deb http://security.debian.org/debian-security $OSCODENAME-security main contrib non-free non-free-firmware
+		deb http://deb.debian.org/debian $OSCODENAME-updates main contrib non-free non-free-firmware
 
 		# Newer Packages (use with extreme caution)
-		deb http://deb.debian.org/debian testing main non-free contrib
-		deb http://deb.debian.org/debian sid main non-free contrib
+		deb http://deb.debian.org/debian testing main non-free non-free-firmware contrib
+		deb http://deb.debian.org/debian sid main non-free non-free-firmware contrib
 		EOF
 	cat >/etc/apt/preferences.d/pinning <<-EOF
 		Package: *
@@ -130,17 +138,40 @@ configure_apt() {
 		Pin: release a=unstable
 		Pin-Priority: 300
 		EOF
+
+	# Update package cache
 	apt-get update
+}
+
+# Install the salt master and get vendor-garbage configured correctly
+install_salt() {
+	# Dependencies
+	apt-get update || return 1
+	apt-get install -y debconf-utils wget python3-venv build-essential git || return 1
+
+        # Application
+        python3 -m venv /opt/salt
+        /opt/salt/bin/pip3 install cryptography pygit2 'Jinja2<3.1' salt==3006.6
+
+        # Directory structure
+        mkdir -p /etc/salt/minion.d
+        mkdir -p /etc/salt/pki/minion
 }
 
 # Run a highstate
 run_highstate() {
+	# Ensure /dev/shm is mounted
+	if ! mountpoint -q /dev/shm; then
+		test -d /dev/shm || mkdir /dev/shm
+		mount -t tmpfs none /dev/shm
+	fi
+
 	# This is an ugly hack because of some networking hiccups during some deployments.
-	if ! salt-call --local -l debug state.highstate; then
+	if ! /opt/salt/bin/salt-call --local -l info state.highstate; then
 		log "$WARN" 'FIRST HIGHSTATE FAILED; Sleeping a few minutes before retrying.'
 		sleep 240
 		# Less verbosity to help with information gathering
-		salt-call --local -l quiet --state-verbose=false state.highstate
+		/opt/salt/bin/salt-call --local -l quiet --state-verbose=false state.highstate
 	fi
 }
 

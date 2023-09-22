@@ -3,7 +3,7 @@ include:
 
 /etc/apt/sources.list:
   file.managed:
-    - source: salt://apt/sources.list
+    - source: salt://apt/sources.list_{{ salt.grains.get('osfinger') }}
     - template: jinja
     - require:
       - file: /etc/apt/preferences.d/pinning

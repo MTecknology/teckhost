@@ -1,0 +1,35 @@
+#!/bin/sh
+##
+# Quick hack to enable keyboard input during testing.
+# This is intended for use on a Mac Github Runner.
+##
+set -e
+
+_VER=$(vboxmanage --version | cut -f1 -d"r" | cut -f1 -d"_")
+_EXTPACKVER=$(vboxmanage list extpacks | grep Version | awk '{print $2}')
+if [ "$_VER" = "$_EXTPACKVER" ]; then
+	echo 'Already up to date.'
+	exit 0
+fi
+
+# Temp directory to unpack
+_TMP="$(mktemp -d)"
+
+# Get extpack
+wget -q "https://download.virtualbox.org/virtualbox/$_VER/Oracle_VM_VirtualBox_Extension_Pack-$_VER.vbox-extpack" -P "$_TMP/"
+
+# Find license checksum
+tar -C "$_TMP" -xf "$_TMP/Oracle_VM_VirtualBox_Extension_Pack-$_VER.vbox-extpack"
+_LICENSEHASH="$(sha256sum "$_TMP/ExtPack-license.txt" | awk '{print $1}')"
+
+# Install extpack
+sudo VBoxManage extpack install --accept-license="$_LICENSEHASH" --replace "$_TMP/Oracle_VM_VirtualBox_Extension_Pack-$_VER.vbox-extpack"
+
+# Verify installed version
+_EXTPACKVER=$(vboxmanage list extpacks | grep Version | awk '{print $2}')
+if [ "$_VER" = "$_EXTPACKVER" ]; then
+	echo "VirtualBox Extension Pack was updated to version $_EXTPACKVER"
+fi
+
+# Clean up
+rm -rf "$_TMP"

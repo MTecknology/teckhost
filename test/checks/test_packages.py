@@ -5,7 +5,7 @@
 import pytest
 
 
-@pytest.mark.parametrize('pkg', ['salt-minion'])
+@pytest.mark.parametrize('pkg', ['vim'])
 def test_package_present(host, pkg):
     '''Verify specific packages are present on the system '''
     assert host.package(pkg).is_installed

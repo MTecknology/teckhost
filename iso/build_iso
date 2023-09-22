@@ -28,7 +28,6 @@ main() {
 # Read options into environment
 parse_options() {
 	# Defaults
-	export TH_CKSUM="$TH_CKSUM"
 	export TH_SRC="${TH_SRC:-./debian-netinst.iso}"
 	export TH_DST="${TH_DST:-./teckhost.iso}"
 	export TH_SEED="${TH_SEED:-preseed.cfg}"
@@ -40,9 +39,8 @@ parse_options() {
 	export THT_DEVICE="${THT_DEVICE:-/dev/nvme0n1}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
 
-	while getopts 'c:i:o:s:f:g:kd:b:x:l:h' OPT; do
+	while getopts 'i:o:s:f:g:kd:b:x:l:h' OPT; do
 		case "$OPT" in
-			c) TH_CKSUM="$OPTARG";;
 			i) TH_SRC="$OPTARG";;
 			o) TH_DST="$OPTARG";;
 			s) TH_SEED="$OPTARG";;
@@ -57,6 +55,9 @@ parse_options() {
 			*) die "Unexpected argument provided: '$OPT'";;
 		esac
 	done
+
+	# Enable real debugging
+	[ "${LOG_LEVEL:-1}" -lt 1 ] && set -x
 }
 
 # Show help text (an explanation of options)
@@ -68,7 +69,6 @@ show_help() {
 	Usage: build_iso [options]
 
 	Options:
-	  -c X${t}Checksum of resource
 	  -i X${t}Pristine ISO to be modified (can be http)
 	  -o X${t}Output ISO
 	  -s X${t}Preseed template to embed into ISO
@@ -82,7 +82,6 @@ show_help() {
 	  -h${t}Print this help text and exit
 
 	Defaults (can be set as environment variables):
-	  TH_CKSUM${t}<empty>
 	  TH_SRC${t}./debian-netinst.iso
 	  TH_DST${t}./teckhost.iso
 	  TH_SEED${t}./preseed.cfg
@@ -93,21 +92,15 @@ show_help() {
 	  THT_GRUBTEST${t}TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg
 	  THT_GRUBTXTRA${t}""
 	  LOG_LEVEL${t}1  (info)
-
-	Tell build_iso to pull a remote iso and store in /tmp/\$TH_CKSUM.iso:
-	  export \\
-	      TH_SRC=https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.3.0-amd64-netinst.iso \\
-	      TH_CKSUM=eba7ce7823681a610f9f23d6468976517ed92b6b90acec4ac55df62b0a090050bba0145ef5c07f544b92569cd10e9572f4e9f7c3415b3323abffa51cd7c5d4f4
-	  ./build_iso -o ~/teckhost.iso
 	EOF
 }
 
 safety_checks() {
-	log "$DEBUG" 'Running sanity checks'
+	log "$INFO" 'Running sanity checks'
 
 	# Check for required commands
 	for cmd in 'bsdtar' 'syslinux' 'xorriso'; do
-		command_present "$cmd" || die 'Missing dependencies, must have: bsdtar syslinux xorriso'
+		command_present "$cmd" || die 'Missing dependencies, must have: bsdtar (libarchive-tools) syslinux xorriso'
 	done
 
 	# Verify provided values point at files
@@ -119,46 +112,14 @@ safety_checks() {
 }
 
 unpack_source() {
-	# If source is http, grab/cache resource
-	if [[ "$TH_SRC" = http* ]]; then
-		_get_websource || die 'Failed to grab resource'
-	fi
-
 	# Verify source exists
 	[[ ! -f "$TH_SRC" ]] && die "Source file ($TH_SRC) does not exist"
-
-	# Verify checksum of source
-	if [[ -n "$TH_CKSUM" ]]; then
-		sha512sum "$TH_SRC" | cut -d' ' -f1 | grep -q "$TH_CKSUM" || \
-			die "cksum($TH_SRC) != $TH_CKSUM"
-	fi
 
 	# Actually unpack source
 	bsdtar -C "$TH_TEMP" -xf "$TH_SRC"
 
 	# Make it editable (must be reverted before regen)
 	chmod -R +w "$TH_TEMP"
-}
-
-# Pull/cache a copy from the web and swap variables once verified
-_get_websource() {
-	command_present 'wget' || die 'wget is required to get a web source'
-
-	# Local cache location
-	iso="/tmp/$TH_CKSUM.iso"
-
-	# If cache file exists, validate and return
-	if [[ -f "$iso" ]]; then
-		if sha512sum "$iso" | cut -d' ' -f1 | grep -q "$TH_CKSUM"; then
-			log "$DEBUG" "Valid cache for $TH_SRC"
-			TH_SRC="$iso"
-			return 0
-		fi
-		log "$WARN" "Removing invalid cache at $iso"
-		rm -f "$iso"
-	fi
-	# Grab resource and store in cache location
-	wget -qO "$iso" "$TH_SRC" && TH_SRC="$iso"
 }
 
 # Insert an auto-only grub boot config
@@ -195,7 +156,7 @@ inject_preseed() {
 
 # Build the modified ISO
 build_iso() {
-	log "$DEBUG" "Bulding ISO at $TH_DST"
+	log "$INFO" "Bulding ISO at $TH_DST"
 	# Some weird requirement; things break without it
 	chmod -R -w "$TH_TEMP"
 	# command partially copied from iso in .disk/isofs

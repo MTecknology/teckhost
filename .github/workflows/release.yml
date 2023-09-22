@@ -38,16 +38,12 @@ jobs:
       - name: Install Build Dependencies
         run: |
             sudo apt-get update
-            sudo apt-get install libarchive-tools syslinux xorriso isolinux
+            sudo apt-get install libarchive-tools syslinux xorriso isolinux coreutils
 
       # 2. Build "Production" ISO (teckhost*.iso)
       - name: Build Teckhost ISO
         id: build_iso
         run: make teckhost.iso teckhost-sda.iso teckhost-nvme0n1.iso
-        env:
-          # current stable
-          TH_SRC: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/firmware-11.7.0-amd64-netinst.iso
-          TH_CKSUM: "029500297f14bd4f6650fa4aa991c96027b8d5cd9cc91b38722ee2b914612e851fa81d60f4e7ad739565a83128a98461368fc95defc01ec7d66c62a32ca15bf9"
 
       # 3. Publish Release w/ Artifacts
       - name: Create Release
