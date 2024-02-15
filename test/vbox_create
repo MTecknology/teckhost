@@ -90,13 +90,7 @@ create_vm() {
 	VBoxManage modifyvm "$TH_VMNAME" --cpus 4
 	VBoxManage modifyvm "$TH_VMNAME" --memory 1024 --vram 128
 	if [[ "$TH_BOOT" = 'efi' ]]; then
-		# Enable EFI
 		VBoxManage modifyvm "$TH_VMNAME" --firmware efi || return 1
-		#VBoxManage modifyvm "$TH_VMNAME" --firmware efi64 || return 1
-		# Enable SecureBoot
-		#VBoxManage modifynvram "$TH_VMNAME" inituefivarstore || return 1
-		#VBoxManage modifynvram "$TH_VMNAME" enrollmssignatures || return 1
-		#VBoxManage modifynvram "$TH_VMNAME" enrollorclpk || return 1
 	fi
 
 	# Networking
@@ -116,12 +110,6 @@ create_vm() {
 	# Boot Order
 	VBoxManage modifyvm "$TH_VMNAME" --boot1 dvd --boot2 disk --boot3 none --boot4 none || return 1
 
-	# Recommended Settings
-	#VBoxManage modifyvm "$TH_VMNAME" --graphicscontroller vboxvga --rtcuseutc on --pae off || return 1
-
-	# Hardware Compatibility
-	#VBoxManage modifyvm "$TH_VMNAME" --nested-hw-virt off --nestedpaging off || return 1
-
 	# PATCH: https://bugs.debian.org/1036310
 	VBoxManage modifyvm "$TH_VMNAME" --paravirtprovider legacy || return 1
 
@@ -134,7 +122,6 @@ create_vm() {
 }
 
 install_os() {
-	[ "$(uname -s)" = "Darwin" ] && set -x
 	# Boot VM to grub menu (assume: clean disk, teckhost.iso[auto-grub,testseed])
 	VBoxManage startvm "$TH_VMNAME" --type headless || return 1
 
@@ -144,7 +131,7 @@ install_os() {
 		# Give VM a chance to initialize
 		sleep 10
 		# Attempt to get a screenshot from the running system (may be blank)
-		VBoxManage controlvm "$TH_VMNAME" screenshotpng "${TH_SHOTS}_boot-$i.png" 2>/dev/null && break
+		VBoxManage controlvm "$TH_VMNAME" screenshotpng "boot.png" 2>/dev/null && break
 	done || return 1
 	sleep 15
 
@@ -156,9 +143,9 @@ install_os() {
 	fi
 
 	# Local testing took ~17 minutes to build testpc1
-	printf 'Waiting (up to 60 minutes) for install to finish ...\nInstalling ...'
+	printf 'Waiting (up to 90 minutes) for install to finish ...\nInstalling ...'
 	# (10s*6)*30m == 1800s == 30m
-	for i in {1..360}; do
+	for i in {1..540}; do
 		# If path is set, take a screenshot before sleeping
 		if [[ "$TH_SHOTS" ]]; then
 			VBoxManage controlvm "$TH_VMNAME" screenshotpng "$TH_SHOTS-$i.png"
