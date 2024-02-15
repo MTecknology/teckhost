@@ -25,7 +25,7 @@ show_usage() {
 	cat <<-EOF
 	Create a fresh VM for testing with
 
-	Usage: ./vbox_create [-h] <options>
+	Usage: vbox_create [-h] <options>
 
 	Options:
 	  -i [path]${t}Location of installer ISO
@@ -90,7 +90,13 @@ create_vm() {
 	VBoxManage modifyvm "$TH_VMNAME" --cpus 4
 	VBoxManage modifyvm "$TH_VMNAME" --memory 1024 --vram 128
 	if [[ "$TH_BOOT" = 'efi' ]]; then
+		# Enable EFI
 		VBoxManage modifyvm "$TH_VMNAME" --firmware efi || return 1
+		#VBoxManage modifyvm "$TH_VMNAME" --firmware efi64 || return 1
+		# Enable SecureBoot
+		#VBoxManage modifynvram "$TH_VMNAME" inituefivarstore || return 1
+		#VBoxManage modifynvram "$TH_VMNAME" enrollmssignatures || return 1
+		#VBoxManage modifynvram "$TH_VMNAME" enrollorclpk || return 1
 	fi
 
 	# Networking
@@ -110,6 +116,15 @@ create_vm() {
 	# Boot Order
 	VBoxManage modifyvm "$TH_VMNAME" --boot1 dvd --boot2 disk --boot3 none --boot4 none || return 1
 
+	# Recommended Settings
+	#VBoxManage modifyvm "$TH_VMNAME" --graphicscontroller vboxvga --rtcuseutc on --pae off || return 1
+
+	# Hardware Compatibility
+	#VBoxManage modifyvm "$TH_VMNAME" --nested-hw-virt off --nestedpaging off || return 1
+
+	# PATCH: https://bugs.debian.org/1036310
+	VBoxManage modifyvm "$TH_VMNAME" --paravirtprovider legacy || return 1
+
 	# Share Folder
 	if [[ -n "$TH_DEVDIR" ]]; then
 		VBoxManage sharedfolder add "$TH_VMNAME" --name devdir --hostpath "$TH_DEVDIR" || return 1
@@ -119,38 +134,46 @@ create_vm() {
 }
 
 install_os() {
+	[ "$(uname -s)" = "Darwin" ] && set -x
 	# Boot VM to grub menu (assume: clean disk, teckhost.iso[auto-grub,testseed])
 	VBoxManage startvm "$TH_VMNAME" --type headless || return 1
 
-	# Wait for VM to start before proceeding; 10 seems to be too aggressive
-	sleep 14
+	# Wait for VM to start before proceeding
+	printf 'Waiting for VM to boot ...\n'
+	for i in {1..30}; do
+		# Give VM a chance to initialize
+		sleep 10
+		# Attempt to get a screenshot from the running system (may be blank)
+		VBoxManage controlvm "$TH_VMNAME" screenshotpng "${TH_SHOTS}_boot-$i.png" 2>/dev/null && break
+	done || return 1
+	sleep 15
 
 	# Press "t" for testing install (see --hotkey=t in iso/auto-grub.cfg)
-	VBoxManage controlvm "$TH_VMNAME" keyboardputstring "t" || return 1
+	VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 14 || return 1
 	if [[ "$TH_BOOT" = 'bios' ]]; then
 		# BIOS mode requires pressing enter
 		VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1C 9C
 	fi
 
 	# Local testing took ~17 minutes to build testpc1
-	printf 'Waiting (up to 30 minutes) for install to finish ...'
+	printf 'Waiting (up to 60 minutes) for install to finish ...\nInstalling ...'
 	# (10s*6)*30m == 1800s == 30m
-	for i in {1..180}; do
+	for i in {1..360}; do
 		# If path is set, take a screenshot before sleeping
 		if [[ "$TH_SHOTS" ]]; then
 			VBoxManage controlvm "$TH_VMNAME" screenshotpng "$TH_SHOTS-$i.png"
 			# Switch to TTY4 around preseed invokation
 			[ "$i" = 18 ] && VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3E BE B8 9D
 		fi
-		sleep 10; printf '.'
+		printf '.'; sleep 10
 		# The installer iso will remain mounted until the installer triggers an eject.
 		VBoxManage showvminfo "$TH_VMNAME" | grep -q "$TH_ISOPATH" || break
 	done
 	if [[ "$TH_SHOTS" ]]; then
 		# Return to TTY1 and take final screenshot
 		VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3B BB B8 9D
+		sleep 1
 		VBoxManage controlvm "$TH_VMNAME" screenshotpng "$TH_SHOTS-final.png"
-		tar -cf "$TH_SHOTS.tar" "$TH_SHOTS"-*.png
 	fi
 	printf 'Done\n'
 

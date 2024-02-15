@@ -10,7 +10,7 @@ show-info-panel=true
 show-notifications=false
 
 [org/cinnamon/desktop/session]
-idle-delay=uint32 600
+idle-delay=uint32 1800
 session-daemon-uses-logind=true
 session-name='cinnamon'
 settings-daemon-uses-logind=true

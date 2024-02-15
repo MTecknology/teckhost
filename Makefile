@@ -6,36 +6,53 @@
 export WORKSPACE ?= $(abspath $(PWD)/)
 export GRUB_EXTRA ?= hostname=testpc1
 
+# Version Table
+debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.1.0/amd64/iso-cd/debian-12.1.0-amd64-netinst.iso
+debian12_sha ?= 9f181ae12b25840a508786b1756c6352a0e58484998669288c4eec2ab16b8559
+
 
 ##
 # ISO
 ##
 
-# Intended for production use (assumes nvme)
-teckhost.iso: iso/preseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
+# Intended for production use
+teckhost.iso: upstream_debian12.iso iso/preseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 	./iso/build_iso \
 	    -s iso/preseed.cfg \
+	    -i upstream_debian12.iso \
 	    -o teckhost.iso \
 	    -x "$(GRUB_EXTRA)" \
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
 # Intended for use with automated testing
-teckhost-%.iso: testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
+teckhost-%.iso: upstream_debian12.iso testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 	./iso/build_iso \
 	    -s testseed.cfg \
+	    -i upstream_debian12.iso \
 	    -o "$@" \
 	    -d "/dev/$*" \
 	    -x "$(GRUB_EXTRA)" \
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
 
 # Intended for local developmnt with virtualbox
-teckhost-local.iso: testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
+teckhost-local.iso: upstream_debian12.iso testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
 	./iso/build_iso \
 	    -s testseed.cfg \
+	    -i upstream_debian12.iso \
 	    -o teckhost-local.iso \
 	    -d /dev/sda \
 	    -x "hostname=devpc1 BS_devdir=/srv" \
 	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
+
+# Grab an upstream ISO and validate checksum
+upstream_%.iso:
+	# Copy iso from parent directory or download fresh copy
+	cp "../$($*_sha).iso" ./ || wget --quiet -O "$($*_sha).iso" "$($*_src)"
+	# Verify checksum of pristine iso
+	echo "$($*_sha)  $($*_sha).iso" | sha256sum -c
+	# Move into location to verify success
+	mv "$($*_sha).iso" "upstream_$*.iso"
+
 
 ##
 # Preeseed
