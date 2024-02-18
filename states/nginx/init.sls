@@ -32,6 +32,7 @@ nginx:
   file.managed:
     - name: /etc/nginx/nginx.conf
     - source: salt://nginx/nginx.conf
+    - template: jinja
     - watch_in:
       - service: nginx
 
