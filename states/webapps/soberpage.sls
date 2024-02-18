@@ -16,7 +16,7 @@ soberpage:
     - watch_in:
       - service: nginx
   cmd.run:
-    - name: /srv/webapps/soberpage/sync -n
+    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains"
     - require:
       - pkg: nginx
       - git: soberpage
@@ -25,7 +25,7 @@ soberpage:
     - watch_in:
       - service: nginx
   cron.present:
-    - name: "/srv/webapps/soberpage/sync -n && service nginx reload"
+    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains && service nginx reload"
     - identifier: soberpge
     - minute: 30
     - hour: 0
