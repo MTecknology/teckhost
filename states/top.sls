@@ -43,8 +43,7 @@ base:
     - match: compound
     - ssh
 
-  'irc*':
-    - irssi
+  'forwarder*':
     - webapps
 
   'mikepc*':
