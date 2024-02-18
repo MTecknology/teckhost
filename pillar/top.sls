@@ -6,3 +6,6 @@ base:
 
   'irc*':
     - webapps
+
+  '*.sobersupport.group':
+    - webapps

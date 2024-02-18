@@ -152,7 +152,8 @@ install_os() {
 			# Switch to TTY4 around preseed invokation
 			[ "$i" = 18 ] && VBoxManage controlvm "$TH_VMNAME" keyboardputscancode 1D 38 3E BE B8 9D
 		fi
-		printf '.'; sleep 10
+		printf '.'; [ "$(uname -s)" = Darwin ] && printf '\n'  # ping on mac runner
+		sleep 10
 		# The installer iso will remain mounted until the installer triggers an eject.
 		VBoxManage showvminfo "$TH_VMNAME" | grep -q "$TH_ISOPATH" || break
 	done
