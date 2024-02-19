@@ -13,16 +13,16 @@ soberpage:
     - source: salt://webapps/nginx-cfg/soberpage.conf
     - require:
       - pkg: nginx
-    - watch_in:
+    - onchanges_in:
       - service: nginx
   cmd.run:
     - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains"
     - require:
       - pkg: nginx
       - git: soberpage
-    - watch:
+    - onchanges:
       - git: soberpage
-    - watch_in:
+    - onchanges_in:
       - service: nginx
   cron.present:
     - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains && service nginx reload"
