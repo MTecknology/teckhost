@@ -17,7 +17,7 @@ soberpage:
       - file: /srv/webapps
   file.managed:
     - name: /etc/nginx/conf.d/soberpage.conf
-    - source: salt://webapps/nginx-cfg/soberpage.conf
+    - source: salt://nginx/configs/soberpage.conf
     - require:
       - pkg: nginx
     - watch_in:
