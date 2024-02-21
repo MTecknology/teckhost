@@ -4,7 +4,7 @@ include:
 
 /etc/nginx/conf.d/mtpaste.conf:
   file.managed:
-    - source: salt://webapps/nginx-cfg/mtpaste.conf
+    - source: salt://nginx/configs/mtpaste.conf
     - require:
       - pkg: nginx
     - watch_in:

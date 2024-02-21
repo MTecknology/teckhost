@@ -4,7 +4,7 @@ include:
 
 /etc/nginx/conf.d/ipecho.conf:
   file.managed:
-    - source: salt://webapps/nginx-cfg/ipecho.conf
+    - source: salt://nginx/configs/ipecho.conf
     - require:
       - pkg: nginx
     - watch_in:

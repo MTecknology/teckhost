@@ -1,6 +1,19 @@
 include:
   - nginx
 
+cloudflare-api:
+  pkg.installed:
+    - name: python3-cloudflare
+  file.managed:
+    - name: /root/.cloudflare.cfg
+    - contents: |
+        [CloudFlare]
+        token = {{ salt.pillar.get('cloudflare:token') }}
+        zone = {{ salt.pillar.get('cloudflare:zone') }}
+    - mode: '0600'
+    - require:
+      - pkg: cloudflare-api
+
 soberpage:
   git.latest:
     - name: https://danwin1210.de:1443/recoverysource/sober.page
@@ -10,24 +23,26 @@ soberpage:
       - file: /srv/webapps
   file.managed:
     - name: /etc/nginx/conf.d/soberpage.conf
-    - source: salt://webapps/nginx-cfg/soberpage.conf
+    - source: salt://nginx/configs/soberpage.conf
     - require:
       - pkg: nginx
     - watch_in:
       - service: nginx
   cmd.run:
-    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains"
+    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains -r"
     - require:
       - pkg: nginx
       - git: soberpage
+      - pkg: cloudflare-api
     - onchanges:
       - git: soberpage
     - watch_in:
       - service: nginx
   cron.present:
-    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains && service nginx reload"
+    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains -r && service nginx reload"
     - identifier: soberpge
     - minute: 30
     - hour: 0
     - require:
       - git: soberpage
+      - pkg: cloudflare-api
