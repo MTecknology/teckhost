@@ -1,6 +1,13 @@
 include:
   - nginx
 
+cloudflare-api:
+  file.managed:
+    - name: /root/.cloudflare.cfg
+    - contents: TODO
+  pkg.installed:
+    - name: python3-cloudflare
+
 soberpage:
   git.latest:
     - name: https://danwin1210.de:1443/recoverysource/sober.page
@@ -20,6 +27,8 @@ soberpage:
     - require:
       - pkg: nginx
       - git: soberpage
+      - pkg: cloudflare-api
+      - file: cloudflare-api
     - onchanges:
       - git: soberpage
     - watch_in:
@@ -31,3 +40,5 @@ soberpage:
     - hour: 0
     - require:
       - git: soberpage
+      - pkg: cloudflare-api
+      - file: cloudflare-api
