@@ -19,6 +19,8 @@ soberpage:
     - name: https://danwin1210.de:1443/recoverysource/sober.page
     - target: /srv/webapps/soberpage
     - force_checkout: True
+    - force_fetch: True
+    - force_reset: True
     - require:
       - file: /srv/webapps
   file.symlink:
