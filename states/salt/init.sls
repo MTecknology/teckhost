@@ -47,7 +47,7 @@ salt-solo:
     - require:
       - pkg: salt-solo
   cron.present:
-    - name: /opt/salt/bin/salt-call --local state.highstate
+    - name: nice -n 15 /opt/salt/bin/salt-call --local state.highstate
     - identifier: highstate
     - special: '@hourly'
     - require:
