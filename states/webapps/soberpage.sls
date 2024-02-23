@@ -21,11 +21,12 @@ soberpage:
     - force_checkout: True
     - require:
       - file: /srv/webapps
-  file.managed:
+  file.symlink:
     - name: /etc/nginx/conf.d/soberpage.conf
-    - source: salt://nginx/configs/soberpage.conf
+    - target: /srv/webapps/soberpage/nginx.conf
     - require:
       - pkg: nginx
+      - git: soberpage
     - watch_in:
       - service: nginx
   cmd.run:
