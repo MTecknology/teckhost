@@ -32,7 +32,7 @@ soberpage:
     - watch_in:
       - service: nginx
   cmd.run:
-    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains -r"
+    - name: "/srv/webapps/soberpage/sync -l WARNING -n -d /srv/webapps/soberpage/data/domains -r"
     - require:
       - pkg: nginx
       - git: soberpage
@@ -42,7 +42,7 @@ soberpage:
     - watch_in:
       - service: nginx
   cron.present:
-    - name: "/srv/webapps/soberpage/sync -n -d /srv/webapps/soberpage/data/domains -r && service nginx reload"
+    - name: "/srv/webapps/soberpage/sync -l WARNING -n -d /srv/webapps/soberpage/data/domains -r && service nginx reload"
     - identifier: soberpge
     - minute: 30
     - hour: 0
