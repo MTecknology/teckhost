@@ -1,6 +1,7 @@
 common-desktop-apps:
   pkg.installed:
     - pkgs:
+      - bolt
       - chromium
       - curl
       - feh
@@ -12,6 +13,7 @@ common-desktop-apps:
       - mesa-utils
       - simple-scan
       - terminator
+      - thunderbolt-tools
       - totem
       - yubikey-personalization
       - wcalc
