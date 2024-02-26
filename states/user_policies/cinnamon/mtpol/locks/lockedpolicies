@@ -42,3 +42,8 @@
 /org/cinnamon/settings-daemon/plugins/power/percentage-action
 /org/cinnamon/settings-daemon/plugins/power/time-low
 /org/cinnamon/settings-daemon/plugins/power/time-critical
+
+# 01-network-mangler
+org/gnome/nm-applet/disable-disconnected-notifications
+org/gnome/nm-applet/disable-connected-notifications
+org/gnome/nm-applet/suppress-wireless-networks-available
