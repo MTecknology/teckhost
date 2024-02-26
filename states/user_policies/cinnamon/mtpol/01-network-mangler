@@ -1,0 +1,4 @@
+[org/gnome/nm-applet]
+disable-disconnected-notifications=true
+disable-connected-notifications=true
+suppress-wireless-networks-available=true
