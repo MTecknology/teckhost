@@ -23,7 +23,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # 1. Shellcheck
       # Looks for +x files
@@ -40,7 +40,7 @@ jobs:
 
       # 3. Python Lint
       - name: Set Up Python environment
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - name: Flake8 Lint
@@ -52,7 +52,7 @@ jobs:
   ##
   # Test installed OS from built ISO:
   # 1. Build a "teckhost" iso from upstream release
-  # 2. Install OS on VM using teckhost-sda.iso (testing option)
+  # 2. Install OS on VM using teckhost.iso (testing option)
   # 3. Verify we can log in using the "testuser" account
   # 4. Run validation tests against the installed OS
   # 5. Ensure make clean produces no errors
@@ -63,25 +63,26 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
             sudo apt-get update
-            sudo apt-get install virtualbox libarchive-tools syslinux xorriso isolinux python3-distro coreutils
+            sudo apt-get install libarchive-tools syslinux xorriso isolinux python3-distro coreutils
 
       # 1. Build a "teckhost" iso from upstream release
       - name: Build Teckhost ISO
         id: build_iso
-        run: make teckhost-sda.iso
+        run: make teckhost-CICD_debian12.iso
         env:
-          THT_GRUBTEST: TEMPLATE_METHOD=lvm BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_pillar_base=master BS_gitfs_base=${{ github.sha }}
+          THT_GRUBTEST: BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_pillar_base=master BS_gitfs_base=${{ github.sha }}
 
-      - name: Save ISO (teckhost-sda.iso)
-        uses: actions/upload-artifact@v3
+      - name: Save ISO (teckhost.iso)
+        uses: actions/upload-artifact@v4
         with:
-          name: teckhost-sda_${{ github.sha }}.iso
-          path: teckhost-sda.iso
+          name: teckhost-CICD_debian12-${{ github.sha }}.iso
+          path: teckhost-CICD_debian12.iso
+          compression-level: 0
 
   testinstall:
     name: "Install and Validate"
@@ -96,7 +97,7 @@ jobs:
 
     runs-on: macos-12
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
@@ -105,30 +106,30 @@ jobs:
             pip3 install pytest-testinfra distro
             #sh ./test/vbox_extpack
 
-      - name: Pull ISO (teckhost-sda.iso)
-        uses: actions/download-artifact@v3
+      - name: Pull ISO (teckhost.iso)
+        uses: actions/download-artifact@v4
         with:
-          name: teckhost-sda_${{ github.sha }}.iso
+          name: teckhost-CICD_debian12-${{ github.sha }}.iso
 
-      # 2. Install OS on VM using teckhost-sda.iso (testing option)
+      # 2. Install OS on VM using teckhost.iso (testing option)
       - name: Create VM and Install (Testing) Teckhost
         id: install_os
-        run: touch testseed.cfg; touch teckhost-sda.iso; make testpc1
+        run: make testpc1_${{ matrix.os }}
         env:
-          TH_ISOPATH: teckhost-sda_${{ github.sha }}.iso
           TH_SHOTS: testpc1-${{ matrix.boot }}
           TH_BOOT: ${{ matrix.boot }}
 
       - name: (on failure) Package Screenshots
         if: failure() && steps.install_os.outcome == 'failure'
-        run: "tar -vcf testpc1-${{ matrix.boot }}.tar *.png"
+        run: "tar -vczf testpc1-${{ matrix.boot }}.tgz *.png"
 
       - name: (on failure) Upload Screenshots
         if: failure() && steps.install_os.outcome == 'failure'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: testpc1-${{ matrix.boot }}_screenshots.tar
-          path: testpc1-${{ matrix.boot }}.tar
+          name: testpc1-${{ matrix.boot }}_screenshots.tgz
+          path: testpc1-${{ matrix.boot }}.tgz
+          compression-level: 0
 
       # 3. Verify we can log in using the "testuser" account
       - name: User (testuser) Login

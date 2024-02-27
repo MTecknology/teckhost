@@ -8,5 +8,4 @@ __pycache__
 .pytest_cache/
 
 # Makefile
-testseed.cfg
-testseed.cfg.orig
+testseed*
