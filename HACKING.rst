@@ -39,10 +39,6 @@ Download and cache "latest" ``debian-netinst.iso``::
 Build the Default ISO::
 
     make teckhost.iso
-    OR
-    make teckhost-sda.iso
-    OR
-    make teckhost-nvme0n1.iso
 
 Run tests::
 
@@ -50,8 +46,8 @@ Run tests::
 
 Build and log in to dev box (requires virtualbox)::
 
-    make devpc1
-    make devpc1-ssh
+    make testpc1
+    make testpc1-ssh
 
 .. _branches:
 
@@ -124,11 +120,10 @@ Makefile
 Key Targets:
 
 - ``make teckhost.iso``
-- ``make teckhost-sda.iso``
 - ``make test``
-- ``make devpc1``
-- ``make devpc1-ssh``
-- ``make devpc1-root``
+- ``make testpc1_<version>``
+- ``make ssh-testpc1-user``
+- ``make ssh-testpc1-admin``
 - ``make clean``
 
 .. _version w/ firmware: https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/

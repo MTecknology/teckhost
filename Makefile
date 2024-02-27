@@ -7,42 +7,32 @@ export WORKSPACE ?= $(abspath $(PWD)/)
 export GRUB_EXTRA ?= hostname=testpc1
 
 # Version Table
-debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.1.0/amd64/iso-cd/debian-12.1.0-amd64-netinst.iso
-debian12_sha ?= 9f181ae12b25840a508786b1756c6352a0e58484998669288c4eec2ab16b8559
-
+debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.4.0/amd64/iso-cd/debian-12.4.0-amd64-netinst.iso
+debian12_sha ?= 64d727dd5785ae5fcfd3ae8ffbede5f40cca96f1580aaa2820e8b99dae989d94
 
 ##
 # ISO
 ##
 
-# Intended for production use
-teckhost.iso: upstream_debian12.iso iso/preseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
-	./iso/build_iso \
-	    -s iso/preseed.cfg \
-	    -i upstream_debian12.iso \
-	    -o teckhost.iso \
-	    -x "$(GRUB_EXTRA)" \
-	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
+# Default release
+teckhost.iso: teckhost_debian12.iso
+	cp teckhost_debian12.iso teckhost.iso
 
-# Intended for use with automated testing
-teckhost-%.iso: upstream_debian12.iso testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
-	./iso/build_iso \
-	    -s testseed.cfg \
-	    -i upstream_debian12.iso \
-	    -o "$@" \
-	    -d "/dev/$*" \
-	    -x "$(GRUB_EXTRA)" \
-	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
+# Intended for use in production and development
+teckhost_%.iso: upstream_%.iso
+	./iso/build_iso $(ISOARGS) \
+		-i upstream_$*.iso -o teckhost_$*.iso \
+		-f iso/$*/grub-bios.cfg -g iso/$*/grub-efi.cfg \
+		-x "$(GRUB_EXTRA)" \
+		-s iso/$*/preseed.cfg
 
-# Intended for local developmnt with virtualbox
-teckhost-local.iso: upstream_debian12.iso testseed.cfg iso/grub-bios.cfg iso/grub-efi.cfg
-	./iso/build_iso \
-	    -s testseed.cfg \
-	    -i upstream_debian12.iso \
-	    -o teckhost-local.iso \
-	    -d /dev/sda \
-	    -x "hostname=devpc1 BS_devdir=/srv" \
-	    -f iso/grub-bios.cfg -g iso/grub-efi.cfg
+# Intended for use in automated testing
+teckhost-CICD_%.iso: upstream_%.iso iso/%/testseed.cfg
+	./iso/build_iso $(ISOARGS) \
+		-i upstream_$*.iso -o $@ \
+		-f iso/$*/grub-bios.cfg -g iso/$*/grub-efi.cfg \
+		-x "$(GRUB_EXTRA)" \
+		-s iso/$*/testseed.cfg
 
 # Grab an upstream ISO and validate checksum
 upstream_%.iso:
@@ -55,67 +45,63 @@ upstream_%.iso:
 
 
 ##
-# Preeseed
-##
-
-testseed.cfg: iso/preseed.cfg test/preseed.patch
-	cp iso/preseed.cfg testseed.cfg
-	patch testseed.cfg test/preseed.patch
-
-
-##
 # Test/Dev Stuff
 ##
 
-# This can't be cleanly checked into git
+# Apply minimum patches (hostname, confirmation, etc.) to preseed
+iso/%/testseed.cfg: iso/%/preseed.cfg iso/%/preseed_test.patch
+	cp iso/$*/preseed.cfg iso/$*/testseed.cfg
+	patch iso/$*/testseed.cfg iso/$*/preseed_test.patch
+
+
+# File modes in git are not reliable
 testprep:
 	chmod 0700 test/.ssh
 	chmod 0600 test/.ssh/id_ed25519
 
-# Run all tests against testpc1
-test: test-testpc1 
-test-testpc1: pytest-testpc1-user pytest-testpc1-admin
+# Create testpc1 and run all {admin,user} tests
+test: testpc1_debian12 pytest-testpc1-user pytest-testpc1-admin
 
-# Run all tests against devpc1
-test-devpc1: pytest-devpc1-user pytest-devpc1-admin
-
-# Run tests against a host (test-<host>-<type>)
-_target = $(word $2,$(subst -, ,$1))
-
-.SECONDEXPANSION:
-pytest-%: testprep $$(call _target,$$*,1) explicit_phony
+# Run user-only tests against a host as user:testuser
+pytest-%-user:
 	python3 -m pytest \
-	    --ssh-config=test/.ssh/config --ssh-identity-file=test/.ssh/id_ed25519 \
-	    --hosts=ssh://test$(call _target,$*,2)@$(call _target,$*,1) \
-	    --type $(call _target,$*,2)
+		--ssh-config=test/.ssh/config \
+		--ssh-identity-file=test/.ssh/id_ed25519 \
+		--hosts=ssh://testuser@$* \
+		--type user
 
-# Connect to a host using ssh (ssh-<host>-<user>)
-ssh-%: $$(call _target,$$*,1) explicit_phony
-	ssh \
-	    -F test/.ssh/config -i test/.ssh/id_ed25519 \
-	    ssh://test$(call _target,$*,2)@$(call _target,$*,1)
+# Run root-required tests against a host as user:testadmin
+pytest-%-admin:
+	python3 -m pytest \
+		--ssh-config=test/.ssh/config \
+		--ssh-identity-file=test/.ssh/id_ed25519 \
+		--hosts=ssh://testadmin@$* \
+		--type admin
+
+# Connect to a host using ssh as user:testadmin
+ssh-%-user: testprep
+	ssh -F test/.ssh/config -i test/.ssh/id_ed25519 \
+		ssh://testuser@$*
+
+# Connect to a host using ssh as user:testadmin
+ssh-%-admin: testprep
+	ssh -F test/.ssh/config -i test/.ssh/id_ed25519 \
+		ssh://testadmin@$*
+
 
 ##
 # Virtual Machines
 ##
 
-# TEST: The standard virtualbox deployment; replicates production
-testpc1: teckhost-sda.iso
-ifneq (,$(findstring testpc1,$(shell VBoxManage list runningvms)))
+# Create a testpc1 image using the specified iso
+testpc1_%: teckhost-CICD_%.iso
+ifneq (,$(findstring testpc1,$(shell VBoxManage list vms)))
 	echo 'VM already exists: testpc1'
 else
-	./test/vbox_create -i $(WORKSPACE)/teckhost-sda.iso -n testpc1 \
-	    -p 4222
-endif
-
-# DEV: Build a dev box using local file directory for salt data
-#      Note: The first highstate will still be from git
-devpc1: teckhost-local.iso
-ifneq (,$(findstring devpc1,$(shell VBoxManage list runningvms)))
-	echo 'VM already exists: devpc1'
-else
-	./test/vbox_create -i $(WORKSPACE)/teckhost-local.iso -n devpc1 \
-	    -p 4224 -d $(WORKSPACE)
+	./test/vbox_create \
+		-i $(WORKSPACE)/teckhost-CICD_$*.iso \
+		-n testpc1 \
+		-p 4222
 endif
 
 
@@ -123,11 +109,11 @@ endif
 # Cleanup
 ##
 
-clean: clean-testpc1 clean-devpc1
-	$(RM) testseed.cfg* teckhost*.iso
+clean: clean-testpc1
+	$(RM) iso/*/testseed.cfg teckhost*.iso
 
 # Delete a VM if it exists
-clean-%: explicit_phony
+clean-%:
 	@if [ -n "$(findstring $*,$(shell VBoxManage list vms))" ]; then \
 		VBoxManage controlvm $* poweroff || true; \
 		VBoxManage unregistervm $* --delete; \
@@ -136,5 +122,4 @@ clean-%: explicit_phony
 	fi
 
 
-explicit_phony:
-.PHONY: testprep test testpc1 devpc1 clean explicit_phony
+.PHONY: testprep test testpc1 clean

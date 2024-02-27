@@ -29,7 +29,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # 1. Pre-Release Checks
       - name: Pre-Release Checks
@@ -43,7 +43,7 @@ jobs:
       # 2. Build "Production" ISO (teckhost*.iso)
       - name: Build Teckhost ISO
         id: build_iso
-        run: make teckhost.iso teckhost-sda.iso teckhost-nvme0n1.iso
+        run: make teckhost.iso
 
       # 3. Publish Release w/ Artifacts
       - name: Create Release
