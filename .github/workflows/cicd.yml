@@ -73,15 +73,15 @@ jobs:
       # 1. Build a "teckhost" iso from upstream release
       - name: Build Teckhost ISO
         id: build_iso
-        run: make teckhost-CICD_debian12.iso
+        run: make teckhost_debian12.iso
         env:
-          THT_GRUBTEST: BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_pillar_base=master BS_gitfs_base=${{ github.sha }}
+          THT_GRUBTEST: hostname=testpc1 BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_pillar_base=master BS_gitfs_base=${{ github.sha }}
 
       - name: Save ISO (teckhost.iso)
         uses: actions/upload-artifact@v4
         with:
-          name: teckhost-CICD_debian12-${{ github.sha }}.iso
-          path: teckhost-CICD_debian12.iso
+          name: teckhost_debian12-${{ github.sha }}.iso
+          path: teckhost_debian12.iso
           compression-level: 0
 
   testinstall:
@@ -109,7 +109,7 @@ jobs:
       - name: Pull ISO (teckhost.iso)
         uses: actions/download-artifact@v4
         with:
-          name: teckhost-CICD_debian12-${{ github.sha }}.iso
+          name: teckhost_debian12-${{ github.sha }}.iso
 
       # 2. Install OS on VM using teckhost.iso (testing option)
       - name: Create VM and Install (Testing) Teckhost
@@ -164,7 +164,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: '0'
           ref: cicd-release
