@@ -4,11 +4,12 @@
 # See env[TH_SRC] and env[TH_CKSUM] for ISO building
 ##
 export WORKSPACE ?= $(abspath $(PWD)/)
-export GRUB_EXTRA ?= hostname=testpc1
 
 # Version Table
 debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.4.0/amd64/iso-cd/debian-12.4.0-amd64-netinst.iso
 debian12_sha ?= 64d727dd5785ae5fcfd3ae8ffbede5f40cca96f1580aaa2820e8b99dae989d94
+ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
+ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
 
 ##
 # ISO
@@ -18,21 +19,10 @@ debian12_sha ?= 64d727dd5785ae5fcfd3ae8ffbede5f40cca96f1580aaa2820e8b99dae989d94
 teckhost.iso: teckhost_debian12.iso
 	cp teckhost_debian12.iso teckhost.iso
 
-# Intended for use in production and development
+# Remaster an upstream ISO with teckhost bootstrapping
 teckhost_%.iso: upstream_%.iso
-	./iso/build_iso $(ISOARGS) \
-		-i upstream_$*.iso -o teckhost_$*.iso \
-		-f iso/$*/grub-bios.cfg -g iso/$*/grub-efi.cfg \
-		-x "$(GRUB_EXTRA)" \
-		-s iso/$*/preseed.cfg
-
-# Intended for use in automated testing
-teckhost-CICD_%.iso: upstream_%.iso iso/%/testseed.cfg
-	./iso/build_iso $(ISOARGS) \
-		-i upstream_$*.iso -o $@ \
-		-f iso/$*/grub-bios.cfg -g iso/$*/grub-efi.cfg \
-		-x "$(GRUB_EXTRA)" \
-		-s iso/$*/testseed.cfg
+	./iso/build_iso $(ISOARGS) -d iso/$* \
+		-i upstream_$*.iso -o teckhost_$*.iso
 
 # Grab an upstream ISO and validate checksum
 upstream_%.iso:
@@ -94,14 +84,13 @@ ssh-%-admin: testprep
 ##
 
 # Create a testpc1 image using the specified iso
-testpc1_%: teckhost-CICD_%.iso
+testpc1_%: teckhost_%.iso
 ifneq (,$(findstring testpc1,$(shell VBoxManage list vms)))
 	echo 'VM already exists: testpc1'
 else
 	./test/vbox_create \
-		-i $(WORKSPACE)/teckhost-CICD_$*.iso \
-		-n testpc1 \
-		-p 4222
+		-i $(WORKSPACE)/teckhost_$*.iso \
+		-n testpc1 -p 4222
 endif
 
 
@@ -122,4 +111,4 @@ clean-%:
 	fi
 
 
-.PHONY: testprep test testpc1 clean
+.PHONY: testprep test clean

@@ -13,9 +13,17 @@ main() {
 
 	# Build customized ISO with preseed
 	unpack_source
-	inject_grubconfig
-	inject_preseed
-	build_iso
+	case "$TH_DST" in
+		(*debian*)
+			[ -f "$TH_DATA/testseed.cfg" ] || make "$TH_DATA/testseed.cfg"
+			inject_preseed
+			inject_grubconfig
+			;;
+		(*ubuntu*)
+			echo TODO
+			;;
+	esac
+	repack_iso
 
 	# Clean up temp data
 	if is_true "$TH_KEEP"; then
@@ -30,24 +38,18 @@ parse_options() {
 	# Defaults
 	export TH_SRC="${TH_SRC:-./debian-netinst.iso}"
 	export TH_DST="${TH_DST:-./teckhost.iso}"
-	export TH_SEED="${TH_SEED:-preseed.cfg}"
-	export TH_GRUBb="${TH_GRUBb:-./grub-bios.cfg}"
-	export TH_GRUBe="${TH_GRUBe:-./grub-efi.cfg}"
-	export THT_GRUBTEST="${THT_GRUBTEST:-BS_pillar_root=test/pillar BS_gitfs_base=master TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
-	export THT_GRUBTXTRA="${THT_GRUBTXTRA}"
+	export TH_DATA="${TH_DATA:-./iso/debian12}"
+	export THT_GRUBTEST="${THT_GRUBTEST:-hostname=testpc1 BS_pillar_root=test/pillar BS_gitfs_base=master TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
 	export TH_KEEP="${TH_KEEP:-False}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
 
-	while getopts 'i:o:s:f:g:kd:b:x:l:h' OPT; do
+	while getopts 'i:o:d:kb:l:h' OPT; do
 		case "$OPT" in
 			i) TH_SRC="$OPTARG";;
 			o) TH_DST="$OPTARG";;
-			s) TH_SEED="$OPTARG";;
-			f) TH_GRUBb="$OPTARG";;
-			g) TH_GRUBe="$OPTARG";;
+			d) TH_DATA="$OPTARG";;
 			k) TH_KEEP=True;;
 			b) THT_GRUBTEST="$OPTARG";;
-			x) THT_GRUBTXTRA="$OPTARG";;
 			l) LOG_LEVEL="$OPTARG";;
 			h) show_help; exit 1;;
 			*) die "Unexpected argument provided: '$OPT'";;
@@ -69,10 +71,7 @@ show_help() {
 	Options:
 	  -i X${t}Pristine ISO to be modified (can be http)
 	  -o X${t}Output ISO
-	  -s X${t}Preseed template to embed into ISO
-	  -f X${t}Grub (bios) configuration file
-	  -g X${t}Grub (efi) configuration file
-	  -d X${t}Installation device
+	  -d X${t}Directory with source data for ISO modification
 	  -b X${t}Options added to test entry in grub boot menu (replace)
 	  -x X${t}Additional options added to test entry (append)
 	  -l X${t}Log level (0=Debug, 1=Info, 2=Warn, 3=Error)
@@ -82,12 +81,9 @@ show_help() {
 	Defaults (can be set as environment variables):
 	  TH_SRC${t}./debian-netinst.iso
 	  TH_DST${t}./teckhost.iso
-	  TH_SEED${t}./preseed.cfg
-	  TH_GRUBb${t}./grub-bios.cfg
-	  TH_GRUBe${t}./grub-efi.cfg
+	  TH_DATA${t}./iso/debian12
 	  TH_KEEP${t}True
 	  THT_GRUBTEST${t}BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg
-	  THT_GRUBTXTRA${t}""
 	  LOG_LEVEL${t}1  (info)
 	EOF
 }
@@ -101,8 +97,7 @@ safety_checks() {
 	done
 
 	# Verify provided values point at files
-	[ -f "$TH_SEED" ] || die 'Seed file not found'
-	[ -f "$TH_GRUBe" ] || die 'Grub v2 configuration not found'
+	[ -d "$TH_DATA" ] || die 'Data directory not found'
 
 	# Other option checks
 	is_int "$LOG_LEVEL" || die 'Log level must be an integer (0-3)'
@@ -124,15 +119,16 @@ inject_grubconfig() {
 	log "$DEBUG" 'Copying grub config'
 
 	# Copy template and update template value(s)
-	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST $THT_GRUBTXTRA|" "$TH_GRUBb" >"$TH_TEMP/isolinux/menu.cfg"
-	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST $THT_GRUBTXTRA|" "$TH_GRUBe" >"$TH_TEMP/boot/grub/grub.cfg"
+	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST|" "$TH_DATA/grub-bios.cfg" >"$TH_TEMP/isolinux/menu.cfg"
+	sed -e "s|TEMPLATE_GRUBTEST|$THT_GRUBTEST|" "$TH_DATA/grub-efi.cfg" >"$TH_TEMP/boot/grub/grub.cfg"
 }
 
 # Inject a custom preseed into initrd
 inject_preseed() {
-	log "$DEBUG" 'Generating preseed file'
-	# Copy template
-	cp "$TH_SEED" "$TH_TEMP/preseed.cfg"
+	log "$DEBUG" 'Injecting preseed file'
+	# Copy preseed and testseed config files
+	cp "$TH_DATA/preseed.cfg" "$TH_TEMP/mainseed.cfg"
+	cp "$TH_DATA/testseed.cfg" "$TH_TEMP/"
 
 	# Not the cleanest assumption, but we error if files are missisg
 	basedir="$(dirname "$0")/../"
@@ -145,20 +141,22 @@ inject_preseed() {
 	log "$DEBUG" 'Injecting preseed into initrd'
 	pushd "$TH_TEMP" >/dev/null || return 1
 	gunzip install.amd/initrd.gz
-	echo 'preseed.cfg' | cpio --quiet -o -H newc -A -F install.amd/initrd
+	# NOTE: preseed.cfg is *always* loaded
+	echo 'mainseed.cfg' | cpio --quiet -o -H newc -A -F install.amd/initrd
+	echo 'testseed.cfg' | cpio --quiet -o -H newc -A -F install.amd/initrd
 	gzip install.amd/initrd
 	find . -follow -type f -print0 2>/dev/null | xargs --null md5sum >md5sum.txt
 	popd >/dev/null || return 1
 }
 
 # Build the modified ISO
-build_iso() {
+repack_iso() {
 	log "$INFO" "Bulding ISO at $TH_DST"
 	# Some weird requirement; things break without it
 	chmod -R -w "$TH_TEMP"
 	# command partially copied from iso in .disk/isofs
 	# see: https://wiki.debian.org/RepackBootableISO
-	xorriso -as mkisofs -quiet -r -V 'Debian Teckhost amd64' \
+	xorriso -as mkisofs -quiet -r -V 'Teckhost Installer' \
 		-isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin \
 		-b isolinux/isolinux.bin -c isolinux/boot.cat -boot-load-size 4 \
 		-boot-info-table -no-emul-boot -eltorito-alt-boot \
