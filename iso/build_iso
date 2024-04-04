@@ -12,18 +12,21 @@ main() {
 	TH_TEMP="$(mktemp -d)"
 
 	# Build customized ISO with preseed
-	unpack_source
-	case "$TH_DST" in
-		(*debian*)
-			[ -f "$TH_DATA/testseed.cfg" ] || make "$TH_DATA/testseed.cfg"
-			inject_preseed
-			inject_grubconfig
-			;;
-		(*ubuntu*)
-			echo TODO
-			;;
+	case "$TH_OS" in
+	debian)
+		unpack_source || die 'Failed: iso unpack'
+		# Create a testseed if patch exists
+		[ -f "$TH_DATA/testseed.cfg" ] || make "$TH_DATA/testseed.cfg"
+		inject_preseed || die 'Failed: inject preseed'
+		inject_grubconfig || die 'Failed: grub config'
+		repack_debian || die 'Failed: repack'
+		;;
+	ubuntu)
+		unpack_source || die 'Failed: iso unpack'
+		scrape_iso  || die 'Failed: iso scrape'
+		repack_ubuntu || die 'Failed: repack'
+		;;
 	esac
-	repack_iso
 
 	# Clean up temp data
 	if is_true "$TH_KEEP"; then
@@ -48,6 +51,7 @@ parse_options() {
 			i) TH_SRC="$OPTARG";;
 			o) TH_DST="$OPTARG";;
 			d) TH_DATA="$OPTARG";;
+			s) TH_OS="$OPTARG";;
 			k) TH_KEEP=True;;
 			b) THT_GRUBTEST="$OPTARG";;
 			l) LOG_LEVEL="$OPTARG";;
@@ -55,6 +59,14 @@ parse_options() {
 			*) die "Unexpected argument provided: '$OPT'";;
 		esac
 	done
+
+	# Guess target OS if not defined
+	if [ -z "$TH_OS" ]; then
+		case "$TH_DST" in
+			(*[Dd]ebian*) TH_OS='debian';;
+			(*[Uu]buntu*) TH_OS='ubuntu';;
+		esac
+	fi
 
 	# Enable real debugging
 	[ "${LOG_LEVEL:-1}" -lt 1 ] && set -x
@@ -66,13 +78,14 @@ show_help() {
 	cat <<-EOF
 	Modify a Debian ISO and inject a preseed.cfg file.
 
-	Usage: build_iso [options]
+	Usage: build_iso [options] -i <input> -o <output> -d <iso_data>
 
 	Options:
 	  -i X${t}Pristine ISO to be modified (can be http)
 	  -o X${t}Output ISO
 	  -d X${t}Directory with source data for ISO modification
 	  -b X${t}Options added to test entry in grub boot menu (replace)
+	  -s X${t}Target OS (debian, ubuntu)
 	  -x X${t}Additional options added to test entry (append)
 	  -l X${t}Log level (0=Debug, 1=Info, 2=Warn, 3=Error)
 	  -k${t}Keep temporary directory
@@ -82,6 +95,7 @@ show_help() {
 	  TH_SRC${t}./debian-netinst.iso
 	  TH_DST${t}./teckhost.iso
 	  TH_DATA${t}./iso/debian12
+	  TH_OS${t}<guess from source path>
 	  TH_KEEP${t}True
 	  THT_GRUBTEST${t}BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg
 	  LOG_LEVEL${t}1  (info)
@@ -103,6 +117,7 @@ safety_checks() {
 	is_int "$LOG_LEVEL" || die 'Log level must be an integer (0-3)'
 }
 
+# Extract contents of an ISO
 unpack_source() {
 	# Verify source exists
 	[[ ! -f "$TH_SRC" ]] && die "Source file ($TH_SRC) does not exist"
@@ -148,9 +163,9 @@ inject_preseed() {
 	find . -follow -type f -print0 2>/dev/null | xargs --null md5sum >md5sum.txt
 	popd >/dev/null || return 1
 }
-
-# Build the modified ISO
-repack_iso() {
+#
+# Build the modified Debian ISO
+repack_debian() {
 	log "$INFO" "Bulding ISO at $TH_DST"
 	# Some weird requirement; things break without it
 	chmod -R -w "$TH_TEMP"
@@ -164,6 +179,29 @@ repack_iso() {
 		-o "$TH_DST" "$TH_TEMP" 2>/dev/null || die 'Building ISO failed'
 	# -w is annoying, so we undo it right away
 	chmod -R +w "$TH_TEMP"
+}
+
+# Extract EFI partition and MBR from ISO
+scrape_iso() {
+	# Read iso table
+	fd="$(mmls -MB "$TH_SRC" | grep EFI)"
+
+	# Verify only one EFI partition is found
+	[ "$(echo "$fd" | wc -l)" == '1' ] || return 1
+
+	# Find start and end of EFI partition (also image)
+	IFS=' ' read -r id slot start end length _ <<< "$fd"
+
+	# Extract EFI
+	dd if="$TH_SRC" skip="$start" count="$length" of="$TH_TEMP/EFI.img" || return 1
+
+	# Extract MBR
+	dd if="$TH_SRC" bs=1 count=446 of="$TH_TEMP/mbr.img" || return 1
+}
+
+# Build the modified Ubuntu ISO
+repack_ubuntu() {
+	log "$INFO" "Bulding ISO at $TH_DST"
 }
 
 
