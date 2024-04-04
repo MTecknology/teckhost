@@ -39,3 +39,8 @@ vim-sanity:
   file.managed:
     - source: salt://basics/gai.conf
     - mode: '0644'
+
+/usr/local/lib/shell:
+  file.managed:
+    - source: salt://basics/helpers.sh
+    - mode: '0755'
