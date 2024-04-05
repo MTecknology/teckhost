@@ -1,3 +1,6 @@
+include:
+  - basics
+
 mokutil:
   pkg.installed:
     - names:
