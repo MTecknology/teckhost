@@ -16,7 +16,7 @@ cloudflare-api:
 
 soberpage:
   git.latest:
-    - name: https://danwin1210.de:1443/recoverysource/sober.page
+    - name: https://github.com/recoverysource/sober.page
     - target: /srv/webapps/soberpage
     - force_checkout: True
     - force_fetch: True
