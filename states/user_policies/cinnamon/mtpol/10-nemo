@@ -1,0 +1,5 @@
+[org/nemo/desktop]
+desktop-layout='false::false'
+
+[org/nemo/preferences]
+detect-content=false

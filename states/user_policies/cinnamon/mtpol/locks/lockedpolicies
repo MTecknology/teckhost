@@ -47,3 +47,7 @@
 org/gnome/nm-applet/disable-disconnected-notifications
 org/gnome/nm-applet/disable-connected-notifications
 org/gnome/nm-applet/suppress-wireless-networks-available
+
+# 10-nemo
+org/nemo/desktop/desktop-layout
+org/nemo/preferences/detect-content
