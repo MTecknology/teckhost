@@ -15,3 +15,9 @@ common-X:
       {% if salt.grains.get('lsb_distrib_release', 12)|int <= 11 %}
       - firmware-linux-nonfree
       {% endif %}
+
+/etc/X11/xorg.conf.d/dpms.conf:
+  file.managed:
+    - source: salt://desktop/xorg.d/dpms.conf
+    - require:
+      - pkg: common-X
