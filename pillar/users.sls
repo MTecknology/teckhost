@@ -9,6 +9,9 @@ device_users:
   - filisha
   {%- elif salt.match.glob('filipc*') %}
   - filisha
+  {%- elif salt.match.glob('blpc*') %}
+  - becky
+  - laura
   {%- endif %}
 
 
@@ -181,4 +184,48 @@ users:
         4KG8MT9ccDS+Wt7XR75wCyJiVftSIe2pSkEYpTrDnPJkQ519GDFKJp4HfUaujfDk
         qqlblJ3vwYMrz6Ip0b94PnylkJzfWw==
         =ByC7
+        -----END PGP MESSAGE-----
+
+  becky:
+    ugid: 7004
+    groups: []
+    pwd: |
+        -----BEGIN PGP MESSAGE-----
+
+        hQIMA7+DShJS+9zMAQ//XUsW6H8tbj2/nXzA023mKzKI9y/6D3kSAQAity5MduGm
+        o3mgbcXk36li4sqChch5dKIxa95CXA9+xe1y4COfbhD26v3eAa+pgK/uNt7JPEUw
+        lanUQWkSqiz/aESDQctA1dNDuN9kDPCf9IfYT0hEAOE8DH0c2RzUmeY0FLHMxcyd
+        0GmaroGWhzuubPujlziTENuaovi/uaWdvdp9CBJQnfP8aD+SuSVD6VQlHisjHA+0
+        5wivf8wBbaPL+Amrt54PkUrvf9C/fP8nX4c2HaYyPkdTOcuMSDK6KUvj0kU2Mpjt
+        QlL5xqsnk6QqSNpyNRfxfJk930psTVRjDAxlRuDi9BFhXcWsIdAKo9sJNyDH6WkP
+        1Bdy+UNtmwEOkfybTOv2etndWFrr3GLpUueC++qRAAjK98j//CdlYPmdODi7AZKT
+        kNzOP1JeZd5Spbx18UPPbsqEwPmUzTnKG3DcC8C8Ko5sMdICuPrWRTlDDnuA4fxk
+        pbkBSQxOkvVUPZyZlFGsk6RjnIwmFWUc77pWKZ4mrTr268zxh9X9m/8REyfym1ip
+        9VUlxZHsIJUKUkAnrgBbsI11NpNIon+646yzk6rErBuVWvJhTOP8UhWwz8Lib9di
+        zoLmczuHesHjUPhwVOTx2hzgg2mRLsUkz/Tl9/wDnIKsoR6dU4oFcScJXXhngjHS
+        RwGxvJgICTlStUxixXOvzd2W70ienXl2Gt75NFWkINU6mw5cv+F8JUiOb1tPE+v4
+        yaWmIdzLzw5U+LPOZyOzWECbkqq7Sq5f
+        =9EaV
+        -----END PGP MESSAGE-----
+
+  laura:
+    ugid: 7005
+    groups: []
+    pwd: |
+        -----BEGIN PGP MESSAGE-----
+
+        hQIMA7+DShJS+9zMAQ//XUsW6H8tbj2/nXzA023mKzKI9y/6D3kSAQAity5MduGm
+        o3mgbcXk36li4sqChch5dKIxa95CXA9+xe1y4COfbhD26v3eAa+pgK/uNt7JPEUw
+        lanUQWkSqiz/aESDQctA1dNDuN9kDPCf9IfYT0hEAOE8DH0c2RzUmeY0FLHMxcyd
+        0GmaroGWhzuubPujlziTENuaovi/uaWdvdp9CBJQnfP8aD+SuSVD6VQlHisjHA+0
+        5wivf8wBbaPL+Amrt54PkUrvf9C/fP8nX4c2HaYyPkdTOcuMSDK6KUvj0kU2Mpjt
+        QlL5xqsnk6QqSNpyNRfxfJk930psTVRjDAxlRuDi9BFhXcWsIdAKo9sJNyDH6WkP
+        1Bdy+UNtmwEOkfybTOv2etndWFrr3GLpUueC++qRAAjK98j//CdlYPmdODi7AZKT
+        kNzOP1JeZd5Spbx18UPPbsqEwPmUzTnKG3DcC8C8Ko5sMdICuPrWRTlDDnuA4fxk
+        pbkBSQxOkvVUPZyZlFGsk6RjnIwmFWUc77pWKZ4mrTr268zxh9X9m/8REyfym1ip
+        9VUlxZHsIJUKUkAnrgBbsI11NpNIon+646yzk6rErBuVWvJhTOP8UhWwz8Lib9di
+        zoLmczuHesHjUPhwVOTx2hzgg2mRLsUkz/Tl9/wDnIKsoR6dU4oFcScJXXhngjHS
+        RwGxvJgICTlStUxixXOvzd2W70ienXl2Gt75NFWkINU6mw5cv+F8JUiOb1tPE+v4
+        yaWmIdzLzw5U+LPOZyOzWECbkqq7Sq5f
+        =9EaV
         -----END PGP MESSAGE-----
