@@ -4,7 +4,7 @@ webapps:
   {% if salt.match.glob('irc.lustfield.net') %}
   mtpaste: paste.lustfield.net
   ipecho: ip.lustfield.net
-  {% elif salt.match.glob('*.sobersupport.group') %}
+  {% elif salt.match.glob('*.sober.page') %}
   soberpage: None  # monolithic
   {% endif %}
 
@@ -12,7 +12,7 @@ webapps:
 # App Tokens
 ##
 
-{% if salt.match.glob('*.sobersupport.group') %}
+{% if salt.match.glob('*.sober.page') %}
 cloudflare:
   token: |
       -----BEGIN PGP MESSAGE-----

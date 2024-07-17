@@ -152,6 +152,8 @@ install_salt() {
         # Application
         python3 -m venv /opt/salt
         /opt/salt/bin/pip3 install cryptography pygit2 'Jinja2<3.1' salt==3006.6
+	# https://github.com/saltstack/salt/issues/66590
+        /opt/salt/bin/pip3 install pygit2==1.14.1
 
         # Directory structure
         mkdir -p /etc/salt/minion.d

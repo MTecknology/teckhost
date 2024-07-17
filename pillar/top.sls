@@ -7,5 +7,5 @@ base:
   'irc*':
     - webapps
 
-  '*.sobersupport.group':
+  '*.sober.page':
     - webapps
