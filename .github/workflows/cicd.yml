@@ -52,7 +52,8 @@ jobs:
   ##
   # Test installed OS from built ISO:
   # 1. Build a "teckhost" iso from upstream release
-  # 2. Install OS on VM using teckhost.iso (testing option)
+  # Replaced with OVA: 2. Install OS on VM using teckhost.iso (testing option)
+  # 2. Deploy Testing VM from Release OVA
   # 3. Verify we can log in using the "testuser" account
   # 4. Run validation tests against the installed OS
   # 5. Ensure make clean produces no errors
@@ -77,16 +78,18 @@ jobs:
         env:
           THT_GRUBTEST: hostname=testpc1 BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_pillar_base=master BS_gitfs_base=${{ github.sha }}
 
-      - name: Save ISO (teckhost.iso)
-        uses: actions/upload-artifact@v4
-        with:
-          name: teckhost_debian12-${{ github.sha }}.iso
-          path: teckhost_debian12.iso
-          compression-level: 0
+      # Disabled: OVA
+      #- name: Save ISO (teckhost.iso)
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: teckhost_debian12-${{ github.sha }}.iso
+      #    path: teckhost_debian12.iso
+      #    compression-level: 0
 
   testinstall:
     name: "Install and Validate"
-    needs: buildiso
+    # Disabled:_OVA
+    #needs: buildiso
 
     strategy:
       matrix:
@@ -95,48 +98,59 @@ jobs:
         #os: [debian11, debian12]
         os: [debian12]
 
-    runs-on: macos-12
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
             brew install coreutils
-            #brew install --cask virtualbox
+            brew install --cask virtualbox
             pip3 install pytest-testinfra distro
-            #sh ./test/vbox_extpack
+            sh ./test/vbox_extpack
 
-      - name: Pull ISO (teckhost.iso)
-        uses: actions/download-artifact@v4
-        with:
-          name: teckhost_debian12-${{ github.sha }}.iso
-
+      # Disabled: OVA
+      #- name: Pull ISO (teckhost.iso)
+      #  uses: actions/download-artifact@v4
+      #  with:
+      #    name: teckhost_debian12-${{ github.sha }}.iso
+      #
       # 2. Install OS on VM using teckhost.iso (testing option)
-      - name: Create VM and Install (Testing) Teckhost
+      #- name: Create VM and Install (Testing) Teckhost
+      #  id: install_os
+      #  run: make testpc1_${{ matrix.os }}
+      #  env:
+      #    TH_SHOTS: testpc1-${{ matrix.boot }}
+      #    TH_BOOT: ${{ matrix.boot }}
+      #
+      #- name: (on failure) Package Screenshots
+      #  if: failure() && steps.install_os.outcome == 'failure'
+      #  run: "tar -vczf testpc1-${{ matrix.boot }}.tgz *.png"
+      #
+      #- name: (on failure) Upload Screenshots
+      #  if: failure() && steps.install_os.outcome == 'failure'
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: testpc1-${{ matrix.boot }}_screenshots.tgz
+      #    path: testpc1-${{ matrix.boot }}.tgz
+      #    compression-level: 0
+      #
+      # 2. Deploy Testing VM from Release OVA
+      - name: Create VM from (Testing) OVA
         id: install_os
-        run: make testpc1_${{ matrix.os }}
-        env:
-          TH_SHOTS: testpc1-${{ matrix.boot }}
-          TH_BOOT: ${{ matrix.boot }}
-
-      - name: (on failure) Package Screenshots
-        if: failure() && steps.install_os.outcome == 'failure'
-        run: "tar -vczf testpc1-${{ matrix.boot }}.tgz *.png"
-
-      - name: (on failure) Upload Screenshots
-        if: failure() && steps.install_os.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: testpc1-${{ matrix.boot }}_screenshots.tgz
-          path: testpc1-${{ matrix.boot }}.tgz
-          compression-level: 0
+        run: |
+            touch teckhost_${{ matrix.os }}.iso
+            make import-testpc1_${{ matrix.os }}
+            VBoxManage modifyvm testpc1 --vram 7 --paravirtprovider legacy
+            VBoxManage startvm testpc1 --type headless
+            sleep 90
 
       # 3. Verify we can log in using the "testuser" account
-      - name: User (testuser) Login
+      - name: Prep and Ping
         id: basic_validation
         run: |
             make testprep
-            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://testuser@localhost:4222 'echo ping'
+            ssh -4 -v -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i test/.ssh/id_ed25519 ssh://testuser@localhost:4222 'echo ping'
 
       # 4. Run validation tests against the installed OS
       - name: Validation Tests
@@ -155,7 +169,8 @@ jobs:
 
   deploy:
     name: Deploy Changes
-    needs: [lint, testinstall]
+    #OVA: needs: [lint, testinstall]
+    needs: [lint, buildiso, testinstall]
     if: github.ref == 'refs/heads/master'
 
     permissions:

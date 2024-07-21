@@ -43,6 +43,59 @@ Bare Metal:
     :align: center
     :alt: teckhost-lifecycle
 
+GA Prebuild
+-----------
+
+Prior to Teckhost v1.2, Github Actions ran through the entire build process,
+including a fresh installation from a generated VM. Each Github Action workflow
+took 40-80 minutes to complete and often took multiple attempts before success.
+
+Starting with v1.2, a manually-generated OVA is uploaded to the github release
+and then used by future workflows to prime the installation.
+
+To create ``testpc1.ova``:
+
+1. ``make clean test``
+2. Wait for all tests to succeed
+3. Within VM::
+
+   # Update
+   apt update
+   apt upgrade -y
+   reboot  # if kernel was updated
+
+   # Clean apt
+   apt autoremove -y
+   apt clean
+   rm /var/lib/apt/lists/* 2>/dev/null
+
+   # Fix boot
+   /sbin/grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --boot-directory=/boot/efi --bootloader-id=grub /dev/sda1
+
+   # Reclaim zeros
+   service cron stop
+   for i in / /var/ /tmp/; do cat /dev/zero >"${i}zero"; rm "${i}zero"; done
+   shutdown -h now
+
+4. Compress disk::
+
+   VBoxManage modifyhd --compact testpc1/disk0.vdi
+
+5. VBox > Machine > Export to OCI
+
+   - Format: v2.0
+   - File: testpc1_debian12-v0.0.ova  [template]
+   - Product: Teckhost
+   - Product-URL: https://github.com/MTecknology/teckhost
+   - Version: v0.0
+   - CPU: 2
+   - RAM: 1024 MB
+
+6. Upload this OVA file to GCP Cloud Storage
+7. Edit Access > ``Public, allUsers, Reader``
+8. Update file and checksum in ``Makefile`` (use "Public URL" link)
+9. Push the change and verify tests succeed
+
 .. _bootstrap:
 
 Salt Bootstrap
@@ -87,6 +140,7 @@ To encrypt data for pillar::
 .. _Download: https://github.com/MTecknology/teckhost/releases
 
 .. _state.highstate: https://docs.saltproject.io/en/latest/topics/tutorials/states_pt1.html
+
 
 .. |cicd-release| image:: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml/badge.svg?branch=cicd-release
     :target: https://github.com/MTecknology/teckhost/actions/workflows/cicd.yml
