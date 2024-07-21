@@ -6,8 +6,8 @@
 export WORKSPACE ?= $(abspath $(PWD)/)
 
 # Version Table
-debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.4.0/amd64/iso-cd/debian-12.4.0-amd64-netinst.iso
-debian12_sha ?= 64d727dd5785ae5fcfd3ae8ffbede5f40cca96f1580aaa2820e8b99dae989d94
+debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.5.0/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
+debian12_sha ?= 013f5b44670d81280b5b1bc02455842b250df2f0c6763398feb69af1a805a14f
 ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
 ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
 
