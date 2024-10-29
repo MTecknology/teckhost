@@ -5,21 +5,11 @@
 ##
 export WORKSPACE ?= $(abspath $(PWD)/)
 
-##
 # Version Table
-##
-
-# Current Debian Stable
 debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.5.0/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
 debian12_sha ?= 013f5b44670d81280b5b1bc02455842b250df2f0c6763398feb69af1a805a14f
-
-# Current Ubuntu LTS
 ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
 ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
-
-# Latest Test Images
-debian12_OVA_src ?= https://storage.googleapis.com/teckhost/testpc1_debian12-v1.2.ova
-debian12_OVA_sha ?= 723d7e54f4cf706dafc47a5b80d799b716401c5b4b032e5289cfde2f02d9e63b
 
 ##
 # ISO
@@ -42,16 +32,6 @@ upstream_%.iso:
 	echo "$($*_sha)  $($*_sha).iso" | sha256sum -c
 	# Move into location to verify success
 	mv "$($*_sha).iso" "upstream_$*.iso"
-
-# Grab an upstream ISO and validate checksum
-# TODO: Remove duplication with above
-upstream_%.ova:
-	# Copy iso from parent directory or download fresh copy
-	cp "../$($*_OVA_sha).ova" ./ || wget --quiet -O "$($*_OVA_sha).ova" "$($*_OVA_src)"
-	# Verify checksum of pristine ova
-	echo "$($*_OVA_sha)  $($*_OVA_sha).ova" | sha256sum -c
-	# Move into location to verify success
-	mv "$($*_OVA_sha).ova" "upstream_$*.ova"
 
 
 ##
@@ -107,22 +87,10 @@ ssh-%-admin: testprep
 testpc1_%: teckhost_%.iso
 ifneq (,$(findstring testpc1,$(shell VBoxManage list vms)))
 	echo 'VM already exists: testpc1'
-ifeq (,$(findstring testpc1,$(shell VBoxManage list runningvms)))
-	VBoxManage startvm testpc1 --type headless && sleep 60
-endif
 else
 	./test/vbox_create \
 		-i $(WORKSPACE)/teckhost_$*.iso \
 		-n testpc1 -p 4222
-endif
-
-# Import a previously-generated test image
-import-testpc1_%: upstream_%.ova
-ifneq (,$(findstring testpc1,$(shell VBoxManage list vms)))
-	echo 'VM already exists: testpc1'
-else
-	VBoxManage import upstream_$*.ova --vsys 0 \
-		--eula accept --vmname testpc1
 endif
 
 
@@ -131,7 +99,7 @@ endif
 ##
 
 clean: clean-testpc1
-	$(RM) -f iso/*/testseed.cfg *.iso *.ova
+	$(RM) iso/*/testseed.cfg teckhost*.iso
 
 # Delete a VM if it exists
 clean-%:
