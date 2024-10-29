@@ -14,6 +14,7 @@ class TestMandatoryAccessControl:
         assert host.package('apparmor').is_installed
 
     @pytest.mark.admin
+    @pytest.mark.breaks_oci
     def test_mac_configured(self, host):
         '''1.6.[2-3](.X) Configure [MAC]'''
         probe = host.run(f'{SUDO_WRAPPER} apparmor_status')

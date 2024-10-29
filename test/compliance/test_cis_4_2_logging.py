@@ -9,11 +9,13 @@ import stat
 
 class TestLogging:
 
-    def test_rsyslog_enabled(self, host):
+    def test_rsyslog_enabled(self, host, pytestconfig):
         '''4.2.1.1 Ensure rsyslog is installed'''
         assert host.package('rsyslog').is_installed
-        # 4.2.1.2 Ensure rsyslog Service is enabled
-        assert host.service('rsyslog').is_running
+
+        if pytestconfig.getoption('--type') != 'container':
+            # 4.2.1.2 Ensure rsyslog Service is enabled
+            assert host.service('rsyslog').is_running
 
     @pytest.mark.parametrize(
         'checkopt', [

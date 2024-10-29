@@ -15,10 +15,12 @@ from conftest import SUDO_WRAPPER
 
 class TestAccess:
 
-    def test_cron_enabled(self, host):
+    def test_cron_enabled(self, host, pytestconfig):
         '''5.1.1 Ensure cron daemon is enabled'''
         assert host.package('cron').is_installed
-        assert host.service('cron').is_running
+
+        if pytestconfig.getoption('--type') != 'container':
+            assert host.service('cron').is_running
 
     @pytest.mark.parametrize(
         'cronfile', [

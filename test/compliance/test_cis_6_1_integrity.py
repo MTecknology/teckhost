@@ -8,6 +8,7 @@ import pytest
 
 class TestIntegrity:
 
+    @pytest.mark.breaks_oci
     @pytest.mark.parametrize(
         # packages which should have no modificatons
         'pkgname', [
@@ -44,6 +45,7 @@ class TestIntegrity:
         assert probe.group in ['root', 'shadow']
         assert oct(probe.mode) == filemode
 
+    @pytest.mark.breaks_oci
     def test_world_writeable(self, host):
         '''6.1.10 Ensure no world writable files exist'''
         probe = host.run("df --local -P | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -type f -perm -0002")

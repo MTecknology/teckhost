@@ -39,6 +39,7 @@ class TestUnusedFilesystems:
 
 
 @pytest.mark.admin
+@pytest.mark.breaks_oci
 class TestMountPoints:
     '''1.1.X (except 1.1.1.X) Ensure <mountpoint> is configured'''
     MOUNTPOINTS = {
@@ -86,6 +87,7 @@ class TestMountPoints:
 @pytest.mark.admin
 class TestFilesystemConfiguration:
 
+    @pytest.mark.breaks_oci
     def test_stickybit_worldwriteable(self, host):
         '''1.1.21 Ensure sticky bit is set on all world-writable directories'''
         probe = host.run(r"df --local -P | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -type d \( -perm -0002 -a ! -perm -1000 \) 2>/dev/null")

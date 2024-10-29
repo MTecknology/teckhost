@@ -1,4 +1,4 @@
-{% set version = salt.pillar.get('versions:salt-minion', '3006.4') %}
+{% set version = salt.pillar.get('versions:salt-minion', '3007.1') %}
 include:
   - helpers
 
@@ -64,7 +64,7 @@ salt-devdir:
     - special: '@reboot'
     - require:
       - pkg: salt-solo
-{% if not salt.chroot.in_chroot() %}
+{% if not salt.chroot.in_chroot() and not salt.environ.get('container', False) %}
   mount.mounted:
     - name: {{ salt.grains.get('bootstrap:devdir') }}
     - device: devdir

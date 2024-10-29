@@ -99,3 +99,38 @@ To encrypt data for pillar::
 .. |issues| image:: https://img.shields.io/github/issues/MTecknology/teckhost.svg
     :target: https://github.com/MTecknology/teckhost/issues
     :alt: Github Issues
+
+Testing
+-------
+
+The best place to start learning about test processes is either ``Makefile`` or
+``.github/workflows/*``.
+
+Quick Commands
+~~~~~~~~~~~~~~
+
+- ``make test``: Run limited set of tests inside of a podman container
+- ``make full-test``: Run ALL (user, admin) tests inside of a virtualbox VM
+
+Disk Space
+~~~~~~~~~~
+
+Disk space used to test a Debian 12 VM:
+
+- ``<repo>/*.iso``: (-> 1.3 GB)
+
+  + ``upstream_debian12.iso``: Original Debian ISO
+  + ``teckhost_debian12.iso``: Remastered ISO
+
+- ``~/VirtualMachines/testpc1/``: (-> 13 GB)
+
+Disk space used to test a Debian 12 Container:
+
+- ``~/.local/share/containers/storage/vfs/dir/``: (-> 11 GB)
+
+  + ``podman build tpod_debian`` reaches 5.4 GB max size -> yields 4.4 GB image
+  + ``podman run tpod_debian Dockertest.sh`` reaches 5.6 GB
+
+- ``/var/tmp``: Image commit at end of ``podman build`` reaches ~7.8 GB (-> 0 GB)
+
+Ultimately, both approaches require approximately 14 GB of disk space.

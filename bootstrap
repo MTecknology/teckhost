@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 ##
 # A quick/simple script to get masterless salt deployed and configured.
 # See help text (./bootstrap -h) and README.rst for requirements.
@@ -18,6 +17,7 @@ set -x
 #   4. Install salt
 #   5. Chown salt
 ##
+set -x
 
 main() {
 	parse_options "$@"
@@ -147,17 +147,20 @@ pristine_apt() {
 install_salt() {
 	# Dependencies
 	apt-get update || return 1
-	apt-get install -y debconf-utils wget python3-venv build-essential git || return 1
+	apt-get install -y debconf-utils wget python3-venv build-essential python3-dev git || return 1
 
-        # Application
-        python3 -m venv /opt/salt
-        /opt/salt/bin/pip3 install cryptography pygit2 'Jinja2<3.1' salt==3006.6
+	# Application
+	python3 -m venv /opt/salt
+        #/opt/salt/bin/pip3 install cryptography pygit2 salt==3007.1
 	# https://github.com/saltstack/salt/issues/66590
-        /opt/salt/bin/pip3 install pygit2==1.14.1
+        #/opt/salt/bin/pip3 install pygit2==1.14.1
 
-        # Directory structure
-        mkdir -p /etc/salt/minion.d
-        mkdir -p /etc/salt/pki/minion
+	# https://github.com/saltstack/salt/issues/66590
+	/opt/salt/bin/pip3 install salt==3007.1 pygit2==1.14.1
+
+	# Directory structure
+	mkdir -p /etc/salt/minion.d
+	mkdir -p /etc/salt/pki/minion
 }
 
 # Run a highstate
@@ -170,8 +173,8 @@ run_highstate() {
 
 	# This is an ugly hack because of some networking hiccups during some deployments.
 	if ! /opt/salt/bin/salt-call --local -l info state.highstate; then
-		log "$WARN" 'FIRST HIGHSTATE FAILED; Sleeping a few minutes before retrying.'
-		sleep 240
+		log "$WARN" 'FIRST HIGHSTATE FAILED; Sleeping before less verbose retry'
+		sleep 120
 		# Less verbosity to help with information gathering
 		/opt/salt/bin/salt-call --local -l quiet --state-verbose=false state.highstate
 	fi
@@ -181,31 +184,42 @@ run_highstate() {
 configure_minion() {
 	# Copy BS_* env vars to grains file
 	# Provides persistence for information that is likely coming from grub for testing.
+	echo -e 'grains:\n  bootstrap:' >/etc/salt/minion.d/bootstrap.conf
 	for var in "${!BS_@}"; do
 		log "$DEBUG" "Saving bootstrap var(${var#BS_}): ${!var}"
-		[ ! -f '/etc/salt/minion.d/bootstrap.conf' ] &&
-			echo -e 'grains:\n  bootstrap:' >/etc/salt/minion.d/bootstrap.conf
 		echo "    ${var#BS_}: ${!var}" >>/etc/salt/minion.d/bootstrap.conf
 	done
 
 	# Write temporary config file; Salt will overwrite using (bootstrap.conf) grains.
-	cat >/etc/salt/minion.d/teckhost.conf <<-EOF
-		file_client: local
-		top_file_merging_strategy: same
-		fileserver_backend:
-		  - gitfs
-		gitfs_saltenv_whitelist: [base]
-		gitfs_remotes:
-		  - ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
-		    - root: ${BS_states_root:-states}
-		    - base: ${BS_gitfs_base:-cicd-release}
-		ext_pillar:
-		  - git:
-		    - ${BS_gitfs_pillar_base:-cicd-release} ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
-		      - root: ${BS_pillar_root:-pillar}
-		      - env: base
-		EOF
-		# NOTE: Salt will overwrite this, verify bootstrap (BS) grains are written.
+	if [ -z "$BS_devdir" ]; then
+		cat >/etc/salt/minion.d/teckhost.conf <<-EOF
+			file_client: local
+			top_file_merging_strategy: same
+			fileserver_backend:
+			  - gitfs
+			gitfs_saltenv_whitelist: [base]
+			gitfs_remotes:
+			  - ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
+			    - root: ${BS_states_root:-states}
+			    - base: ${BS_gitfs_base:-cicd-release}
+			ext_pillar:
+			  - git:
+			    - ${BS_gitfs_pillar_base:-cicd-release} ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
+			      - root: ${BS_pillar_root:-pillar}
+			      - env: base
+			EOF
+	else
+		cat >/etc/salt/minion.d/teckhost.conf <<-EOF
+			file_client: local
+			file_roots:
+			  base:
+			    - ${BS_devdir}/${BS_states_root:-states}
+			pillar_roots:
+			  base:
+			    - ${BS_devdir}/${BS_pillar_root:-pillar}
+			EOF
+	fi
+	# NOTE: Salt will overwrite this, verify bootstrap (BS) grains are written.
 }
 
 # Download and unpack Salt GPG keys

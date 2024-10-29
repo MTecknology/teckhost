@@ -51,15 +51,12 @@ jobs:
 
   ##
   # Test installed OS from built ISO:
-  # 1. Build a "teckhost" iso from upstream release
-  # 2. Install OS on VM using teckhost.iso (testing option)
-  # 3. Verify we can log in using the "testuser" account
-  # 4. Run validation tests against the installed OS
-  # 5. Ensure make clean produces no errors
+  # 1. Run validation tests inside of container
+  # 2. Ensure make clean produces no errors
   ##
 
-  buildiso:
-    name: Build Teckhost ISO
+  container:
+    name: Container Tests
 
     runs-on: ubuntu-latest
     steps:
@@ -68,82 +65,14 @@ jobs:
       - name: Install Dependencies
         run: |
             sudo apt-get update
-            sudo apt-get install libarchive-tools syslinux xorriso isolinux python3-distro coreutils
+            sudo apt-get install make podman
 
-      # 1. Build a "teckhost" iso from upstream release
-      - name: Build Teckhost ISO
-        id: build_iso
-        run: make teckhost_debian12.iso
-        env:
-          THT_GRUBTEST: hostname=testpc1 BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_pillar_base=master BS_gitfs_base=${{ github.sha }}
-
-      - name: Save ISO (teckhost.iso)
-        uses: actions/upload-artifact@v4
-        with:
-          name: teckhost_debian12-${{ github.sha }}.iso
-          path: teckhost_debian12.iso
-          compression-level: 0
-
-  testinstall:
-    name: "Install and Validate"
-    needs: buildiso
-
-    strategy:
-      matrix:
-        #boot: [efi, bios]
-        boot: [efi]
-        #os: [debian11, debian12]
-        os: [debian12]
-
-    runs-on: macos-12
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Dependencies
-        run: |
-            brew install coreutils
-            #brew install --cask virtualbox
-            pip3 install pytest-testinfra distro
-            #sh ./test/vbox_extpack
-
-      - name: Pull ISO (teckhost.iso)
-        uses: actions/download-artifact@v4
-        with:
-          name: teckhost_debian12-${{ github.sha }}.iso
-
-      # 2. Install OS on VM using teckhost.iso (testing option)
-      - name: Create VM and Install (Testing) Teckhost
-        id: install_os
-        run: make testpc1_${{ matrix.os }}
-        env:
-          TH_SHOTS: testpc1-${{ matrix.boot }}
-          TH_BOOT: ${{ matrix.boot }}
-
-      - name: (on failure) Package Screenshots
-        if: failure() && steps.install_os.outcome == 'failure'
-        run: "tar -vczf testpc1-${{ matrix.boot }}.tgz *.png"
-
-      - name: (on failure) Upload Screenshots
-        if: failure() && steps.install_os.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: testpc1-${{ matrix.boot }}_screenshots.tgz
-          path: testpc1-${{ matrix.boot }}.tgz
-          compression-level: 0
-
-      # 3. Verify we can log in using the "testuser" account
-      - name: User (testuser) Login
-        id: basic_validation
-        run: |
-            make testprep
-            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://testuser@localhost:4222 'echo ping'
-
-      # 4. Run validation tests against the installed OS
-      - name: Validation Tests
+      # 1. Run validation tests inside of container
+      - name: Run Container Tests
         id: validation_tests
         run: make test
 
-      # 5. Ensure make clean produces no errors
+      # 2. Ensure make clean produces no errors
       - name: Run Cleanup
         id: cleanup
         run: make clean
@@ -155,7 +84,7 @@ jobs:
 
   deploy:
     name: Deploy Changes
-    needs: [lint, testinstall]
+    needs: [lint, container]
     if: github.ref == 'refs/heads/master'
 
     permissions:
