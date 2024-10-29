@@ -39,7 +39,7 @@ parse_options() {
 	export TH_SRC="${TH_SRC:-./debian-netinst.iso}"
 	export TH_DST="${TH_DST:-./teckhost.iso}"
 	export TH_DATA="${TH_DATA:-./iso/debian12}"
-	export THT_GRUBTEST="${THT_GRUBTEST:-hostname=testpc1 BS_pillar_root=test/pillar BS_gitfs_base=master TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
+	export THT_GRUBTEST="${THT_GRUBTEST:-netcfg/hostname=testpc1 netcfg/get_hostname=testpc1 BS_pillar_root=test/pillar BS_gitfs_base=master TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg}"
 	export TH_KEEP="${TH_KEEP:-False}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
 

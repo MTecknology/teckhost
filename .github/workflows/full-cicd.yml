@@ -1,0 +1,181 @@
+name: CI/CD
+##
+# This github workflow is used to run tests on all commits to the master branch
+# to verify all basic processes function correctly.
+##
+
+on:
+  push:
+    branches:
+      - DISABLED
+
+jobs:
+
+  ##
+  # Lint Checkers
+  # 1. Shellcheck
+  # 2. SLS Lint
+  # 3. Python Lint
+  ##
+
+  lint:
+    name: Lint Checkers
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Shellcheck
+      # Looks for +x files
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          ignore_names: '10_linux'
+        env:
+          SHELLCHECK_OPTS: -e SC1091
+
+      # 2. SLS Lint
+      - name: SLS Lint
+        uses: roaldnefs/salt-lint-action@master
+
+      # 3. Python Lint
+      - name: Set Up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Flake8 Lint
+        uses: py-actions/flake8@v2
+        with:
+          # E501: Ignore long lines for tests
+          ignore: 'E501'
+
+  ##
+  # Test installed OS from built ISO:
+  # 1. Build a "teckhost" iso from upstream release
+  # 2. Install OS on VM using teckhost.iso (testing option)
+  # 3. Verify we can log in using the "testuser" account
+  # 4. Run validation tests against the installed OS
+  # 5. Ensure make clean produces no errors
+  ##
+
+  buildiso:
+    name: Build Teckhost ISO
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+            sudo apt-get update
+            sudo apt-get install libarchive-tools syslinux xorriso isolinux python3-distro coreutils
+
+      # 1. Build a "teckhost" iso from upstream release
+      - name: Build Teckhost ISO
+        id: build_iso
+        run: make teckhost_debian12.iso
+        env:
+          THT_GRUBTEST: netcfg/hostname=testpc1 BS_pillar_root=test/pillar TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg BS_gitfs_pillar_base=master BS_gitfs_base=${{ github.sha }}
+
+      - name: Save ISO (teckhost.iso)
+        uses: actions/upload-artifact@v4
+        with:
+          name: teckhost_debian12-${{ github.sha }}.iso
+          path: teckhost_debian12.iso
+          compression-level: 0
+
+  testinstall:
+    name: "Install and Validate"
+    needs: buildiso
+
+    strategy:
+      matrix:
+        #boot: [efi, bios]
+        boot: [efi]
+        #os: [debian11, debian12]
+        os: [debian12]
+
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+            brew install coreutils
+            #brew install --cask virtualbox
+            pip3 install pytest-testinfra distro
+            #sh ./test/vbox_extpack
+
+      - name: Pull ISO (teckhost.iso)
+        uses: actions/download-artifact@v4
+        with:
+          name: teckhost_debian12-${{ github.sha }}.iso
+
+      # 2. Install OS on VM using teckhost.iso (testing option)
+      - name: Create VM and Install (Testing) Teckhost
+        id: install_os
+        run: make testpc1_${{ matrix.os }}
+        env:
+          TH_SHOTS: testpc1-${{ matrix.boot }}
+          TH_BOOT: ${{ matrix.boot }}
+
+      - name: (on failure) Package Screenshots
+        if: failure() && steps.install_os.outcome == 'failure'
+        run: "tar -vczf testpc1-${{ matrix.boot }}.tgz *.png"
+
+      - name: (on failure) Upload Screenshots
+        if: failure() && steps.install_os.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: testpc1-${{ matrix.boot }}_screenshots.tgz
+          path: testpc1-${{ matrix.boot }}.tgz
+          compression-level: 0
+
+      # 3. Verify we can log in using the "testuser" account
+      - name: User (testuser) Login
+        id: basic_validation
+        run: |
+            make testprep
+            ssh -v -o "StrictHostKeyChecking=no" -i test/.ssh/id_ed25519 ssh://testuser@localhost:4222 'echo ping'
+
+      # 4. Run validation tests against the installed OS
+      - name: Validation Tests
+        id: validation_tests
+        run: make test
+
+      # 5. Ensure make clean produces no errors
+      - name: Run Cleanup
+        id: cleanup
+        run: make clean
+
+  ##
+  # Merge master into cicd-release after tests pass
+  # NOTE: From this point forward, a force push is non-trivial!
+  ##
+
+  deploy:
+    name: Deploy Changes
+    needs: [lint, testinstall]
+    if: github.ref == 'refs/heads/master'
+
+    permissions:
+      pull-requests: write
+      contents: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+          ref: cicd-release
+
+      - name: Merge Changes
+        run: |
+            git config --local user.email "actions@github.com"
+            git config --local user.name "Github Actions"
+            git merge --no-ff "${{ github.sha }}" -m "[CICD-Pass] Merge ${{ github.sha }} into cicd-release"
+
+      # CICD: deploy->master
+      - name: Go Live!
+        run: |
+            git push origin cicd-release

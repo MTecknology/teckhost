@@ -8,6 +8,7 @@ from conftest import SUDO_WRAPPER
 
 
 @pytest.mark.admin
+@pytest.mark.breaks_oci
 class TestAccounting:
 
     @pytest.mark.parametrize(

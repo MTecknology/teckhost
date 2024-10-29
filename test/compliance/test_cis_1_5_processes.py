@@ -9,18 +9,20 @@ from conftest import SUDO_WRAPPER
 
 class TestProcesses:
 
-    def test_limits_coredump(self, host):
+    def test_limits_coredump(self, host, pytestconfig):
         '''1.5.1 Ensure core dumps are restricted'''
         probe = host.run('grep "hard core" -R /etc/security/limits.*')
         assert probe.rc == 0, 'limits.conf is missing "* hard core 0"'
         stdout = probe.stdout.strip()
         assert '* hard core 0' in stdout
         # Part 2: sysctl fs.suid_dumpable
-        assert host.sysctl('fs.suid_dumpable') == 0
+        if pytestconfig.getoption('--type') != 'container':
+            assert host.sysctl('fs.suid_dumpable') == 0
         # Part 3: systemd-coredump
         assert not host.package('systemd-coredump').is_installed
 
     @pytest.mark.admin
+    @pytest.mark.breaks_oci
     def test_xdnx_active(self, host):
         '''1.5.2 Ensure XD/NX support is enabled'''
         virtname = host.file('/sys/devices/virtual/dmi/id/product_name').content_string

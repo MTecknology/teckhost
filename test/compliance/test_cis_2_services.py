@@ -15,10 +15,12 @@ class TestServices:
         assert not host.file('/etc/xinetd.conf').exists
         assert not host.file('/etc/xinetd.d').exists
 
-    def test_ntp_running(self, host):
+    def test_ntp_running(self, host, pytestconfig):
         '''2.2.1(.X) Time Synchronization'''
         assert host.package('chrony').is_installed
-        assert host.service('chrony').is_running
+
+        if pytestconfig.getoption('--type') != 'container':
+            assert host.service('chrony').is_running
 
     @pytest.mark.parametrize(
         'service', [

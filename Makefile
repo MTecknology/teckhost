@@ -5,15 +5,16 @@
 ##
 export WORKSPACE ?= $(abspath $(PWD)/)
 
-# Version Table
-debian12_src ?= https://cdimage.debian.org/cdimage/archive/12.4.0/amd64/iso-cd/debian-12.4.0-amd64-netinst.iso
-debian12_sha ?= 64d727dd5785ae5fcfd3ae8ffbede5f40cca96f1580aaa2820e8b99dae989d94
-ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
-ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
 
 ##
 # ISO
 ##
+
+# Version Table
+debian12_src   ?= https://cdimage.debian.org/cdimage/archive/12.6.0/amd64/iso-cd/debian-12.6.0-amd64-netinst.iso
+debian12_sha   ?= ade3a4acc465f59ca2496344aab72455945f3277a52afc5a2cae88cdc370fa12
+ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
+ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
 
 # Default release
 teckhost.iso: teckhost_debian12.iso
@@ -35,7 +36,47 @@ upstream_%.iso:
 
 
 ##
-# Test/Dev Stuff
+# Default Test [Debian 12, Container]
+##
+
+test: testpod-debian
+
+
+##
+# Test/Dev - Container (packer)
+##
+
+# Run tests inside container
+testpod-%: tpod_%
+	podman run --rm -it -h testpc1 \
+		-v "$(PWD):/srv/salt" \
+		-e BS_gitfs_base="$(shell git rev-parse HEAD)" \
+		tpod_$* /srv/salt/test/Dockertest.sh
+
+# Log in to container (pre-dockertest.sh)
+playpod-%: tpod_%
+	podman run --rm -it -h testpc1 \
+		-v "$(PWD):/srv/salt" \
+		tpod_$* /bin/bash
+
+
+##
+# Containers (test pods)
+##
+
+# Build a container for testing
+# Dockerfile pre-installs many desktop files and requires 8+GB in /var/tmp.
+tpod_%:
+	@current_size=$$(df -m /var/tmp | awk 'NR==2 {print $$2}'); \
+	if [ "$$current_size" -lt 10240 ]; then \
+		mount -o remount,size=10G /var/tmp; \
+	fi
+	podman build -t tpod_$* \
+		-f test/Dockerfile.$*
+
+
+##
+# Test/Dev - Full VM (virtualbox)
 ##
 
 # Apply minimum patches (hostname, confirmation, etc.) to preseed
@@ -43,14 +84,13 @@ iso/%/testseed.cfg: iso/%/preseed.cfg iso/%/preseed_test.patch
 	cp iso/$*/preseed.cfg iso/$*/testseed.cfg
 	patch iso/$*/testseed.cfg iso/$*/preseed_test.patch
 
-
 # File modes in git are not reliable
 testprep:
 	chmod 0700 test/.ssh
 	chmod 0600 test/.ssh/id_ed25519
 
 # Create testpc1 and run all {admin,user} tests
-test: testpc1_debian12 pytest-testpc1-user pytest-testpc1-admin
+full-test: testpc1_debian12 pytest-testpc1-user pytest-testpc1-admin
 
 # Run user-only tests against a host as user:testuser
 pytest-%-user:
@@ -98,8 +138,17 @@ endif
 # Cleanup
 ##
 
-clean: clean-testpc1
+clean: clean-testpc1 cleanpod-debian
 	$(RM) iso/*/testseed.cfg teckhost*.iso
+	podman system prune -f || true
+
+# Delete a Container if it exists
+cleanpod-%:
+	@if [ -n "$(findstring tpod_$*,$(shell podman images))" ]; then \
+		podman rmi tpod_$*; \
+	else \
+		echo "No container exists for $*; skipping"; \
+	fi
 
 # Delete a VM if it exists
 clean-%:

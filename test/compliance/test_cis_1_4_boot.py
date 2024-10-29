@@ -10,6 +10,7 @@ from conftest import SUDO_WRAPPER
 
 class TestBoot:
 
+    @pytest.mark.breaks_oci
     def test_bootloader_permissions(self, host):
         '''1.4.1 Ensure permissions on bootloader config are configured'''
         probe = host.file('/boot/grub/grub.cfg')
@@ -19,6 +20,7 @@ class TestBoot:
         assert probe.mode != stat.S_IWOTH, 'file is world-writeable'
 
     @pytest.mark.admin
+    @pytest.mark.breaks_oci
     def test_bootloader_password(self, host):
         '''1.4.2 Ensure bootloader password is set'''
         probe = host.run(f'{SUDO_WRAPPER} cat /boot/grub/grub.cfg')

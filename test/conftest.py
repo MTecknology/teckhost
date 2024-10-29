@@ -20,8 +20,8 @@ def pytest_addoption(parser):
     Add extra options to pytest command. See: ``pytest --help``
     '''
     parser.addoption(
-        '--type', choices=['user', 'admin'], default='user',
-        help='Some tests expect user-level access and some expect admin.')
+        '--type', choices=['user', 'admin', 'container'], default='user',
+        help='Some tests expect user-level access and some expect admin; container testing is for testing within podman')
 
 
 def pytest_configure(config):
@@ -34,19 +34,26 @@ def pytest_configure(config):
     config.addinivalue_line(
         'markers',
         'admin: mark a test to run only for admin users')
+    config.addinivalue_line(
+        'markers',
+        'breaks_oci: mark a test to skip when type=container')
 
 
 def pytest_collection_modifyitems(config, items):
     '''
     Modify collected test stack.
     '''
-    # Add '@pytest.mark.admin' decorator to test function only with type=admin
-    skip_user = pytest.mark.skip(reason='user-only test')
-    # Add '@pytest.mark.user' decorator to test function only with type=user
-    skip_admin = pytest.mark.skip(reason='admin-only test')
-
     for item in items:
+
+        # Add '@pytest.mark.admin' decorator to test function only with type=admin
         if 'admin' in item.keywords and config.getoption('--type') == 'user':
-            item.add_marker(skip_admin)
+            item.add_marker(pytest.mark.skip(reason='user-only test'))
+
+        # Add '@pytest.mark.user' decorator to test function only with type=user
         if 'user' in item.keywords and config.getoption('--type') == 'admin':
-            item.add_marker(skip_user)
+            item.add_marker(pytest.mark.skip(reason='admin-only test'))
+
+        # Add '@pytest.mark.breaks_oci' decorator to skip for container type
+        # Note: Assumes *all* (admin and user) tests will be performed.
+        if 'breaks_oci' in item.keywords and config.getoption('--type') == 'container':
+            item.add_marker(pytest.mark.skip(reason='breaks OCI containers'))
