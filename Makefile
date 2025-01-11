@@ -69,6 +69,7 @@ playpod-%: tpod_%
 tpod_%:
 	@current_size=$$(df -m /var/tmp | awk 'NR==2 {print $$2}'); \
 	if [ "$$current_size" -lt 10240 ]; then \
+		echo 'WARN: podman test requires 10GB in /var/tmp'; \
 		mount -o remount,size=10G /var/tmp; \
 	fi
 	podman build -t tpod_$* \
