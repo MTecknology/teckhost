@@ -1,0 +1,5 @@
+let skip_defaults_vim=1
+syntax on
+set mouse=
+set background=dark
+filetype plugin indent on

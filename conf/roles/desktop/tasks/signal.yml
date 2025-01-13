@@ -1,0 +1,16 @@
+- name: Manage signal apt key
+  ansible.builtin.copy:
+    src: signal-keyring.gpg
+    dest: /usr/share/keyrings/signal-desktop-keyring.gpg
+    mode: "0644"
+
+- name: Add specified repository into sources list using specified filename
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main
+    state: present
+    filename: signal
+
+- name: Manage polkit configuration files
+  ansible.builtin.package:
+    name: signal-desktop
+    state: present

@@ -1,0 +1,11 @@
+---
+- name: Regular Maintenance
+  hosts: localhost
+  vars:
+    partial_install: "{{ (ansible_is_chroot) or ('container' in ansible_virtualization_tech_guest) }}"
+    is_server: "{{ not 'pc' in ansible_hostname }}"
+    is_desktop: "{{ 'pc' in ansible_hostname }}"
+    is_test: "{{ 'test' in ansible_hostname }}"
+  roles:
+    - common
+    - custom

@@ -1,4 +1,5 @@
-name: CI/CD
+---
+name: Partial CI/CD
 ##
 # This github workflow is used to run tests on all commits to the master branch
 # to verify all basic processes function correctly.
@@ -14,7 +15,7 @@ jobs:
   ##
   # Lint Checkers
   # 1. Shellcheck
-  # 2. SLS Lint
+  # 2. Ansible Lint
   # 3. Python Lint
   ##
 
@@ -30,13 +31,23 @@ jobs:
       - name: ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
-          ignore_names: '10_linux'
+          ignore_names: '10_linux firstlogin_mikepc.sh'
         env:
           SHELLCHECK_OPTS: -e SC1091
 
-      # 2. SLS Lint
-      - name: SLS Lint
-        uses: roaldnefs/salt-lint-action@master
+      # 2. Ansible Lint
+      - name: Test .vaultpass
+        run: |
+            gpg --batch --decrypt --passphrase AWeakLink conf/_test/key.gpg >.vaultpass
+
+      - name: Ansible Lint
+        uses: ansible/ansible-lint@main
+        with:
+          args: >-
+              --exclude .github
+              --exclude conf/group_vars
+              --exclude conf/_test/group_vars/all/main.yml
+              -x latest[git],command-instead-of-module
 
       # 3. Python Lint
       - name: Set Up Python environment

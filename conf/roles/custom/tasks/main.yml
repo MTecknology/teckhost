@@ -1,0 +1,9 @@
+- name: Run desktop tasks on PCs
+  ansible.builtin.include_role:
+    name: desktop
+  when: "'pc' in ansible_hostname"
+
+- name: Run extra tasks on MikePCs
+  ansible.builtin.include_tasks:
+    file: mikepc.yml
+  when: "'mikepc' in ansible_hostname"

@@ -27,6 +27,7 @@ class TestUnusedFilesystems:
         assert probe.rc != 0, f'{filesystem} kernel module is currently loaded'
         assert probe.stdout == ''
 
+    @pytest.mark.breaks_oci
     @pytest.mark.admin
     @pytest.mark.parametrize('filesystem', FSLIST)
     def test_filesystem_disabled(self, host, filesystem):

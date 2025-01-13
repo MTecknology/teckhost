@@ -1,0 +1,87 @@
+##
+# Browser: Chromium
+# Available Chromium Policies: https://chromeenterprise.google/policies/
+##
+
+- name: Manage chromium master preferences
+  ansible.builtin.copy:
+    src: user_policies/chromium/master_preferences
+    dest: /etc/chromium/master_preferences
+    mode: "0644"
+
+- name: Ensure chromium directories exist with correct permissions
+  ansible.builtin.file:
+    path: "{{ dpath }}"
+    state: directory
+    mode: "0755"
+  with_list:
+    - /etc/chromium
+    - /etc/chromium/policies
+    - /etc/chromium/policies/managed
+    - /etc/chromium/policies/recommended
+  loop_control:
+    loop_var: dpath
+
+- name: Manage chromium default bookmarks
+  ansible.builtin.copy:
+    src: user_policies/chromium/default_bookmarks.html
+    dest: /etc/chromium/default_bookmarks.html
+    mode: "0644"
+
+- name: Manage chromium user preferences
+  ansible.builtin.copy:
+    src: user_policies/chromium/preferences.json
+    dest: /etc/chromium/policies/managed/preferences.json
+    mode: "0644"
+
+##
+# Browser: Firefox
+# Available Firefox Policies: https://github.com/mozilla/policy-templates/blob/master/README.md
+##
+
+- name: Ensure firefox directories exist with correct permissions
+  ansible.builtin.file:
+    path: "{{ dpath }}"
+    state: directory
+    mode: "0755"
+  with_list:
+    - /etc/firefox
+    - /etc/firefox/policies
+  loop_control:
+    loop_var: dpath
+
+- name: Manage firefox master preferences
+  ansible.builtin.copy:
+    src: user_policies/firefox/firefox-esr.js
+    dest: /etc/firefox-esr/firefox-esr.js
+    mode: "0644"
+
+- name: Manage firefox user policies
+  ansible.builtin.copy:
+    src: user_policies/firefox/policies.json
+    dest: /etc/firefox/policies/policies.json
+    mode: "0644"
+
+##
+# Desktop: Cinnamon
+##
+
+- name: Manage cinnamon configuration profile
+  ansible.builtin.copy:
+    src: user_policies/cinnamon/profile
+    dest: /etc/dconf/
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+  notify: dconf-update
+
+- name: Manage cinnamon configuration policy
+  ansible.builtin.copy:
+    src: user_policies/cinnamon/mtpol.d
+    dest: /etc/dconf/db/
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+  notify: dconf-update

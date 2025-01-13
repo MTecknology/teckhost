@@ -1,0 +1,15 @@
+- name: GUARD - Verify device is PC
+  ansible.builtin.fail:
+    msg: "This role should not be run on devices without 'pc' in the hostname!"
+  when: "'pc' not in ansible_hostname"
+
+- name: All Common Tasks
+  ansible.builtin.include_tasks:
+    file: "{{ task_group }}.yml"
+  with_list:
+    - cinnamon
+    - polkit
+    - user_policies  # requires: cinnamon
+    - signal
+  loop_control:
+    loop_var: task_group

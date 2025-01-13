@@ -1,7 +1,0 @@
-#! /bin/sh
-set -e
-
-cat <<EOF
-set superusers="admin"
-password_pbkdf2 admin {{ salt.pillar.get('grubadmin', 'UNSET') }}
-EOF

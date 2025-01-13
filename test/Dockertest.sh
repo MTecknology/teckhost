@@ -2,37 +2,23 @@
 ##
 # Primary entry point for testing within containers.
 #
-# NOTE: The root of this repo should be mounted to /srv/salt.
+# NOTE: The root of this repo should be mounted to /etc/ansible.
 ##
 set -e
 
-
 ##
-# Safety Checks
-##
-
-if [ -z "$BS_gitfs_base" ]; then
-	echo 'ERROR: BS_gitfs_base is a required environment variable.'
-	exit 1
-fi
-
-
-##
-# Run Bootstrap (&& Highstate)
+# Run Bootstrap (&& Ansible)
 ##
 
 # Defaults from .github/workflows/cicd.yml::THT_GRUBTEST)
-export TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/test/pillar/skeys.gpg
-export BS_devdir=/srv/salt
-export BS_pillar_root=test/pillar
-export BS_gitfs_pillar_base=master
-#export BS_gitfs_base=<set via Makefile>
+export TH_ANSGPG="${TH_ANSGPG:-/etc/ansible/conf/_test/key.gpg}"
+export BS_PLAYBOOK="${BS_PLAYBOOK:-/etc/ansible/conf/_test/maintenance.yml}"
 
 # Password for test data (based on iso/debconf_early)
 printf 'AWeakLink' >/tmp/gpgpassphrase
 
-# Bootstrap -> Highstate
-/srv/salt/bootstrap
+# Bootstrap -> Ansible -> Maintenance(.yml)
+/etc/ansible/bootstrap
 
 
 ##
@@ -40,4 +26,4 @@ printf 'AWeakLink' >/tmp/gpgpassphrase
 ##
 
 # Run pytest and exit
-cd /srv/salt && pytest --type=container
+cd /etc/ansible && pytest --type=container

@@ -1,0 +1,79 @@
+- name: Verify removal of temporary setup files
+  ansible.builtin.file:
+    path: "{{ fpath }}"
+    state: absent
+  with_list:
+    - /tmp/bootstrap
+    - /tmp/gpgpassphrase
+  loop_control:
+    loop_var: fpath
+
+- name: Remove packages that should never be installed
+  ansible.builtin.package:
+    name:
+      - apache2
+      - apache2-bin
+      - apport
+      - apt-listchanges
+      - avahi-daemon
+      - deja-dup
+      - duplicity
+      - gdebi
+      - gdebi-core
+      - gnome-online-accounts
+      - gnome-software
+      - gist
+      - malcontent
+      - malcontent-gui
+      - nano
+      - os-prober
+      - pidgin
+      - pidgin-data
+      - ppp
+      - prelink
+      - python3-debian
+      - software-properties-gtk
+      - software-properties-common
+      - spotify-client  # insecure application
+      - synaptic
+      - tasksel
+      - tasksel-data
+      - vim-tiny
+      - xdg-desktop-portal-gtk
+      # installed via Recommends
+      - exim4-daemon-light
+      - exim4-config
+      - exim4-base
+      # systemd cruft ...
+      - libnss-myhostname
+      - libnss-mymachines
+      - libnss-resolve
+      - libnss-systemd
+      - libsystemd-dev
+      - libudev-dev
+      - systemd-boot
+      - systemd-boot-efi
+      - systemd-coredump
+      - systemd-cron
+      - systemd-homed
+      - systemd-oomd
+      - systemd-standalone-sysusers
+      - systemd-standalone-tmpfiles
+      - systemd-tests
+      - systemd-timesyncd
+    state: absent
+  notify: apt-autoremove
+
+- name: Check for scratch volume
+  ansible.builtin.command:
+    cmd: "test -e /dev/mapper/sys-scratch"
+  register: scratch_presence
+  changed_when: false
+  failed_when: false
+
+- name: Remove scratch volume
+  ansible.builtin.command:
+    cmd: "lvm lvremove sys/scratch --yes"
+  register: scratch_removed
+  changed_when: scratch_removed.rc == 0
+  when: scratch_presence.rc == 0

@@ -1,0 +1,11 @@
+# Generate hash using `mkpasswd -m yescrypt` (apt install whois)
+common_root:
+  password: '!'
+  keys: []
+
+# List of (company-managed) "standard" system groups
+common_groups: ['ssh-user']
+
+# Dictionary of regular (non-system) users available on a system
+# Note: System users should be defined in their respective role.
+common_users: {}

@@ -1,0 +1,28 @@
+- name: Configure Mountpoints
+  ansible.builtin.include_tasks:
+    file: mountpoints.yml
+  when: "'container' not in ansible_virtualization_tech_guest"
+
+# TODO: This must be limited to servers (family accounts are self-managed)
+# - name: Manage security/access.conf
+#   ansible.builtin.template:
+#     src: access.conf
+#     dest: /etc/security/access.conf
+
+- name: Manage security/limits.conf
+  ansible.builtin.copy:
+    src: limits.conf
+    dest: /etc/security/limits.conf
+    mode: "0644"
+
+- name: Manage security/modprobe.conf
+  ansible.builtin.template:
+    src: modprobe.conf
+    dest: /etc/security/modprobe.conf
+    mode: "0644"
+
+- name: Manage sysctl.conf
+  ansible.builtin.copy:
+    src: sysctl.conf
+    dest: /etc/sysctl.conf
+    mode: "0644"

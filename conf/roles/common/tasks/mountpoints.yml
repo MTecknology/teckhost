@@ -1,0 +1,71 @@
+- name: Mount root
+  ansible.posix.mount:
+    path: /
+    src: /dev/mapper/sys-root
+    fstype: ext4
+    opts: errors=remount-ro
+    state: mounted
+    passno: 1
+
+- name: Mount tmp
+  ansible.posix.mount:
+    state: mounted
+    path: /tmp
+    src: /dev/mapper/sys-tmp
+    fstype: ext4
+    opts: nosuid,nodev,noexec
+    passno: 2
+
+- name: Mount var
+  ansible.posix.mount:
+    path: /var
+    src: /dev/mapper/sys-var
+    fstype: ext4
+    opts: nosuid,nodev
+    state: mounted
+    passno: 2
+
+- name: Mount log
+  ansible.posix.mount:
+    path: /var/log
+    src: /dev/mapper/sys-log
+    fstype: ext4
+    opts: nosuid,nodev,noexec
+    state: mounted
+    passno: 2
+
+- name: Mount home
+  ansible.posix.mount:
+    path: /home
+    src: /dev/mapper/sys-home
+    fstype: ext4
+    opts: nosuid,nodev
+    state: mounted
+    passno: 2
+
+- name: Mount opt
+  ansible.posix.mount:
+    path: /opt
+    src: /dev/mapper/sys-opt
+    fstype: ext4
+    opts: nosuid,nodev
+    state: mounted
+    passno: 2
+
+- name: Mount srv
+  ansible.posix.mount:
+    path: /srv
+    src: /dev/mapper/sys-srv
+    fstype: ext4
+    opts: nosuid,nodev,noexec
+    state: mounted
+    passno: 2
+  when: ansible_virtualization_role == "host"
+
+- name: Mount vartmp
+  ansible.posix.mount:
+    path: /var/tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: nodev,nosuid,noexec
+    state: mounted

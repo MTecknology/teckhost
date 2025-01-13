@@ -3,7 +3,12 @@
 # Makefile for Teckhost systems
 # See env[TH_SRC] and env[TH_CKSUM] for ISO building
 ##
+
+# Location used for temp/test data
 export WORKSPACE ?= $(abspath $(PWD)/)
+
+# Handed to virtualbox during full-test
+#export BS_GITREV ?= $(shell git rev-parse HEAD)
 
 
 ##
@@ -11,8 +16,8 @@ export WORKSPACE ?= $(abspath $(PWD)/)
 ##
 
 # Version Table
-debian12_src   ?= https://cdimage.debian.org/cdimage/archive/12.6.0/amd64/iso-cd/debian-12.6.0-amd64-netinst.iso
-debian12_sha   ?= ade3a4acc465f59ca2496344aab72455945f3277a52afc5a2cae88cdc370fa12
+debian12_src   ?= https://cdimage.debian.org/cdimage/archive/12.8.0/amd64/iso-cd/debian-12.8.0-amd64-netinst.iso
+debian12_sha   ?= 04396d12b0f377958a070c38a923c227832fa3b3e18ddc013936ecf492e9fbb3
 ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
 ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
 
@@ -48,15 +53,17 @@ test: testpod-debian
 
 # Run tests inside container
 testpod-%: tpod_%
-	podman run --rm -it -h testpc1 \
-		-v "$(PWD):/srv/salt" \
-		-e BS_gitfs_base="$(shell git rev-parse HEAD)" \
-		tpod_$* /srv/salt/test/Dockertest.sh
+	podman run --rm -it --cap-add=NET_ADMIN,NET_RAW \
+		-h testpc1 \
+		-v "$(PWD):/etc/ansible" \
+		-e "BS_GITREV=$(BS_GITREV)" \
+		tpod_$* /etc/ansible/test/Dockertest.sh
 
 # Log in to container (pre-dockertest.sh)
 playpod-%: tpod_%
-	podman run --rm -it -h testpc1 \
-		-v "$(PWD):/srv/salt" \
+	podman run --rm -it --cap-add=NET_ADMIN,NET_RAW \
+		-h testpc1 \
+		-v "$(PWD):/etc/ansible" \
 		tpod_$* /bin/bash
 
 

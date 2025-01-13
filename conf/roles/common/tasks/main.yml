@@ -1,0 +1,20 @@
+- name: All Common Tasks
+  ansible.builtin.include_tasks:
+    file: "{{ task_group }}.yml"
+  with_list:
+    - firewall
+    - baseline  # includes: sshd, apt
+    - mokcert
+    # (above) Always First
+    - auditd
+    - drivers
+    - ntp
+    - packages
+    - pam
+    - security
+    - sudo
+    # (below) Always Last
+    - users
+    - cleanup
+  loop_control:
+    loop_var: task_group

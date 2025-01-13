@@ -1,8 +1,0 @@
-{% if salt.grains.get('osrelease') not in ['testing'] -%}
-deb http://deb.debian.org/debian/ {{ salt.grains.get('oscodename') }} main contrib non-free non-free-firmware
-deb http://security.debian.org/debian-security {{ salt.grains.get('oscodename') }}-security main contrib non-free non-free-firmware
-deb http://deb.debian.org/debian/ {{ salt.grains.get('oscodename') }}-updates main contrib non-free non-free-firmware
-deb http://deb.debian.org/debian/ {{ salt.grains.get('oscodename') }}-backports main contrib non-free non-free-firmware
-{% endif -%}
-deb http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-deb http://deb.debian.org/debian/ sid main contrib non-free non-free-firmware

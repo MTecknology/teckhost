@@ -1,0 +1,17 @@
+- name: Install sudo package
+  ansible.builtin.package:
+    name:
+      - sudo
+    state: present
+
+- name: Ensure sudo group is present
+  ansible.builtin.group:
+    name: sudo
+    state: present
+    system: true
+
+- name: Manage sudoers configuration
+  ansible.builtin.copy:
+    src: sudoers
+    dest: /etc/sudoers
+    mode: "0440"

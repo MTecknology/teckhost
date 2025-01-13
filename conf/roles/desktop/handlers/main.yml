@@ -1,0 +1,23 @@
+- name: Restart polkit service
+  listen: restart-polkit
+  ansible.builtin.service:
+    name: polkit
+    state: restarted
+  when: not partial_install
+
+- name: Trigger "dconf update"
+  listen: dconf-update
+  ansible.builtin.command:
+    cmd: dconf update
+  register: dconf_update
+  failed_when: "dconf_update.rc != 0"
+  changed_when: false
+
+- name: Trigger "update-grub"
+  listen: update-grub
+  ansible.builtin.command:
+    cmd: update-grub
+  register: update_grub
+  failed_when: "update_grub.rc != 0"
+  changed_when: false
+  when: "'container' not in ansible_virtualization_tech_guest"

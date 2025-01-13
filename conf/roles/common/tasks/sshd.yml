@@ -1,0 +1,25 @@
+- name: Install sshd package
+  ansible.builtin.package:
+    name: openssh-server
+    state: present
+
+- name: Manage chrony.conf file
+  ansible.builtin.copy:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+    mode: "0640"
+  notify: restart-sshd
+
+- name: Ensure sshd service is running
+  ansible.builtin.service:
+    name: sshd
+    state: started
+    enabled: true
+  when: not partial_install
+
+- name: Allow ssh into firewall
+  community.general.ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+  when: not partial_install

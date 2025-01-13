@@ -12,9 +12,9 @@
 
 main() {
 	safety_checks
-	# If BS_pillar_root=test/pillar, then use testing values
-	if [ -n "$BS_pillar_root" ]; then
-		printf 'AWeakLink' >/tmp/gpgpassphrase
+	# If TH_ANSGPG_PRIV is set, then use testing values
+	if [ -n "$TH_ANSGPG_PRIV" ]; then
+		printf 'AWeakLink' >/tmp/gpgpassphrase  # same as $TH_ANSGPG_PRIV
 		db_set partman-auto/method lvm
 	else
 		debconf_prompts
@@ -39,7 +39,7 @@ debconf_environment() {
 # Interact with debconf to get extra information from users
 #
 # - gpgpassphrase:
-#   + Used to decrypt salt gpg keys in `bootstrap` script
+#   + Used to decrypt key in `bootstrap` script
 #   + Stores password in /tmp/gpgpassphrase
 debconf_prompts() {
 	# Create a debconf template file

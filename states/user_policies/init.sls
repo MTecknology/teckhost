@@ -1,4 +1,0 @@
-include:
-  - .cinnamon
-  - .chromium
-  - .firefox

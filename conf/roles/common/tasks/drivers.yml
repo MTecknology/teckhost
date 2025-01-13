@@ -1,0 +1,16 @@
+- name: Drivers for virtualbox
+  ansible.builtin.include_tasks:
+    file: "drivers_virtualbox.yml"
+  when: ansible_virtualization_type == "virtualbox"
+
+- name: Check if nvidia is present
+  ansible.builtin.shell:
+    cmd: "set -o pipefail; lspci | grep -qi nvidia"
+  failed_when: false
+  changed_when: false
+  register: nvidia_present
+
+- name: Drivers for virtualbox
+  ansible.builtin.include_tasks:
+    file: "drivers_nvidia.yml"
+  when: "(ansible_virtualization_role == 'host') and (nvidia_present.rc == 0)"

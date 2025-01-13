@@ -1,21 +1,18 @@
 #!/bin/bash
 ##
-# A quick/simple script to get masterless salt deployed and configured.
+# A quick/simple script to get agentless ansible deployed and configured.
 # See help text (./bootstrap -h) and README.rst for requirements.
 #
 # skeys.gpg, generated with:
-#   gpg --homedir /etc/salt/gpgkeys --export-secret-keys --export-options export-backup <KEY-ID> \
-#       | gpg --symmetric --cipher-algo TWOFISH -o skeys.gpg
+#   printf .vaultpass | gpg --symmetric --cipher-algo TWOFISH -o skeys.gpg
 #
-# BS_*: This script will dump all "BS_*" environment variables into a configuration
-#       file for salt-minion; this provides a way to mangle teckhost.conf.
+# BS_*: This script will dump all "BS_*" environment variables into configuration
 #
 # Critical Order:
 #   1. Prepare apt
-#   2. Install apt/salt dependencies,
-#   3. Add salt repo
-#   4. Install salt
-#   5. Chown salt
+#   2. Install dependencies
+#   3. Install ansible
+#   4. Check permissions
 ##
 set -x
 
@@ -26,21 +23,18 @@ main() {
 	safety_checks
 	lock acquire "$0" || die 'Unable to acquire lock'
 	pristine_apt || die 'Failed to set pristine apt configuration'
-	mkdir -p /etc/salt/minion.d
-	echo 'master: invalid.tld' >/etc/salt/minion.d/teckhost.conf
 
 	# Hack: IPv6 is often incorrectly implemented and first boot is very touchy
 	echo 'precedence ::ffff:0:0/96  100' >>/etc/gai.conf
 	echo 'Acquire::ForceIPv4 "true";' >/etc/apt/apt.conf.d/99force-ipv4
 
-	# Install and configure salt-minion (solo)
-	install_salt || die 'Failed to install salt-minion service'
-	configure_minion || die 'Failed to configure salt-minion'
-	deploy_gpgkeys || die 'Failed to unpack GPG keys'
-	chown -R root:root /etc/salt/gpgkeys
+	# Install and configure (local) ansible
+	install_ansible || die 'Failed to install ansible'
+	configure_ansible || die 'Failed to configure ansible'
+	deploy_key || die 'Failed to unpack key'
 
 	# Run Highstate and Configure System
-	run_highstate || die 'Provisioning process (highstate) failed'
+	run_maintenance || die 'Provisioning process (playbook) failed'
 
 	# Cleanup
 	lock destroy "$0"
@@ -49,21 +43,20 @@ main() {
 show_usage() {
 	t="$(printf '\t')"
 	cat <<-EOF
-	Deploy masterless salt on a host managed by MTecknology.
+	Deploy agentless ansible on a host managed by MTecknology.
 
 	Usage: $0 [-h] <options>
 
 	Options:
-	  -k [http]${t}Location of encrypted blob containing Salt GPG keys (can be file)
+	  -k [http]${t}Location of encrypted blob containing ansible-vault key (can be file)
 	  -p [path]${t}File with password used to decrypt gpg blob
 	  -l X${t}Log level (0=Debug, 1=Info, 2=Warn, 3=Error)
 	  -h${t}${t}Print this help text
 
 	Environment Variables (Defaults):
-	  TH_SALTGPG${t}https://raw.githubusercontent.com/MTecknology/teckhost/master/pillar/skeys.gpg
-	  TH_SALTPWF${t}/tmp/gpgpassphrase
+	  TH_ANSGPG${t}https://raw.githubusercontent.com/MTecknology/teckhost/master/conf/key.gpg
+	  TH_ANSGPG_PRIV${t}/tmp/gpgpassphrase
 	  LOG_LEVEL${t}1  (info)
-	  keydir${t}/etc/salt/gpgkeys
 	  BS_*${t}${t}<none>
 	EOF
 }
@@ -72,15 +65,15 @@ show_usage() {
 parse_options() {
 	# Default values
 	# These can be overridden by setting environment variables
-	export TH_SALTGPG="${TH_SALTGPG:-https://raw.githubusercontent.com/MTecknology/teckhost/master/pillar/skeys.gpg}"
-	export TH_SALTPWF="${TH_SALTPWF:-/tmp/gpgpassphrase}"
+	export TH_ANSGPG="${TH_ANSGPG:-https://raw.githubusercontent.com/MTecknology/teckhost/master/conf/key.gpg}"
+	export TH_ANSGPG_PRIV="${TH_ANSGPG_PRIV:-/tmp/gpgpassphrase}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
 
 	# Modify defaults
 	while getopts 'k:p:l:h' opt; do
 		case "$opt" in
-			k) TH_SALTGPG="$OPTARG";;
-			p) TH_SALTPWF="$OPTARG";;
+			k) TH_ANSGPG="$OPTARG";;
+			p) TH_ANSGPG_PRIV="$OPTARG";;
 			l) LOG_LEVEL="$OPTARG";;
 			h) show_usage; exit 0;;
 			*) die "Unexpected argument provided: '$OPT'";;
@@ -93,7 +86,7 @@ safety_checks() {
 	command_present apt-get || die 'Must have apt-get available'
 }
 
-# Ensure a clean apt state prior to salt management
+# Ensure a clean apt state prior to configuration management
 pristine_apt() {
 	# Find $OSCODENAME
 	# Seems excessive when only one path is likely, but who knows how this might get used
@@ -143,107 +136,56 @@ pristine_apt() {
 	apt-get update
 }
 
-# Install the salt master and get vendor-garbage configured correctly
-install_salt() {
+# Install ansible and other basic dependencies
+install_ansible() {
 	# Dependencies
 	apt-get update || return 1
-	apt-get install -y debconf-utils wget python3-venv build-essential python3-dev git || return 1
+	# rsync required for ansible.posix.synchronize
+	apt-get install -y debconf-utils wget git gpg rsync || return 1
 
 	# Application
-	python3 -m venv /opt/salt
-        #/opt/salt/bin/pip3 install cryptography pygit2 salt==3007.1
-	# https://github.com/saltstack/salt/issues/66590
-        #/opt/salt/bin/pip3 install pygit2==1.14.1
-
-	# https://github.com/saltstack/salt/issues/66590
-	/opt/salt/bin/pip3 install salt==3007.1 pygit2==1.14.1
-
-	# Directory structure
-	mkdir -p /etc/salt/minion.d
-	mkdir -p /etc/salt/pki/minion
+	apt-get install -y ansible || return 1
 }
 
-# Run a highstate
-run_highstate() {
+# Run configuration (playbook:maintenance)
+run_maintenance() {
 	# Ensure /dev/shm is mounted
 	if ! mountpoint -q /dev/shm; then
 		test -d /dev/shm || mkdir /dev/shm
 		mount -t tmpfs none /dev/shm
 	fi
 
-	# This is an ugly hack because of some networking hiccups during some deployments.
-	if ! /opt/salt/bin/salt-call --local -l info state.highstate; then
-		log "$WARN" 'FIRST HIGHSTATE FAILED; Sleeping before less verbose retry'
-		sleep 120
-		# Less verbosity to help with information gathering
-		/opt/salt/bin/salt-call --local -l quiet --state-verbose=false state.highstate
-	fi
+	# Run ansible
+	cd /etc/ansible && ansible-playbook "${BS_PLAYBOOK:-conf/maintenance.yml}"
 }
 
 # Create default minion configuration
-configure_minion() {
-	# Copy BS_* env vars to grains file
-	# Provides persistence for information that is likely coming from grub for testing.
-	echo -e 'grains:\n  bootstrap:' >/etc/salt/minion.d/bootstrap.conf
-	for var in "${!BS_@}"; do
-		log "$DEBUG" "Saving bootstrap var(${var#BS_}): ${!var}"
-		echo "    ${var#BS_}: ${!var}" >>/etc/salt/minion.d/bootstrap.conf
-	done
-
-	# Write temporary config file; Salt will overwrite using (bootstrap.conf) grains.
-	if [ -z "$BS_devdir" ]; then
-		cat >/etc/salt/minion.d/teckhost.conf <<-EOF
-			file_client: local
-			top_file_merging_strategy: same
-			fileserver_backend:
-			  - gitfs
-			gitfs_saltenv_whitelist: [base]
-			gitfs_remotes:
-			  - ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
-			    - root: ${BS_states_root:-states}
-			    - base: ${BS_gitfs_base:-cicd-release}
-			ext_pillar:
-			  - git:
-			    - ${BS_gitfs_pillar_base:-cicd-release} ${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}:
-			      - root: ${BS_pillar_root:-pillar}
-			      - env: base
-			EOF
+configure_ansible() {
+	if [ -e /etc/ansible ]; then
+		log "$INFO" '/etc/ansible already exists, not replacing'
 	else
-		cat >/etc/salt/minion.d/teckhost.conf <<-EOF
-			file_client: local
-			file_roots:
-			  base:
-			    - ${BS_devdir}/${BS_states_root:-states}
-			pillar_roots:
-			  base:
-			    - ${BS_devdir}/${BS_pillar_root:-pillar}
-			EOF
+		git clone --depth=1 --branch "${BS_GITREV:-master}" "${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}" /etc/ansible
 	fi
-	# NOTE: Salt will overwrite this, verify bootstrap (BS) grains are written.
+	chmod 0700 /etc/ansible
 }
 
-# Download and unpack Salt GPG keys
+# Download and unpack ansible-vault key
 # NOTE: This requires a password, shared among admins
-deploy_gpgkeys() {
+deploy_key() {
 	# Get the encrypted keys
 	gpgblob="$(mktemp)"
-	keydir="${keydir:-/etc/salt/gpgkeys}"
-	if [[ -f "$TH_SALTGPG" ]]; then
-		log "$DEBUG" "Copying GPG blob from $TH_SALTGPG"
-		cp "$TH_SALTGPG" "$gpgblob" || return 1
+	if [[ -f "$TH_ANSGPG" ]]; then
+		log "$DEBUG" "Copying GPG blob from $TH_ANSGPG"
+		cp "$TH_ANSGPG" "$gpgblob" || return 1
 	else
-		log "$DEBUG" "Downloading GPG blob from $TH_SALTGPG"
-		wget "$TH_SALTGPG" -O "$gpgblob" || return 1
+		log "$DEBUG" "Downloading GPG blob from $TH_ANSGPG"
+		wget "$TH_ANSGPG" -O "$gpgblob" || return 1
 	fi
 
-	# Deploy GPG keys
-	mkdir "$keydir"; chmod 0700 "$keydir"
-	unset pwfile; [[ -f "$TH_SALTPWF" ]] && pwfile=('--passphrase-file' "$TH_SALTPWF")
-	gpg --batch "${pwfile[@]}" --decrypt "$gpgblob" | gpg --homedir "$keydir" --import
-
-	# Verification
-	gpg --homedir "$keydir" --list-secret-keys | grep -q 'salt' ||
-		die 'Could not verify gpg keys were installed correctly'
+	# Decrypt key
+	unset pwfile; [[ -f "$TH_ANSGPG_PRIV" ]] && pwfile=('--passphrase-file' "$TH_ANSGPG_PRIV")
+	gpg --batch "${pwfile[@]}" --decrypt "$gpgblob" >/etc/ansible/.vaultpass
+	chmod 0600 /etc/ansible/.vaultpass
 
 	# Cleanup (leave broken for investigation)
 	rm "$gpgblob"
