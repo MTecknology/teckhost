@@ -1,0 +1,100 @@
+##
+# Standard System Users and Groups
+##
+
+- name: Ensure standard groups are present
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+    system: true
+  with_list: "{{ common_groups }}"
+
+- name: Manage root user
+  ansible.builtin.user:
+    name: root
+    password: "{{ common_root.password }}"
+    shell: /bin/bash
+    home: /root
+    create_home: false
+
+- name: Manage root authorized_keys
+  ansible.builtin.template:
+    src: authorized_keys.root
+    dest: /root/.ssh/authorized_keys
+    owner: root
+    group: root
+    mode: "0440"
+
+##
+# Skeleton Directory
+# Note: Modifications to /etc/skel only affect newly-created users.
+##
+
+# Placeholder
+
+##
+# Managed Users (uid >= 1000)
+##
+
+- name: Create or update user
+  ansible.builtin.user:
+    name: "{{ item.key }}"
+    password: "{{ item.value.get('password', '!') }}"
+    comment: "{{ item.value.get('comment', item.key) }}"
+    shell: "{{ item.value.get('shell', '/bin/bash') }}"
+    groups: "{{ item.value.get('groups', []) }}"
+    append: false
+    home: "/home/{{ item.key }}"
+    create_home: false
+  with_dict: "{{ common_users }}"
+
+- name: Configure permission on home directories
+  ansible.builtin.file:
+    state: directory
+    path: "/home/{{ item }}"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: "0700"
+  with_list: "{{ common_users.keys() }}"
+
+- name: Configure permission on ~/.ssh
+  ansible.builtin.file:
+    state: directory
+    path: "/home/{{ item }}/.ssh"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: "0700"
+  with_list: "{{ common_users.keys() }}"
+
+- name: Manage ~/.ssh/authorized_keys
+  ansible.builtin.template:
+    src: authorized_keys
+    dest: "/home/{{ item.key }}/.ssh/authorized_keys"
+    owner: "{{ item.key }}"
+    group: "{{ item.key }}"
+    mode: "0440"
+  with_dict: "{{ common_users }}"
+
+##
+# Removed Users and Groups
+# DISABLED: Family-managed devices use unmanaged user accounts
+##
+#
+# - name: Get list of users with UID >= 1000 from remote system
+#   ansible.builtin.shell:
+#     cmd: "set -o pipefail && getent passwd | awk -F: '$3 >= 1000 { print $1 }'"
+#     executable: /bin/bash
+#   register: remote_users
+#   changed_when: false
+#
+# - name: Remove unexpected users with UID >= 1000
+#   ansible.builtin.user:
+#     name: "{{ item }}"
+#     state: absent
+#     force: true
+#   when: "item != 'nobody' and item not in common_users.keys()"
+#   loop: "{{ remote_users.stdout.splitlines() }}"
+#
+# # - name: Remove unexpected groups (TODO)
+# #   ansible.builtin.group:
+# #     state: absent

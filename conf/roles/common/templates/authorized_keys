@@ -1,0 +1,4 @@
+# Managed by Ansible
+{% for key in item.value.get('keys', []) %}
+{{ key }}
+{% endfor %}

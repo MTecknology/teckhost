@@ -1,0 +1,37 @@
+- name: Ensure polkit is installed
+  ansible.builtin.package:
+    name: policykit-1
+    state: present
+
+- name: Manage polkit configuration files
+  ansible.posix.synchronize:
+    src: localauthority
+    dest: /etc/polkit-1/
+    rsync_opts:
+      - "--exclude=.gitkeep"
+    archive: false
+    recursive: true
+    delete: true
+  notify: restart-polkit
+
+- name: Configure permissions on synchronized polkit files
+  ansible.builtin.file:
+    path: /etc/polkit-1/localauthority
+    recurse: true
+    owner: root
+    group: root
+    mode: "0640"
+  notify: restart-polkit
+
+- name: Ensure /etc/polkit-1/rules.d is absent
+  ansible.builtin.file:
+    path: /etc/polkit-1/rules.d
+    state: absent
+  notify: restart-polkit
+
+- name: Ensure polkit service is running
+  ansible.builtin.service:
+    name: polkit
+    state: started
+    enabled: true
+  when: not partial_install

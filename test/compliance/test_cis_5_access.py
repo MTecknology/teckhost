@@ -4,8 +4,8 @@ Source: CIS_Distribution_Independent_Linux_Benchmark_v2.0.0.pdf
 Implements: 5 Access, Authentication and Authorization
 Not-Implemented:
 - 5.1.8 Ensure at/cron is restricted to authorized users - common use
-- 5.3 Configure PAM - local security policy is enforced via salt
-- 5.4.1.X Ensure [password requirement] - user credentials/expiration managed via salt
+- 5.3 Configure PAM - local security policy is enforced via ansible
+- 5.4.1.X Ensure [password requirement] - user credentials/expiration managed via ansible
 - 5.4.5 Ensure default user shell timeout is 900 seconds or less - not practical
 '''
 import pytest
@@ -91,6 +91,7 @@ class TestAccess:
             # ('maxstartups', '10:30:60') ,       # 5.2.22 - TODO
             # ('maxsessions', '4') ,              # 5.2.23 - TODO
         ])
+    @pytest.mark.breaks_oci  # requires --privileged
     @pytest.mark.admin
     def test_sshd_settings(self, host, argument, expected):
         '''5.2.[4-12] Ensure SSH <argument> is <expected> configuration'''

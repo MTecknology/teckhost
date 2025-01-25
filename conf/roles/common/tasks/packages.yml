@@ -1,0 +1,30 @@
+- name: Install packages every Linux machine should have
+  ansible.builtin.package:
+    name:
+      - anacron
+      - net-tools
+      - openssl
+      - rsync
+      - tcpdump
+      - tmux
+      - tree
+      - unzip
+      - wget
+
+- name: Install packages every Debian machine should have
+  ansible.builtin.package:
+    name:
+      - locate
+      - curl
+      - pkg-config
+      - vim
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install packages every RedHat machine should have
+  ansible.builtin.package:
+    name:
+      - mlocate
+      - vim-enhanced
+    state: present
+  when: ansible_os_family == "RedHat"

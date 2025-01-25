@@ -1,0 +1,32 @@
+- name: Install auditd package (debian)
+  ansible.builtin.package:
+    name: auditd
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install auditd package (rhel)
+  ansible.builtin.package:
+    name: audit
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Manage auditd.conf
+  ansible.builtin.copy:
+    src: auditd.conf
+    dest: /etc/audit/auditd.conf
+    mode: "0640"
+  notify: restart-auditd
+
+- name: Manage audit.rules
+  ansible.builtin.copy:
+    src: audit.rules
+    dest: /etc/audit/rules.d/audit.rules
+    mode: "0640"
+  notify: restart-auditd
+
+- name: Ensure auditd service is running
+  ansible.builtin.service:
+    name: auditd
+    state: started
+    enabled: true
+  when: not partial_install

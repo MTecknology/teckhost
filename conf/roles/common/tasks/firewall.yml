@@ -1,0 +1,51 @@
+##
+# UFW
+##
+
+- name: Install ufw package
+  ansible.builtin.package:
+    name: ufw
+    state: present
+
+- name: Enable ufw
+  ansible.builtin.copy:
+    src: ufw.conf
+    dest: /etc/ufw/ufw.conf
+    mode: "0644"
+  notify: restart-ufw
+
+- name: Ensure ufw service is running
+  ansible.builtin.command:
+    cmd: service ufw start
+  register: ufw_start
+  changed_when: "ufw_start.rc != 0"
+
+##
+# Fail2Ban
+##
+
+- name: Install fail2ban package
+  ansible.builtin.package:
+    name: fail2ban
+    state: present
+
+- name: Manage f2b/jail.conf file
+  ansible.builtin.copy:
+    src: f2b_jail.conf
+    dest: /etc/fail2ban/jail.conf
+    mode: "0644"
+  notify: restart-fail2ban
+
+- name: Manage f2b/jail.conf file
+  ansible.builtin.copy:
+    src: f2b_fail2ban.conf
+    dest: /etc/fail2ban/fail2ban.conf
+    mode: "0644"
+  notify: restart-fail2ban
+
+- name: Ensure f2b service is running
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true
+  when: not partial_install

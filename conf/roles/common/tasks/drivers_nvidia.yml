@@ -1,0 +1,21 @@
+- name: Install nvidia packages
+  ansible.builtin.package:
+    name:
+      - nvidia-driver
+      - nvidia-cuda-toolkit
+      - nvidia-cuda-toolkit-gcc
+      - nvidia-cudnn
+    state: present
+
+# Hibernation is problematic with SecureBoot and (separately) disk encryption
+- name: Manage sleep.conf for nvidia
+  ansible.builtin.copy:
+    src: nvidia/sleep.conf
+    dest: /etc/systemd/sleep.conf
+    mode: "0644"
+
+- name: Manage sleep.conf for nvidia
+  ansible.builtin.copy:
+    src: nvidia/nvidia-kernel-common.conf
+    dest: /etc/modprobe.d/nvidia-kernel-common.conf
+    mode: "0644"

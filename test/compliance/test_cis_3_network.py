@@ -13,9 +13,10 @@ import pytest
 from conftest import SUDO_WRAPPER
 
 
+@pytest.mark.admin
+@pytest.mark.breaks_oci
 class TestNetworkProtocols:
 
-    @pytest.mark.admin
     @pytest.mark.parametrize(
         'proto', [
             'dccp',     # 3.4.1

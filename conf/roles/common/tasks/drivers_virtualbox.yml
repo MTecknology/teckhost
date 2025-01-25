@@ -1,0 +1,11 @@
+- name: Install package with guest additions
+  ansible.builtin.package:
+    name: virtualbox-guest-additions-iso
+    state: present
+
+- name: Install virtualbox guest additions
+  ansible.builtin.command:
+    cmd: >
+        mount /usr/share/virtualbox/VBoxGuestAdditions.iso /mnt;
+        /mnt/VBoxLinuxAdditions.run; umount /mnt
+    creates: /sys/module/vboxguest

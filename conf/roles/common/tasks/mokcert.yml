@@ -1,0 +1,85 @@
+##
+# Configuration Files
+##
+
+- name: Install mokutil/dkms package
+  ansible.builtin.package:
+    name:
+      - mokutil
+      - dkms
+    state: present
+
+- name: Manage dkms/framework.conf
+  ansible.builtin.copy:
+    src: mokcert/framework.conf
+    dest: /etc/dkms/framework.conf
+    mode: "0644"
+
+- name: Manage dkms/sign_helper.sh
+  ansible.builtin.copy:
+    src: mokcert/sign_helper.sh
+    dest: /etc/dkms/sign_helper.sh
+    mode: "0755"
+
+- name: Create mokcert workspace
+  ansible.builtin.file:
+    state: directory
+    path: /root/.mok
+    mode: "0700"
+
+- name: Manage mokcert ssl configuration
+  ansible.builtin.copy:
+    src: mokcert/openssl.cnf
+    dest: /root/.mok/openssl.cnf
+    mode: "0755"
+
+- name: Manage mokcert ssl configuration
+  ansible.builtin.copy:
+    src: mokcert/delete_oldmok.sh
+    dest: /root/.mok/delete_oldmok
+    mode: "0700"
+
+##
+# Key Generation
+##
+
+- name: Generate mokcert key if it does not exist
+  ansible.builtin.command:
+    cmd: >
+        openssl req -config /root/.mok/openssl.cnf -new -x509 -newkey rsa:2048
+        -keyout /root/.mok/client.key -outform DER -out /root/.mok/client.der
+        -nodes -days 36500 -subj "/CN=Teckhost/"
+    creates: /root/.mok/client.key
+  notify: mokcert-makepem
+
+##
+# Key Enrollment
+##
+
+- name: Check for Secure Boot
+  ansible.builtin.stat:
+    path: /sys/firmware/efi/runtime
+  register: secure_boot
+
+- name: Check mokcert enrollment
+  ansible.builtin.command:
+    cmd: "mokutil --test-key /root/.mok/client.der"
+  failed_when: false
+  changed_when: false
+  when: secure_boot.stat.exists
+  register: mokcert_enrolled
+
+- name: Enroll mokcert key
+  ansible.builtin.command:
+    cmd: 'mokutil --timeout 0; mokutil --import /root/.mok/client.der'
+    stdin: 'GR3en\nGR3en\n'
+  register: mokcert_enroll
+  changed_when: "mokcert_enroll.rc == 0"
+  when: "(secure_boot.stat.exists) and ('already enrolled' in mokcert_enrolled.stdout)"
+
+- name: Clean up retired mokcert keys
+  ansible.builtin.command:
+    cmd: /root/.mok/delete_oldmok
+    chdir: /root/.mok
+  changed_when: false
+  when: secure_boot.stat.exists

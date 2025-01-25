@@ -1,0 +1,18 @@
+- name: Install chrony package
+  ansible.builtin.package:
+    name: chrony
+    state: present
+
+- name: Manage chrony.conf file
+  ansible.builtin.copy:
+    src: chrony.conf
+    dest: /etc/chrony/chrony.conf
+    mode: "0640"
+  notify: restart-chrony
+
+- name: Ensure chronyd service is running
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true
+  when: not partial_install

@@ -1,0 +1,4 @@
+# Managed by Ansible
+{% for key in common_root.get('keys', []) %}
+{{ key }}
+{% endfor %}

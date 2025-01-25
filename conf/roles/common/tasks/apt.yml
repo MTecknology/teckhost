@@ -1,0 +1,13 @@
+- name: Configure apt preferences
+  ansible.builtin.template:
+    src: pinning.prefs
+    dest: /etc/apt/preferences.d/pinning
+    mode: "0644"
+  notify: refresh-apt
+
+- name: Configure apt sources.list
+  ansible.builtin.template:
+    src: sources.list
+    dest: /etc/apt/sources.list
+    mode: "0644"
+  notify: refresh-apt

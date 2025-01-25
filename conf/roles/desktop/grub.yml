@@ -1,0 +1,27 @@
+- name: Install grub package
+  ansible.builtin.package:
+    name:
+      - grub2-common
+      - procps
+    state: present
+
+- name: Manage grub configuration
+  ansible.builtin.copy:
+    src: grub/grub
+    dest: /etc/default/grub
+    mode: "0640"
+  notify: update-grub
+
+- name: Manage grub password file
+  ansible.builtin.copy:
+    src: grub/01_admin
+    dest: /etc/grub.d/01_admin
+    mode: "0755"
+  notify: update-grub
+
+- name: Manage grub configuration
+  ansible.builtin.copy:
+    src: grub/10_linux
+    dest: /etc/grub.d/10_linux
+    mode: "0755"
+  notify: update-grub

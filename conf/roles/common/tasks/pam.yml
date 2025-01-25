@@ -1,0 +1,26 @@
+- name: Install pam package
+  ansible.builtin.package:
+    name: libpam-runtime
+    state: present
+
+- name: Manage pam configuration files
+  ansible.builtin.copy:
+    src: "pam/{{ fpath }}"
+    dest: "/etc/pam.d/{{ fpath }}"
+    mode: "0644"
+  with_list:
+    - common-account
+    - common-auth
+    - common-password
+    - common-session
+    - common-session-noninteractive
+    - cron
+    - lightdm
+    - login
+    - passwd
+    - sshd
+    - sudo
+    - su
+    - su-l
+  loop_control:
+    loop_var: fpath

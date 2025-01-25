@@ -1,0 +1,99 @@
+##
+# Core Libraries and Configuration
+##
+
+- name: Shell Helpers
+  ansible.builtin.copy:
+    src: shell.sh
+    dest: /usr/local/lib/shell
+    mode: "0755"
+
+- name: Configure gai.conf
+  ansible.builtin.copy:
+    src: gai.conf
+    dest: /etc/gai.conf
+    mode: "0644"
+
+- name: Configure (apt) package manager
+  ansible.builtin.include_tasks:
+    file: apt.yml
+  when: ansible_os_family == "Debian"
+
+##
+# Core Packages
+##
+
+- name: Install packages every Linux machine should have
+  ansible.builtin.package:
+    name:
+      - anacron
+      - ansible
+      - file
+      - git
+      - gnupg
+      - kmod
+      - lsof
+      - net-tools
+      - openssl
+      - rsync
+      - tcpdump
+      - tmux
+      - tree
+      - unzip
+      - wget
+    state: present
+
+- name: Install packages every Debian machine should have
+  ansible.builtin.package:
+    name:
+      - build-essential
+      - console-setup
+      - curl
+      - locate
+      - openssh-client
+      - pkg-config
+      - screen
+      - vim
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install packages every RedHat machine should have
+  ansible.builtin.package:
+    name:
+      - mlocate
+      - openssh-clients
+      - pkgconf-pkg-config
+      - vim-enhanced
+    state: present
+  when: ansible_os_family == "RedHat"
+
+##
+# Additional Configuration
+##
+
+- name: Configure vimrc.local
+  ansible.builtin.copy:
+    src: vimrc.local
+    dest: /etc/vim/vimrc.local
+    mode: "0644"
+
+- name: Obtain copy of teckhost configuration
+  ansible.builtin.git:
+    repo: https://github.com/MTecknology/teckhost.git
+    dest: /etc/ansible
+    update: false  # ansible-forced updates will reset local history
+
+- name: Add self-managed ansible runs to cron
+  ansible.builtin.cron:
+    job: "cd /etc/ansible && git pull && ansible-playbook conf/maintenance.yml"
+    name: ansible-maintenance
+    special_time: hourly
+
+##
+# Server Includes
+##
+
+- name: Include SSH-Server for test or non-pc
+  ansible.builtin.include_tasks:
+    file: sshd.yml
+  when: is_server or is_test
