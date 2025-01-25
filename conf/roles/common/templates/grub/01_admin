@@ -3,5 +3,5 @@ set -e
 
 cat <<EOF
 set superusers="admin"
-password_pbkdf2 admin {{ desktop_bootpass }}
+password_pbkdf2 admin {{ common_bootpass }}
 EOF

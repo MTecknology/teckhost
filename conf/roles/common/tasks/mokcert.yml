@@ -82,4 +82,4 @@
     cmd: /root/.mok/delete_oldmok
     chdir: /root/.mok
   changed_when: false
-  when: secure_boot.stat.exists
+  when: secure_boot.stat.exists and not partial_install

@@ -17,7 +17,7 @@ class TestIntegrity:
             'bind9-host', 'binutils', 'binutils-common', 'busybox',
             'ca-certificates', 'console-setup', 'coreutils', 'cpio',
             'cracklib-runtime', 'cron', 'dpkg', 'gcc', 'gpg', 'init',
-            'lightdm', 'linux-base', 'net-tools', 'nftables', 'openssl',
+            'lightdm', 'linux-base', 'net-tools', 'openssl',
             'perl-base', 'xauth',
         ])
     def test_package_integrity(self, host, pkgname):

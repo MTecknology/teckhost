@@ -37,6 +37,15 @@
   failed_when: "makepem.rc != 0"
   changed_when: false
 
+- name: Trigger "update-grub"
+  listen: update-grub
+  ansible.builtin.command:
+    cmd: update-grub
+  register: update_grub
+  failed_when: "update_grub.rc != 0"
+  changed_when: false
+  when: "'container' not in ansible_virtualization_tech_guest"
+
 ##
 # Restart Services
 ##
@@ -71,10 +80,9 @@
     state: restarted
   when: not partial_install
 
-- name: Restart ufw service
-  listen: restart-ufw
-  ansible.builtin.command:
-    cmd: service ufw restart
-  register: ufw_restart
-  failed_when: "ufw_restart.rc != 0"
-  changed_when: false
+- name: Reload nftables rules
+  listen: reload-nft
+  ansible.builtin.service:
+    name: nftables
+    state: restarted
+  when: not partial_install
