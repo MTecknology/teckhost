@@ -13,7 +13,7 @@
   notify: update-grub
 
 - name: Manage grub password file
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: grub/01_admin
     dest: /etc/grub.d/01_admin
     mode: "0755"

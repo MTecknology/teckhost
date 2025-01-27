@@ -1,7 +1,7 @@
-- name: Drivers for virtualbox
-  ansible.builtin.include_tasks:
-    file: "drivers_virtualbox.yml"
-  when: ansible_virtualization_type == "virtualbox"
+# - name: Drivers for virtualbox
+#   ansible.builtin.include_tasks:
+#     file: "drivers_virtualbox.yml"
+#   when: ansible_virtualization_type == "virtualbox"
 
 - name: Check if nvidia is present
   ansible.builtin.shell:

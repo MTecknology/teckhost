@@ -1,24 +1,18 @@
 ##
-# UFW
+# NFTables
 ##
 
-- name: Install ufw package
+- name: Ensure nftables is installed
   ansible.builtin.package:
-    name: ufw
+    name: nftables
     state: present
 
-- name: Enable ufw
+- name: Manage nftables configuration
   ansible.builtin.copy:
-    src: ufw.conf
-    dest: /etc/ufw/ufw.conf
-    mode: "0644"
-  notify: restart-ufw
-
-- name: Ensure ufw service is running
-  ansible.builtin.command:
-    cmd: service ufw start
-  register: ufw_start
-  changed_when: "ufw_start.rc != 0"
+    src: nftables.conf
+    dest: /etc/nftables.conf
+    mode: "0755"
+  notify: reload-nft
 
 ##
 # Fail2Ban

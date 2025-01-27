@@ -1,3 +1,6 @@
+# Configure grub password (required to change boot items)
+common_bootpass: ""
+
 # Generate hash using `mkpasswd -m yescrypt` (apt install whois)
 common_root:
   password: '!'

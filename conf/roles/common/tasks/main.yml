@@ -8,6 +8,7 @@
     # (above) Always First
     - auditd
     - drivers
+    - grub
     - ntp
     - packages
     - pam

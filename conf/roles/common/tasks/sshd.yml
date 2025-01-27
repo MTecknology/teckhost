@@ -16,10 +16,3 @@
     state: started
     enabled: true
   when: not partial_install
-
-- name: Allow ssh into firewall
-  community.general.ufw:
-    rule: allow
-    port: "22"
-    proto: tcp
-  when: not partial_install
