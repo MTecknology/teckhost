@@ -100,6 +100,8 @@
       target: repos/data/.homedir/.config/redshift.conf
     - link: .config/terminator
       target: repos/data/.homedir/.config/terminator/
+    - link: .config/user-dirs.dirs
+      target: repos/data/.homedir/.config/user-dirs.dirs
     - link: .bash_aliases
       target: repos/data/.homedir/.bash_aliases
     - link: .bash_logout
