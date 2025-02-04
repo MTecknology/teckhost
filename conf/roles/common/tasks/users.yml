@@ -36,9 +36,18 @@
 # Managed Users (uid >= 1000)
 ##
 
-- name: Create or update user
-  ansible.builtin.user:
+- name: Create personal groups
+  ansible.builtin.group:
+    state: present
     name: "{{ item.key }}"
+    gid: "{{ item.value.get('guid', None) }}"
+  with_dict: "{{ common_users }}"
+
+- name: Create users
+  ansible.builtin.user:
+    state: present
+    name: "{{ item.key }}"
+    uid: "{{ item.value.get('guid', None) }}"
     password: "{{ item.value.get('password', '!') }}"
     comment: "{{ item.value.get('comment', item.key) }}"
     shell: "{{ item.value.get('shell', '/bin/bash') }}"
