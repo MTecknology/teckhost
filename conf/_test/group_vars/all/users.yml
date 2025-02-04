@@ -8,6 +8,7 @@ common_users:
   testadmin:
     comment: Test Admin
     groups: [ssh-user, sudo]
+    guid: 4243
     # password: InsecurePassword4CICDAdmin
     password: $y$j9T$ypK6DVXKxyvmL5/xr1ESv0$QSveUc3SC.5NXdLB8OOUjD1wOkI2.1zfHzIt9O6mbt5
     keys:
@@ -16,6 +17,7 @@ common_users:
   testuser:
     comment: Test User
     groups: [ssh-user]
+    guid: 4242
     # password: InsecurePassword4CICD
     password: $y$j9T$BMZl5O.F4FMUlFT1lYWG90$//EYuQFqtvFUsTCg40zkOIEazRFUo.ORl8oNJgBPre9
     keys:
