@@ -84,15 +84,15 @@ jobs:
       # 1. Build a "teckhost" iso from upstream release
       - name: Build Teckhost ISO
         id: build_iso
-        run: make teckhost_debian12.iso
+        run: make teckhost_debian13.iso
         env:
           THT_GRUBTEST: netcfg/hostname=testpc1 BS_GITREV=${{ github.sha }} TH_ANSGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/conf/_test/key.gpg BS_PLAYBOOK=/etc/ansible/conf/_test/maintenance.yml
 
       - name: Save ISO (teckhost.iso)
         uses: actions/upload-artifact@v4
         with:
-          name: teckhost_debian12-${{ github.sha }}.iso
-          path: teckhost_debian12.iso
+          name: teckhost_debian13-${{ github.sha }}.iso
+          path: teckhost_debian13.iso
           compression-level: 0
 
   testinstall:
@@ -103,8 +103,8 @@ jobs:
       matrix:
         # boot: [efi, bios]
         boot: [efi]
-        # os: [debian11, debian12]
-        os: [debian12]
+        # os: [debian11, debian13]
+        os: [debian13]
 
     runs-on: macos-12
     steps:
@@ -120,7 +120,7 @@ jobs:
       - name: Pull ISO (teckhost.iso)
         uses: actions/download-artifact@v4
         with:
-          name: teckhost_debian12-${{ github.sha }}.iso
+          name: teckhost_debian13-${{ github.sha }}.iso
 
       # 2. Install OS on VM using teckhost.iso (testing option)
       - name: Create VM and Install (Testing) Teckhost

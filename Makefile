@@ -16,14 +16,14 @@ export WORKSPACE ?= $(abspath $(PWD)/)
 ##
 
 # Version Table
-debian12_src   ?= https://cdimage.debian.org/cdimage/archive/12.8.0/amd64/iso-cd/debian-12.8.0-amd64-netinst.iso
-debian12_sha   ?= 04396d12b0f377958a070c38a923c227832fa3b3e18ddc013936ecf492e9fbb3
+debian13_src   ?= https://cdimage.debian.org/cdimage/archive/13.0.0/amd64/iso-cd/debian-13.0.0-amd64-netinst.iso
+debian13_sha   ?= e363cae0f1f22ed73363d0bde50b4ca582cb2816185cf6eac28e93d9bb9e1504
 ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
 ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
 
 # Default release
-teckhost.iso: teckhost_debian12.iso
-	cp teckhost_debian12.iso teckhost.iso
+teckhost.iso: teckhost_debian13.iso
+	cp teckhost_debian13.iso teckhost.iso
 
 # Remaster an upstream ISO with teckhost bootstrapping
 teckhost_%.iso: upstream_%.iso
@@ -98,7 +98,7 @@ testprep:
 	chmod 0600 test/.ssh/id_ed25519
 
 # Create testpc1 and run all {admin,user} tests
-full-test: testpc1_debian12 pytest-testpc1-user pytest-testpc1-admin
+full-test: testpc1_debian13 pytest-testpc1-user pytest-testpc1-admin
 
 # Run user-only tests against a host as user:testuser
 pytest-%-user:

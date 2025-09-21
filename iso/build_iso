@@ -38,7 +38,7 @@ parse_options() {
 	# Defaults
 	export TH_SRC="${TH_SRC:-./debian-netinst.iso}"
 	export TH_DST="${TH_DST:-./teckhost.iso}"
-	export TH_DATA="${TH_DATA:-./iso/debian12}"
+	export TH_DATA="${TH_DATA:-./iso/debian13}"
 	export THT_GRUBTEST="${THT_GRUBTEST:-netcfg/hostname=testpc1 netcfg/get_hostname=testpc1 TH_ANSGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/conf/_test/key.gpg TH_ANSGPG_PRIV=/tmp/gpgpassphrase BS_PLAYBOOK=/etc/ansible/conf/_test/maintenance.yml}"
 	export TH_KEEP="${TH_KEEP:-False}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
@@ -81,7 +81,7 @@ show_help() {
 	Defaults (can be set as environment variables):
 	  TH_SRC${t}./debian-netinst.iso
 	  TH_DST${t}./teckhost.iso
-	  TH_DATA${t}./iso/debian12
+	  TH_DATA${t}./iso/debian13
 	  TH_KEEP${t}True
 	  THT_GRUBTEST${t}TH_SALTGPG=https://raw.githubusercontent.com/MTecknology/teckhost/master/conf/_test/key.gpg [..see code..]
 	  LOG_LEVEL${t}1  (info)
