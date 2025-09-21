@@ -95,8 +95,8 @@ Disk space used to test a Debian 12 VM:
 
 - ``<repo>/*.iso``: (-> 1.3 GB)
 
-  + ``upstream_debian12.iso``: Original Debian ISO
-  + ``teckhost_debian12.iso``: Remastered ISO
+  + ``upstream_debian13.iso``: Original Debian ISO
+  + ``teckhost_debian13.iso``: Remastered ISO
 
 - ``~/VirtualMachines/testpc1/``: (-> 13 GB)
 

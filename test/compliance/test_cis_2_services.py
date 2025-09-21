@@ -22,6 +22,7 @@ class TestServices:
         if pytestconfig.getoption('--type') != 'container':
             assert host.service('chrony').is_running
 
+    @pytest.mark.breaks_oci
     @pytest.mark.parametrize(
         'service', [
             'systemd-timesyncd',    # 2.2.1.X

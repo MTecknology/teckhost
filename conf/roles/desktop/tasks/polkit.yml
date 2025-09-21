@@ -1,6 +1,10 @@
+- name: Include distro-specific variables
+  ansible.builtin.include_vars:
+    file: "{{ ansible_distribution }}_{{ ansible_distribution_release }}.yml"
+
 - name: Ensure polkit is installed
   ansible.builtin.package:
-    name: policykit-1
+    name: "{{ polkit_name }}"
     state: present
 
 - name: Manage polkit configuration files

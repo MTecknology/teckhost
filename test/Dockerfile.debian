@@ -1,5 +1,5 @@
 # Base Image
-ARG TEST_IMAGE=docker.io/debian:12
+ARG TEST_IMAGE=docker.io/debian:13
 FROM ${TEST_IMAGE} AS base
 
 # Update OS Software
