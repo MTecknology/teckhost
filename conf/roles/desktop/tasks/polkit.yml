@@ -1,5 +1,6 @@
 - name: Include distro-specific variables
-  include_vars: "{{ ansible_distribution }}_{{ ansible_distribution_major_version }}.yml"
+  ansible.builtin.include_vars:
+    file: "{{ ansible_distribution }}_{{ ansible_distribution_release }}.yml"
 
 - name: Ensure polkit is installed
   ansible.builtin.package:

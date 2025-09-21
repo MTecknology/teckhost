@@ -96,6 +96,7 @@ class TestFilesystemConfiguration:
         stdout = probe.stdout.strip()
         assert stdout == '', 'sticky bit was not set on a world-writable directory'
 
+    @pytest.mark.breaks_oci
     def test_disable_automount(self, host):
         '''1.1.22 Disable Automounting (Scored)'''
         probe = host.service('autofs')
