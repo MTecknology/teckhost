@@ -15,27 +15,6 @@
   listen: refresh-apt
   ansible.builtin.apt:
     update_cache: true
-  when: ansible_os_family == "Debian"
-
-- name: Apt Autoremove
-  listen: apt-autoremove
-  ansible.builtin.command:
-    cmd: "apt-get -y autoremove"
-  register: apt_autoremove
-  failed_when: "apt_autoremove.rc != 0"
-  changed_when: false
-  when: ansible_os_family == "Debian"
-
-- name: Generate mokcert.pem from private key
-  listen: mokcert-makepem
-  ansible.builtin.command:
-    cmd: >
-        openssl x509
-        -inform DER -in /root/.mok/client.der
-        -outform PEM -out /root/.mok/client.pem
-  register: makepem
-  failed_when: "makepem.rc != 0"
-  changed_when: false
 
 - name: Trigger "update-grub"
   listen: update-grub
@@ -50,23 +29,14 @@
 # Restart Services
 ##
 
-- name: Restart auditd service
-  listen: restart-auditd
-  ansible.builtin.command:
-    cmd: service auditd restart
-  register: auditd_restart
-  failed_when: "auditd_restart.rc != 0"
-  changed_when: false
-
 - name: Restart chrony service
   listen: restart-chrony
-  ansible.builtin.command:
-    cmd: service chrony restart
-  register: chrony_restart
-  failed_when: "chrony_restart.rc != 0"
-  changed_when: false
+  ansible.builtin.service:
+    name: chronyd
+    state: restarted
+  when: not partial_install
 
-- name: Restart f2b service
+- name: Restart fail2ban service
   listen: restart-fail2ban
   ansible.builtin.service:
     name: fail2ban
@@ -80,9 +50,10 @@
     state: restarted
   when: not partial_install
 
-- name: Reload nftables rules
-  listen: reload-nft
+- name: Reload nftables service
+  listen: restart-nftables
   ansible.builtin.service:
     name: nftables
-    state: restarted
+    # Restart destroys any temporary tables
+    state: reloaded
   when: not partial_install

@@ -1,21 +1,50 @@
+# This is for tasks that create sequencing problems
+- name: Run Special Tasks
+  ansible.builtin.include_tasks:
+    file: "special_{{ task_group }}.yml"
+  with_list: "{{ common_special_tasks }}"
+  loop_control:
+    loop_var: task_group
+
+- name: Include distro-specific variables
+  ansible.builtin.include_vars:
+    file: "{{ ansible_distribution }}.yml"
+
 - name: All Common Tasks
   ansible.builtin.include_tasks:
     file: "{{ task_group }}.yml"
   with_list:
-    - firewall
     - baseline  # includes: sshd, apt
-    - mokcert
     # (above) Always First
-    - auditd
     - drivers
     - grub
     - ntp
     - packages
+    - banners
+    - fail2ban
+    - journald
     - pam
     - security
     - sudo
+    - updates
     # (below) Always Last
     - users
-    - cleanup
   loop_control:
     loop_var: task_group
+
+- name: All Common OS-Specific Tasks
+  ansible.builtin.include_tasks:
+    file: "{{ task_group }}.yml"
+  with_list: "{{ common_extra_tasks }}"
+  loop_control:
+    loop_var: task_group
+
+- name: Include Extra Tasks
+  ansible.builtin.include_role:
+    name: "{{ extra_role }}"
+  with_list: "{{ common_extras }}"
+  loop_control:
+    loop_var: extra_role
+
+- name: Flush common/local handlers before continuing
+  ansible.builtin.meta: flush_handlers

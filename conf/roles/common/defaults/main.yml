@@ -9,6 +9,34 @@ common_root:
 # List of (company-managed) "standard" system groups
 common_groups: ['ssh-user']
 
+# Extra roles that that are included on all servers (company-localization)
+common_extras: []
+
+# List of extra packages to be installed
+common_packages: []
+
+# Adds non-free-firmware to apt
+common_apt_nonfree: false
+
 # Dictionary of regular (non-system) users available on a system
 # Note: System users should be defined in their respective role.
 common_users: {}
+
+# List of user (in addition to root) that are allowed access to cron
+common_cron_permit: []
+
+# List of firewall rules added to server (nftables/input)
+common_firewall_input: []
+common_firewall_forward: []
+
+# Special list of input rules meant for admin access
+common_firewall_admin: []
+
+# Place for any firewall edge case needs
+common_firewall_extra: ""
+
+# List of "special_*.yml" tasks that are required before "common" roles
+common_special_tasks: []
+
+# Required by common:special_ipforward to verify change
+common_sysctl_ipv4forward: "0"

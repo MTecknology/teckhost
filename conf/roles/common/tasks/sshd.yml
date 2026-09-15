@@ -3,8 +3,8 @@
     name: openssh-server
     state: present
 
-- name: Manage chrony.conf file
-  ansible.builtin.copy:
+- name: Manage sshd_config file
+  ansible.builtin.template:
     src: sshd_config
     dest: /etc/ssh/sshd_config
     mode: "0640"

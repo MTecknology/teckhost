@@ -1,13 +1,19 @@
 - name: Configure apt preferences
-  ansible.builtin.template:
+  ansible.builtin.copy:
     src: pinning.prefs
     dest: /etc/apt/preferences.d/pinning
     mode: "0644"
   notify: refresh-apt
 
-- name: Configure apt sources.list
+- name: Manage default apt sources
   ansible.builtin.template:
-    src: sources.list
-    dest: /etc/apt/sources.list
+    src: debian.sources
+    dest: /etc/apt/sources.list.d/debian.sources
     mode: "0644"
+  notify: refresh-apt
+
+- name: Remove legacy (one-line) sources
+  ansible.builtin.file:
+    path: /etc/apt/sources.list
+    state: absent
   notify: refresh-apt

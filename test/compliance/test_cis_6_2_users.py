@@ -14,7 +14,7 @@ class TestUsers:
     @pytest.mark.admin
     def test_empty_passwords(self, host):
         '''6.2.1 Ensure password fields are not empty'''
-        probe = host.run(f'{SUDO_WRAPPER} grep "^[^:]+::" /etc/shadow')
+        probe = host.run(f'{SUDO_WRAPPER} grep -E "^[^:]+::" /etc/shadow')
         assert probe.rc == 1, 'unexpected exit status from grep'
         stdout = probe.stdout.strip()
         assert stdout == ''
@@ -54,9 +54,9 @@ class TestUsers:
             assert oct(userdir.mode) in ['0o700', '0o750']  # 6.2.[8,10]
             assert host.run(f'{SUDO_WRAPPER} stat {userprobe.home}/.forward').rc != 0, \
                 'file-found: {userprobe.home}/.forward'  # 6.2.11
-            assert host.run(f'{SUDO_WRAPPER} stat {userprobe.home}/.forward').rc != 0, \
+            assert host.run(f'{SUDO_WRAPPER} stat {userprobe.home}/.netrc').rc != 0, \
                 'file-found: {userprobe.home}/.netrc'  # 6.2.[12-13]
-            assert host.run(f'{SUDO_WRAPPER} stat {userprobe.home}/.forward').rc != 0, \
+            assert host.run(f'{SUDO_WRAPPER} stat {userprobe.home}/.rhosts').rc != 0, \
                 'file-found: {userprobe.home}/.rhosts'  # 6.2.14
 
     def test_duplicate_groups(self, host):
@@ -80,5 +80,7 @@ class TestUsers:
 
     def test_empty_shadow_group(self, host):
         '''6.2.20 Ensure shadow group is empty'''
+        if host.system_info.distribution != 'debian':
+            pytest.skip('shadow group is Debian-only')
         probe = host.run('grep shadow /etc/group')
         assert probe.stdout.strip() == 'shadow:x:42:'

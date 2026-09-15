@@ -1,26 +1,33 @@
+##
+# Pluggable Authentication Modules
+# Note: These are stock Debian 13 files; the only local policy is the
+#       pam_access.so lines appended to the "common-*" stack, which is what
+#       makes /etc/security/access.conf load-bearing.
+##
+
 - name: Install pam package
   ansible.builtin.package:
     name: libpam-runtime
     state: present
+  when: ansible_os_family == "Debian"
 
 - name: Manage pam configuration files
   ansible.builtin.copy:
-    src: "pam/{{ fpath }}"
+    src: "pam_debian/{{ fpath }}"
     dest: "/etc/pam.d/{{ fpath }}"
     mode: "0644"
   with_list:
     - common-account
     - common-auth
-    - common-password
     - common-session
     - common-session-noninteractive
     - cron
-    - lightdm
     - login
-    - passwd
+    - runuser
     - sshd
-    - sudo
     - su
-    - su-l
+    - sudo
+    - sudo-i
   loop_control:
     loop_var: fpath
+  when: ansible_os_family == "Debian"

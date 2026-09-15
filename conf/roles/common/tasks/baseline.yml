@@ -14,68 +14,14 @@
     dest: /etc/gai.conf
     mode: "0644"
 
-- name: Configure (apt) package manager
-  ansible.builtin.include_tasks:
-    file: apt.yml
-  when: ansible_os_family == "Debian"
-
-##
-# Core Packages
-##
-
-- name: Install packages every Linux machine should have
-  ansible.builtin.package:
-    name:
-      - anacron
-      - ansible
-      - file
-      - git
-      - gnupg
-      - kmod
-      - lsof
-      - net-tools
-      - openssl
-      - rsync
-      - tcpdump
-      - tmux
-      - tree
-      - unzip
-      - wget
-    state: present
-
-- name: Install packages every Debian machine should have
-  ansible.builtin.package:
-    name:
-      - build-essential
-      - console-setup
-      - curl
-      - locate
-      - openssh-client
-      - pkg-config
-      - screen
-      - vim
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Install packages every RedHat machine should have
-  ansible.builtin.package:
-    name:
-      - mlocate
-      - openssh-clients
-      - pkgconf-pkg-config
-      - vim-enhanced
-    state: present
-  when: ansible_os_family == "RedHat"
-
 ##
 # Additional Configuration
 ##
 
-- name: Configure vimrc.local
-  ansible.builtin.copy:
-    src: vimrc.local
-    dest: /etc/vim/vimrc.local
-    mode: "0644"
+- name: Install git package
+  ansible.builtin.package:
+    name: git
+    state: present
 
 - name: Obtain copy of teckhost configuration
   ansible.builtin.git:
@@ -83,11 +29,22 @@
     dest: /etc/ansible
     update: false  # ansible-forced updates will reset local history
 
-- name: Add self-managed ansible runs to cron
+- name: Remove self-managed ansible runs from cron
   ansible.builtin.cron:
-    job: "cd /etc/ansible && git pull && ansible-playbook conf/maintenance.yml"
     name: ansible-maintenance
-    special_time: hourly
+    state: absent
+
+- name: Manage self-managed ansible service
+  ansible.builtin.copy:
+    src: ansible-maintenance.service
+    dest: /etc/systemd/system/ansible-maintenance.service
+    mode: "0644"
+  notify: reload-systemd
+
+- name: Ensure self-managed ansible service is enabled
+  ansible.builtin.systemd_service:
+    name: ansible-maintenance.service
+    enabled: true
 
 ##
 # Server Includes

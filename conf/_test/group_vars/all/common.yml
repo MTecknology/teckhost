@@ -1,0 +1,4 @@
+common_firewall_admin:
+  # Allow ssh from local network
+  - "tcp dport 22 accept"
+common_apt_nonfree: true

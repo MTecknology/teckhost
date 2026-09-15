@@ -1,0 +1,4 @@
+root
+{% for username in common_cron_permit %}
+{{ username }}
+{% endfor %}

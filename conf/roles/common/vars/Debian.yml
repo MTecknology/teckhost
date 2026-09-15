@@ -1,0 +1,6 @@
+common_nftables_path: /etc/nftables.conf
+common_chrony_path: /etc/chrony/chrony.conf
+common_sftp_path: /usr/lib/openssh/sftp-server
+common_autoupdate_package: unattended-upgrades
+common_autoupdate_timer: apt-daily-upgrade.timer
+common_extra_tasks: []

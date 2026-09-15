@@ -69,6 +69,11 @@ jobs:
   container:
     name: Container Tests
 
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [debian, rocky]
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,9 +84,9 @@ jobs:
             sudo apt-get install make podman
 
       # 1. Run validation tests inside of container
-      - name: Run Container Tests
+      - name: Run Container Tests - ${{ matrix.distro }}
         id: validation_tests
-        run: make test
+        run: make testpod-${{ matrix.distro }}
 
       # 2. Ensure make clean produces no errors
       - name: Run Cleanup

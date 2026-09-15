@@ -17,6 +17,8 @@ class TestAccess:
 
     def test_cron_enabled(self, host, pytestconfig):
         '''5.1.1 Ensure cron daemon is enabled'''
+        if host.system_info.distribution != 'debian':
+            pytest.skip('these are Debian package names')
         assert host.package('cron').is_installed
 
         if pytestconfig.getoption('--type') != 'container':
@@ -85,7 +87,7 @@ class TestAccess:
             # ('logingracetime', '60'),           # 5.2.16 - TODO
             ('permituserenvironment', 'no'),    # 5.2.17
             ('allowgroups', 'ssh-user'),        # 5.2.18
-            # ('banner', '/etc/issue.net') ,      # 5.2.19 - TODO
+            ('banner', '/etc/issue.net'),       # 5.2.19
             ('usepam', 'yes'),                  # 5.2.20
             # ('allowtcpforwarding', 'no') ,      # 5.2.21 - TODO
             # ('maxstartups', '10:30:60') ,       # 5.2.22 - TODO
@@ -105,12 +107,80 @@ class TestAccess:
             sshdconfig[key] = value
         assert sshdconfig[argument] == expected
 
+    @pytest.mark.parametrize(
+        'argument,approved', [
+            ('ciphers', {                       # 5.2.13
+                'chacha20-poly1305@openssh.com',
+                'aes128-ctr', 'aes192-ctr', 'aes256-ctr',
+                'aes128-gcm@openssh.com', 'aes256-gcm@openssh.com'}),
+            ('macs', {                          # 5.2.14
+                'umac-64-etm@openssh.com', 'umac-128-etm@openssh.com',
+                'hmac-sha2-256-etm@openssh.com', 'hmac-sha2-512-etm@openssh.com',
+                'hmac-sha1-etm@openssh.com',
+                'umac-64@openssh.com', 'umac-128@openssh.com',
+                'hmac-sha2-256', 'hmac-sha2-512', 'hmac-sha1'}),
+        ])
+    def test_sshd_algorithms(self, host, argument, approved):
+        '''5.2.[13-14] Ensure only approved <argument> are offered
+
+        The benchmark states an ordered string, but preference order is not the
+        control and it moves between releases: OpenSSH 10 promoted GCM above
+        CTR, so Debian 13 and Rocky 10 disagree on order while offering the same
+        set. Comparing the set still fails loudly on a weak algorithm.
+        '''
+        if not host.package('openssh-server').is_installed:
+            pytest.skip('SSH Server Not Found')
+        probe = host.run(f'sshd -T | grep "^{argument} "')
+        assert probe.rc == 0, f'unable to read sshd {argument}'
+        offered = set(probe.stdout.strip().split(' ', 1)[1].split(','))
+        assert offered == approved, f'{argument} differs from the approved set'
+
+    def test_pam_access_enforced(self, host):
+        '''5.3 Ensure access.conf is enforced by pam_access.so on login
+
+        access.conf is inert on its own; it was rendered for a long time while
+        no PAM stack referenced pam_access.so, so the deny-all did nothing.
+        Probe the login stacks directly rather than opening a real session.
+        '''
+        if host.system_info.distribution != 'debian':
+            pytest.skip('pam stack is only managed on Debian; RHEL uses authselect')
+        # Every managed user must survive both login paths. An access.conf whose
+        # rules do not match still parses, still loads, and refuses everyone via
+        # the trailing -:ALL:ALL -- which is how the fleet got locked out once.
+        for user in ('root', 'testadmin', 'testuser'):
+            for service in ('login', 'sshd'):
+                probe = host.run(f'pamtester {service} {user} acct_mgmt')
+                assert probe.rc == 0, \
+                    f'{user} is locked out of {service}: {probe.stderr}'
+        # daemon is a service account matching no "+" rule, so -:ALL:ALL applies
+        probe = host.run('pamtester login daemon acct_mgmt')
+        assert probe.rc != 0, 'access.conf deny-all is not being enforced'
+
+    def test_pam_access_login_only(self, host):
+        '''access.conf must not reach the session stack
+
+        pam_access belongs on the account stack of login and sshd only. In the
+        "common-*" files it also covers su, cron and sudo -- and sudo sets
+        PAM_USER to the target before pam_open_session, so every
+        "become_user: postgres" task on a database host died with
+        "sudo: pam_open_session: Permission denied".
+        '''
+        if host.system_info.distribution != 'debian':
+            pytest.skip('pam stack is only managed on Debian; RHEL uses authselect')
+        probe = host.run('sudo -n -u daemon true')
+        assert probe.rc == 0, f'sudo to a service account is blocked: {probe.stderr}'
+        probe = host.run('pamtester cron daemon acct_mgmt')
+        assert probe.rc == 0, f'cron is gated by access.conf: {probe.stderr}'
+
     def test_root_group(self, host):
         '''5.4.3 Ensure default group for the root account is GID 0'''
         probe = host.run('grep "^root:" /etc/passwd')
-        assert probe.rc == 0, 'unable to get sshd runtime parameters'
-        stdout = probe.stdout.strip()
-        assert stdout == 'root:x:0:0:root:/root:/bin/bash'
+        assert probe.rc == 0, 'unable to read root entry in /etc/passwd'
+        # name:passwd:uid:gid:gecos:home:shell -- gecos is not part of the
+        # control and differs by distro ("root" on Debian, "Super User" on RHEL).
+        fields = probe.stdout.strip().split(':')
+        assert fields[2] == '0', 'root account is not UID 0'
+        assert fields[3] == '0', 'root account is not GID 0'
 
     @pytest.mark.skip(reason='TODO')
     def test_default_umask(self, host):

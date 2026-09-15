@@ -1,0 +1,6 @@
+common_nftables_path: /etc/sysconfig/nftables.conf
+common_chrony_path: /etc/chrony.conf
+common_sftp_path: /usr/libexec/openssh/sftp-server
+common_autoupdate_package: dnf-automatic
+common_autoupdate_timer: dnf-automatic.timer
+common_extra_tasks: []

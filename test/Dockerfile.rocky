@@ -1,0 +1,25 @@
+# Default: Rocky 10
+ARG TEST_IMAGE=docker.io/rockylinux/rockylinux:10
+
+# Copy files into base image
+FROM ${TEST_IMAGE} AS base
+
+# Update sofware
+RUN dnf upgrade -y
+
+# Install ansible and testing dependencies
+# Note: Rocky 10 ships no python3-pytest; pip pulls it in with testinfra.
+RUN dnf install -y ansible-core python3-pip systemd kmod
+RUN pip3 install pytest-testinfra 2>/dev/null  # Do not pip as root in production
+
+# Several packages below only exist in EPEL
+RUN dnf install -y epel-release
+
+# Put large static list of installations into a cacheable layer
+# - base_roles/common/tasks/packages: Install packages every Linux machine should have
+RUN dnf install -y net-tools nftables openssl rsync screen tcpdump tmux tree unzip whois wget
+# - base_roles/common/tasks/packages: Install packages every RedHat machine should have
+RUN dnf install -y cronie-anacron plocate procps-ng vim-enhanced
+
+# Run systemd as PID 1 so roles can start and restart services
+CMD ["/sbin/init"]

@@ -1,0 +1,5 @@
+// Refresh the package lists and apply pending upgrades on the apt-daily timers.
+// The set of origins this applies to is left at the distro default, which
+// covers Debian and Debian-Security for the running codename.
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";

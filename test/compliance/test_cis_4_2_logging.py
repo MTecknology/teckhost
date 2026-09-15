@@ -17,6 +17,11 @@ class TestLogging:
             # 4.2.1.2 Ensure rsyslog Service is enabled
             assert host.file('/lib/systemd/systemd-journald').exists
 
+    def test_rsyslog_removed(self, host):
+        '''4.2.1.X Ensure a second log daemon is not competing with journald'''
+        assert not host.package('rsyslog').is_installed
+        assert not host.file('/etc/rsyslog.conf').exists
+
     def test_logfile_permissions(self, host):
         '''4.2.3 Ensure permissions on all logfiles are configured'''
         for path in host.file('/var/log').listdir():
