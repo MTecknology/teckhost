@@ -7,7 +7,8 @@ After=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/etc/ansible
-ExecStart=/usr/bin/git pull
+ExecStart=/usr/bin/git fetch
+ExecStart=/usr/bin/git reset --hard @{upstream}
 ExecStart=/usr/bin/ansible-playbook conf/maintenance.yml
 
 [Install]
