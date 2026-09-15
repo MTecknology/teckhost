@@ -11,7 +11,7 @@ Ansible Notes
 
 **USE CAUTION WITH:**
 
-- ``ansible.builtin.service``: It breaks d-i and container environments.
+- ``ansible.builtin.service``: It breaks d-i environments.
 
    Instead, use::
 

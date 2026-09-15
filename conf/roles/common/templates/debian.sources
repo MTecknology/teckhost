@@ -1,0 +1,11 @@
+Types: deb
+URIs: http://security.debian.org
+Suites: {{ ansible_distribution_release }}-security
+Components: contrib main{{ ' non-free non-free-firmware' if common_apt_nonfree else '' }}
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: http://deb.debian.org/debian
+Suites: {{ ansible_distribution_release }} {{ ansible_distribution_release }}-updates testing
+Components: contrib main{{ ' non-free non-free-firmware' if common_apt_nonfree else '' }}
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

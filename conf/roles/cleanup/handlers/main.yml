@@ -1,0 +1,8 @@
+- name: Apt Autoremove
+  listen: apt-autoremove
+  ansible.builtin.command:
+    cmd: "apt-get -y autoremove"
+  register: apt_autoremove
+  failed_when: "apt_autoremove.rc != 0"
+  changed_when: false
+  when: ansible_os_family == "Debian"

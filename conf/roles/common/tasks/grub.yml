@@ -2,7 +2,6 @@
   ansible.builtin.package:
     name:
       - grub2-common
-      - procps
     state: present
 
 - name: Manage grub configuration

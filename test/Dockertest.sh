@@ -7,18 +7,19 @@
 set -e
 
 ##
-# Run Bootstrap (&& Ansible)
+# Run Ansible
 ##
 
-# Defaults from .github/workflows/cicd.yml::THT_GRUBTEST)
-export TH_ANSGPG="${TH_ANSGPG:-/etc/ansible/conf/_test/key.gpg}"
-export BS_PLAYBOOK="${BS_PLAYBOOK:-/etc/ansible/conf/_test/maintenance.yml}"
+# Services cannot be managed until systemd has finished booting
+count=0
+while [ "$count" -lt 30 ]; do
+	systemctl is-system-running 2>/dev/null | grep -qE '^(running|degraded)$' && break
+	count=$((count + 1))
+	sleep 1
+done
 
-# Password for test data (based on iso/debconf_early)
-printf 'AWeakLink' >/tmp/gpgpassphrase
-
-# Bootstrap -> Ansible -> Maintenance(.yml)
-/etc/ansible/bootstrap
+# Ansible -> Maintenance(.yml)
+cd /etc/ansible && ansible-playbook conf/_test/maintenance.yml
 
 
 ##

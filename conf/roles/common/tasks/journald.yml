@@ -1,0 +1,16 @@
+- name: Remove rsyslog package
+  ansible.builtin.package:
+    name: rsyslog
+    state: absent
+
+- name: Remove rsyslog configuration file
+  ansible.builtin.file:
+    path: /etc/rsyslog.conf
+    state: absent
+
+# No enabled: here; systemd-journald is a static unit on both distros.
+- name: Ensure systemd-journald service is running
+  ansible.builtin.service:
+    name: systemd-journald
+    state: started
+  when: not partial_install

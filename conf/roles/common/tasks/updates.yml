@@ -1,0 +1,26 @@
+- name: Install automatic update package
+  ansible.builtin.package:
+    name: "{{ common_autoupdate_package }}"
+    state: present
+
+- name: Manage apt periodic upgrade configuration
+  ansible.builtin.copy:
+    src: 20auto-upgrades
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: "0644"
+  when: ansible_os_family == "Debian"
+
+- name: Ensure updates are applied and not merely downloaded
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/automatic.conf
+    regexp: '^apply_updates\s*='
+    line: apply_updates = yes
+    mode: "0644"
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure automatic update timer is running
+  ansible.builtin.service:
+    name: "{{ common_autoupdate_timer }}"
+    state: started
+    enabled: true
+  when: not partial_install

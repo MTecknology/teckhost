@@ -18,8 +18,6 @@ export WORKSPACE ?= $(abspath $(PWD)/)
 # Version Table
 debian13_src   ?= https://cdimage.debian.org/cdimage/archive/13.0.0/amd64/iso-cd/debian-13.0.0-amd64-netinst.iso
 debian13_sha   ?= e363cae0f1f22ed73363d0bde50b4ca582cb2816185cf6eac28e93d9bb9e1504
-ubuntu2204_src ?= https://releases.ubuntu.com/20.04.6/ubuntu-20.04.6-desktop-amd64.iso
-ubuntu2204_sha ?= 510ce77afcb9537f198bc7daa0e5b503b6e67aaed68146943c231baeaab94df1
 
 # Default release
 teckhost.iso: teckhost_debian13.iso
@@ -44,27 +42,41 @@ upstream_%.iso:
 # Default Test [Debian 12, Container]
 ##
 
-test: testpod-debian
+test: testpod-debian testpod-rocky
 
 
 ##
 # Test/Dev - Container (packer)
 ##
 
+debian_hostname ?= testpc1
+rocky_hostname ?= testbox1
+
+# Password for test data (based on iso/debconf_early)
+.vaultpass:
+	gpg --batch --decrypt --passphrase AWeakLink conf/_test/key.gpg >.vaultpass
+
 # Run tests inside container
-testpod-%: tpod_%
-	podman run --rm -it --cap-add=NET_ADMIN,NET_RAW \
-		-h testpc1 \
+testpod-%: tpod_% .vaultpass
+	podman run -d --replace --name $@ \
+		--systemd=always --cap-add=NET_ADMIN,NET_RAW,SYS_ADMIN \
+		-h $($*_hostname) \
 		-v "$(PWD):/etc/ansible" \
-		-e "BS_GITREV=$(BS_GITREV)" \
-		tpod_$* /etc/ansible/test/Dockertest.sh
+		tpod_$* >/dev/null
+	podman exec $@ /etc/ansible/test/Dockertest.sh; \
+		rc="$$?"; \
+		podman rm -f $@ >/dev/null; \
+		exit "$$rc"
 
 # Log in to container (pre-dockertest.sh)
-playpod-%: tpod_%
-	podman run --rm -it --cap-add=NET_ADMIN,NET_RAW \
-		-h testpc1 \
+playpod-%: tpod_% .vaultpass
+	podman run -d --replace --name $@ \
+		--systemd=always --cap-add=NET_ADMIN,NET_RAW,SYS_ADMIN \
+		-h $($*_hostname) \
 		-v "$(PWD):/etc/ansible" \
-		tpod_$* /bin/bash
+		tpod_$* >/dev/null
+	-podman exec -it $@ /bin/bash
+	podman rm -f $@ >/dev/null
 
 
 ##
@@ -72,13 +84,7 @@ playpod-%: tpod_%
 ##
 
 # Build a container for testing
-# Dockerfile pre-installs many desktop files and requires 8+GB in /var/tmp.
 tpod_%:
-	@current_size=$$(df -m /var/tmp | awk 'NR==2 {print $$2}'); \
-	if [ "$$current_size" -lt 10240 ]; then \
-		echo 'WARN: podman test requires 10GB in /var/tmp'; \
-		mount -o remount,size=10G /var/tmp; \
-	fi
 	podman build -t tpod_$* \
 		-f test/Dockerfile.$*
 
@@ -146,7 +152,7 @@ endif
 # Cleanup
 ##
 
-clean: clean-testpc1 cleanpod-debian
+clean: clean-testpc1 cleanpod-debian cleanpod-rocky
 	$(RM) iso/*/testseed.cfg teckhost*.iso
 	podman system prune -f || true
 

@@ -9,28 +9,12 @@
 
 - name: Manage polkit configuration files
   ansible.posix.synchronize:
-    src: localauthority
+    src: rules.d
     dest: /etc/polkit-1/
-    rsync_opts:
-      - "--exclude=.gitkeep"
     archive: false
     recursive: true
     delete: true
-  notify: restart-polkit
-
-- name: Configure permissions on synchronized polkit files
-  ansible.builtin.file:
-    path: /etc/polkit-1/localauthority
-    recurse: true
-    owner: root
-    group: root
-    mode: "0640"
-  notify: restart-polkit
-
-- name: Ensure /etc/polkit-1/rules.d is absent
-  ansible.builtin.file:
-    path: /etc/polkit-1/rules.d
-    state: absent
+    times: true
   notify: restart-polkit
 
 - name: Ensure polkit service is running

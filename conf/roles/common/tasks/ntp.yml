@@ -1,18 +1,27 @@
-- name: Install chrony package
+- name: Install ntp package
   ansible.builtin.package:
     name: chrony
     state: present
+  when: "'container' not in ansible_virtualization_tech_guest"
 
 - name: Manage chrony.conf file
   ansible.builtin.copy:
     src: chrony.conf
-    dest: /etc/chrony/chrony.conf
+    dest: "{{ common_chrony_path }}"
     mode: "0640"
   notify: restart-chrony
+  when: "'container' not in ansible_virtualization_tech_guest"
 
-- name: Ensure chronyd service is running
+- name: Ensure chrony service is running
   ansible.builtin.service:
-    name: chrony
+    name: chronyd
     state: started
     enabled: true
-  when: not partial_install
+  when:
+    - not partial_install
+    - "'container' not in ansible_virtualization_tech_guest"
+
+- name: Remove conflicting ntp implementation
+  ansible.builtin.package:
+    name: systemd-timesyncd
+    state: absent

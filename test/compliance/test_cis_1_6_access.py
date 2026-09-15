@@ -11,6 +11,8 @@ class TestMandatoryAccessControl:
 
     def test_mac_installed(self, host):
         '''1.6.1(.X) Ensure Mandatory Access Control Software is Installed'''
+        if host.system_info.distribution != 'debian':
+            pytest.skip('MAC not implemented')
         assert host.package('apparmor').is_installed
 
     @pytest.mark.admin

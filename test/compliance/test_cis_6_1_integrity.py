@@ -39,11 +39,13 @@ class TestIntegrity:
             ('gshadow-', '0o640'),  # 6.1.9
         ])
     def test_authfile_permissions(self, host, authfile, filemode):
-        '''6.1.2 Ensure permissions on /etc/[*] are configured'''
+        '''6.1.[2-9] Ensure permissions on /etc/[*] are configured'''
+        allowed = int(filemode, 8)
         probe = host.file(f'/etc/{authfile}')
         assert probe.user == 'root'
         assert probe.group in ['root', 'shadow']
-        assert oct(probe.mode) == filemode
+        assert (probe.mode | allowed) == allowed, \
+            f'/etc/{authfile} is more permissive than {filemode}'
 
     @pytest.mark.breaks_oci
     def test_world_writeable(self, host):

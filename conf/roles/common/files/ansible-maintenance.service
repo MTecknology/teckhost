@@ -1,0 +1,14 @@
+[Unit]
+Description=Self-managed ansible run
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/etc/ansible
+ExecStart=/usr/bin/git pull
+ExecStart=/usr/bin/ansible-playbook conf/maintenance.yml
+
+[Install]
+WantedBy=multi-user.target

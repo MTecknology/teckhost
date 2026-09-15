@@ -23,7 +23,7 @@
     dest: /root/.ssh/authorized_keys
     owner: root
     group: root
-    mode: "0440"
+    mode: "0600"
 
 ##
 # Skeleton Directory

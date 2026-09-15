@@ -1,22 +1,39 @@
+- name: Configure (apt) package manager
+  ansible.builtin.include_tasks:
+    file: apt.yml
+  when: ansible_distribution == "Debian"
+
+- name: Enable EPEL on RHEL
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  when: ansible_os_family == "RedHat"
+
 - name: Install packages every Linux machine should have
   ansible.builtin.package:
     name:
-      - anacron
       - net-tools
+      - nftables
       - openssl
       - rsync
+      - screen
       - tcpdump
       - tmux
       - tree
       - unzip
+      - whois
       - wget
+    state: present
 
 - name: Install packages every Debian machine should have
   ansible.builtin.package:
     name:
-      - locate
+      - anacron
       - curl
+      - locate
       - pkg-config
+      - procps
+      - ssl-cert
       - vim
     state: present
   when: ansible_os_family == "Debian"
@@ -24,7 +41,22 @@
 - name: Install packages every RedHat machine should have
   ansible.builtin.package:
     name:
-      - mlocate
+      - cronie-anacron
+      - plocate
+      - procps-ng
       - vim-enhanced
     state: present
   when: ansible_os_family == "RedHat"
+
+- name: Extra Packages
+  ansible.builtin.package:
+    name: "{{ common_packages }}"
+    state: present
+  when: common_packages|length > 0
+
+- name: Sane vimrc
+  ansible.builtin.copy:
+    src: vimrc.local
+    dest: /etc/vim/vimrc.local
+    mode: "0644"
+  when: ansible_os_family == "Debian"

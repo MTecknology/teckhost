@@ -15,12 +15,14 @@ class TestServices:
         assert not host.file('/etc/xinetd.conf').exists
         assert not host.file('/etc/xinetd.d').exists
 
-    def test_ntp_running(self, host, pytestconfig):
+    def test_ntp_running(self, host):
         '''2.2.1(.X) Time Synchronization'''
+        # ntp.yml skips containers, which share the host clock and cannot
+        # use adjtimex(). That applies to LXC containers, not just tests.
+        if host.run('systemd-detect-virt --container').rc == 0:
+            pytest.skip('container does not own the system clock')
         assert host.package('chrony').is_installed
-
-        if pytestconfig.getoption('--type') != 'container':
-            assert host.service('chrony').is_running
+        assert host.service('chrony').is_running
 
     @pytest.mark.breaks_oci
     @pytest.mark.parametrize(
@@ -50,4 +52,7 @@ class TestServices:
         '''2.[2-3].X Ensure <service> is not enabled'''
         assert not host.package(service).is_installed
         assert not host.service(service).is_running
-        assert not host.service(service).is_enabled
+        # `systemctl is-enabled` exits 4 for a unit that does not exist at all,
+        # which testinfra raises on instead of reporting as "not enabled".
+        probe = host.run(f'systemctl is-enabled {service}')
+        assert probe.stdout.strip() != 'enabled', f'{service} is enabled'

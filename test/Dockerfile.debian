@@ -1,17 +1,32 @@
-# Base Image
+# Default: Debian 13
 ARG TEST_IMAGE=docker.io/debian:13
+
+# Copy files into base image
 FROM ${TEST_IMAGE} AS base
 
-# Update OS Software
-RUN apt-get update && apt full-upgrade -y
+# Update sofware
+RUN apt update && apt upgrade -y
 
-# Install Test Dependencies
-RUN apt-get install -y systemd python3-testinfra
+# Install ansible and testing dependencies
+# Note: pamtester probes a named PAM stack directly, which is how the
+#       access.conf tests avoid needing a real login session.
+RUN apt install -y ansible-core python3-testinfra systemd systemd-sysv kmod pamtester
 
-# Pre-install Desktop Packages (allows moving big things into the OCI image)
-RUN apt-get install -y build-essential python3-dev python3-venv cinnamon-core \
-    firefox-esr chromium thunderbird gimp inkscape libreoffice-writer x11-apps \
-    vim vlc git openssh-client wget totem wireshark keepassxc fonts-pc evince   \
-    apparmor exim4-daemon-light xserver-xorg-core xwayland kwayland-integration  \
-    chrony simple-scan terminator thunderbolt-tools totem yubikey-personalization \
-    && apt-get autoremove -y && apt-get clean
+# Put large static list of Desktop Packages into a cacheable layer
+# - base_roles/common/tasks/packages:
+RUN apt install -y anacron net-tools nftables openssl procps rsync screen tcpdump tmux tree unzip \
+	whois wget locate curl pkg-config ssl-cert vim
+# - conf/roles/desktop/tasks/cinnamon:
+RUN apt install -y dbus-x11 libx11-data x11-apps x11-session-utils x11-xkb-utils x11-xserver-utils \
+	xserver-xorg-core xserver-xorg-input-all xwayland kwayland-integration bolt chromium curl feh \
+	firefox-esr gimp gmrun inkscape keepassxc mesa-utils simple-scan terminator thunderbolt-tools \
+	totem yubikey-personalization wcalc wireshark zathura zenity apparmor apparmor-utils blueman \
+	cinnamon-core dconf-cli eog evince firefox-esr chromium fonts-liberation fonts-pc fonts-recommended \
+	gnome-calculator gnome-screenshot thunderbird totem vlc cheese cups gimp gnome-disk-utility \
+	gnome-font-viewer gnome-system-monitor gnote gstreamer1.0-libav gstreamer1.0-plugins-ugly inkscape \
+	laptop-mode-tools libreoffice-calc libreoffice-gnome libreoffice-impress libreoffice-writer \
+	mate-themes orca remmina rhythmbox seahorse gnome-photos simple-scan sound-theme-freedesktop \
+	system-config-printer zenity
+
+# Run systemd as PID 1 so roles can start and restart services
+CMD ["/sbin/init"]

@@ -3,14 +3,24 @@
     src: signal-keyring.gpg
     dest: /usr/share/keyrings/signal-desktop-keyring.gpg
     mode: "0644"
+  notify: refresh-apt
 
-- name: Add specified repository into sources list using specified filename
-  ansible.builtin.apt_repository:
-    repo: deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main
-    state: present
-    filename: signal
+- name: Manage apt sources for signal
+  ansible.builtin.copy:
+    src: signal.sources
+    dest: /etc/apt/sources.list.d/signal.sources
+    mode: "0644"
+  notify: refresh-apt
 
-- name: Manage polkit configuration files
+- name: Remove legacy format
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/signal.list
+    state: absent
+
+- name: Force apt refresh now
+  ansible.builtin.meta: flush_handlers
+
+- name: Install signal-desktop package
   ansible.builtin.package:
     name: signal-desktop
     state: present

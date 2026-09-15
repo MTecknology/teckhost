@@ -1,0 +1,12 @@
+[DEFAULT]
+# Never ban localhost
+ignoreip = 127.0.0.1/8 ::1
+
+# Debian sets these in jail.d/defaults-debian.conf and RHEL ships no equivalent,
+# so state them here or fail2ban runs with zero jails on RHEL.
+banaction = nftables
+banaction_allports = nftables[type=allports]
+
+[sshd]
+enabled = true
+backend = systemd

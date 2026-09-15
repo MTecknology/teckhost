@@ -1,0 +1,15 @@
+// Allow users to update timezone
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.timedate1.set-timezone" &&
+        subject.local && subject.active && subject.isInGroup("users")) {
+        return polkit.Result.YES;
+    }
+});
+
+// Allow users to manage printer settings
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.opensuse.cupspkhelper.mechanism.all-edit" &&
+        subject.local && subject.active && subject.isInGroup("users")) {
+        return polkit.Result.YES;
+    }
+});

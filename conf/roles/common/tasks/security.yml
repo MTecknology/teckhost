@@ -3,19 +3,27 @@
     file: mountpoints.yml
   when: "'container' not in ansible_virtualization_tech_guest"
 
-# TODO: This must be limited to servers (family accounts are self-managed)
-# - name: Manage access.conf
-#   ansible.builtin.template:
-#     src: access.conf
-#     dest: /etc/security/access.conf
+- name: Manage security/access.conf
+  ansible.builtin.template:
+    src: access.conf
+    dest: /etc/security/access.conf
+    mode: "0644"
+  # pam_access.so is only enabled in on Debian (see pam.yml)
+  when: ansible_os_family == "Debian"
 
-- name: Manage limits.conf
+- name: Manage security/limits.conf
   ansible.builtin.copy:
     src: limits.conf
     dest: /etc/security/limits.conf
     mode: "0644"
 
-- name: Manage modprobe.conf
+- name: Manage security/limits.d/90-cis.conf
+  ansible.builtin.copy:
+    src: limits_cis.conf
+    dest: /etc/security/limits.d/90-cis.conf
+    mode: "0644"
+
+- name: Manage modprobe.d/security.conf
   ansible.builtin.template:
     src: modprobe.conf
     dest: /etc/modprobe.d/security.conf
@@ -26,3 +34,23 @@
     src: sysctl.conf
     dest: /etc/sysctl.conf
     mode: "0644"
+
+- name: Manage cron.allow
+  ansible.builtin.template:
+    src: cron.allow
+    dest: /etc/cron.allow
+    mode: "0644"
+
+- name: Manage nftables.conf
+  ansible.builtin.template:
+    src: nftables.conf
+    dest: "{{ common_nftables_path }}"
+    mode: "0644"
+  notify: restart-nftables
+
+- name: Ensure nftables service is running
+  ansible.builtin.service:
+    name: nftables
+    state: started
+    enabled: true
+  when: not partial_install

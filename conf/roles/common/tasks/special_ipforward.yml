@@ -1,0 +1,19 @@
+##
+# Must be included using common_special_tasks
+##
+
+- name: CAUTION - DO NOT include this on LXC containers
+  ansible.builtin.command:
+    cmd: "test -f /proc/1/environ && grep -q lxc /proc/1/environ"
+  register: lxc_check
+  failed_when: lxc_check.rc == 0
+  changed_when: false
+
+- name: Enable IPv4 forwarding (nat)
+  ansible.posix.sysctl:
+    sysctl_file: /etc/sysctl.d/90-ipforward.conf
+    name: net.ipv4.ip_forward
+    value: "{{ common_sysctl_ipv4forward }}"
+    state: present
+    reload: true
+  notify: restart-nftables

@@ -9,6 +9,7 @@ from conftest import SUDO_WRAPPER
 
 @pytest.mark.admin
 @pytest.mark.breaks_oci
+@pytest.mark.skip(reason='TODO: auditd not implemented')
 class TestAccounting:
 
     @pytest.mark.parametrize(

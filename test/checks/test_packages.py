@@ -8,6 +8,8 @@ import pytest
 @pytest.mark.parametrize('pkg', ['vim'])
 def test_package_present(host, pkg):
     '''Verify specific packages are present on the system '''
+    if host.system_info.distribution != 'debian':
+        pytest.skip('these are Debian package names')
     assert host.package(pkg).is_installed
 
 

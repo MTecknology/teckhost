@@ -19,9 +19,6 @@ main() {
 			inject_preseed
 			inject_grubconfig
 			;;
-		(*ubuntu*)
-			echo TODO
-			;;
 	esac
 	repack_iso
 

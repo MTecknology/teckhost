@@ -1,0 +1,16 @@
+- name: Manage login warning banners
+  ansible.builtin.copy:
+    src: issue
+    dest: "{{ banner_path }}"
+    mode: "0644"
+  with_list:
+    - /etc/issue
+    - /etc/issue.net
+  loop_control:
+    loop_var: banner_path
+
+- name: Manage message of the day
+  ansible.builtin.copy:
+    src: motd
+    dest: /etc/motd
+    mode: "0644"

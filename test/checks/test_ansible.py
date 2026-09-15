@@ -14,7 +14,7 @@ def test_two_runs(host, pytestconfig):
     else:
         SUDO_WRAPPER = conftest.SUDO_WRAPPER
 
-    for run in range(1, 2):
+    for run in range(1, 3):
         result = host.run(f'{SUDO_WRAPPER} ansible-playbook /etc/ansible/conf/_test/maintenance.yml -i conf/_test/inventory.yml')
         assert result.succeeded
         ansible_stdout = result.stdout.replace(' ', '')
