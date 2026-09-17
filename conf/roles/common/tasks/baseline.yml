@@ -27,6 +27,7 @@
   ansible.builtin.git:
     repo: https://github.com/MTecknology/teckhost.git
     dest: /etc/ansible
+    version: "{{ common_gitrev }}"
     update: false  # ansible-forced updates will reset local history
 
 - name: Remove self-managed ansible runs from cron

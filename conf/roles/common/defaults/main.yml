@@ -1,3 +1,6 @@
+# Branch that deployed hosts track (CI promotes master to cicd-release)
+common_gitrev: cicd-release
+
 # Configure grub password (required to change boot items)
 common_bootpass: ""
 

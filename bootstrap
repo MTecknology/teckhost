@@ -57,6 +57,7 @@ show_usage() {
 	  TH_ANSGPG${t}https://raw.githubusercontent.com/MTecknology/teckhost/master/conf/key.gpg
 	  TH_ANSGPG_PRIV${t}/tmp/gpgpassphrase
 	  LOG_LEVEL${t}1  (info)
+	  BS_GITREV${t}cicd-release
 	  BS_*${t}${t}<none>
 	EOF
 }
@@ -68,6 +69,7 @@ parse_options() {
 	export TH_ANSGPG="${TH_ANSGPG:-https://raw.githubusercontent.com/MTecknology/teckhost/master/conf/key.gpg}"
 	export TH_ANSGPG_PRIV="${TH_ANSGPG_PRIV:-/tmp/gpgpassphrase}"
 	export LOG_LEVEL="${LOG_LEVEL:-1}"
+	export BS_GITREV="${BS_GITREV:-cicd-release}"
 
 	# Modify defaults
 	while getopts 'k:p:l:h' opt; do
@@ -164,7 +166,7 @@ configure_ansible() {
 	if [ -e /etc/ansible ]; then
 		log "$INFO" '/etc/ansible already exists, not replacing'
 	else
-		git clone --depth=1 --branch "${BS_GITREV:-master}" "${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}" /etc/ansible
+		git clone --depth=1 --branch "$BS_GITREV" "${BS_gitrepo:-https://github.com/MTecknology/teckhost.git}" /etc/ansible
 	fi
 	chmod 0700 /etc/ansible
 }
